@@ -1,6 +1,6 @@
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
-const storeKey = 'momentum_v004';
+const storeKey = 'momentum_v004'; // conservé pour garder tes données locales entre v0.04 et v0.05
 const sports = ['Course à pied','Vélo','Gravel / VTT','Musculation','CrossFit','Hyrox','Natation','Marche','Randonnée','Mobilité','Récupération','Ski de fond','Ski alpin','Padel','Autre'];
 const icons = {'Course à pied':'🏃','Vélo':'🚴','Gravel / VTT':'🚵','Musculation':'🏋️','CrossFit':'💪','Hyrox':'🔥','Natation':'🏊','Marche':'🚶','Randonnée':'⛰️','Mobilité':'🧘','Récupération':'💙','Ski de fond':'🎿','Ski alpin':'⛷️','Padel':'🎾','Autre':'✨'};
 const weekdays = ['LUN','MAR','MER','JEU','VEN','SAM','DIM'];
@@ -87,7 +87,7 @@ function renderMonth(){
 }
 function renderKpis(){
   const ws=weekStart(new Date()), we=addDays(ws,6), weekSessions=state.sessions.filter(s=>s.status==='done'&&dateFromIso(s.date)>=ws&&dateFromIso(s.date)<=we);
-  const km=weekSessions.filter(s=>s.sport==='Course à pied').reduce((a,s)=>a+(s.distance||0),0), min=weekSessions.reduce((a,s)=>a+(s.duration||0),0), load=weekSessions.reduce((a,s)=>a+(s.duration||0)*(s.rpe||0),0);
+  const km=weekSessions.reduce((a,s)=>a+(s.distance||0),0), min=weekSessions.reduce((a,s)=>a+(s.duration||0),0), load=weekSessions.reduce((a,s)=>a+(s.duration||0)*(s.rpe||0),0);
   const wellnessVals=Object.entries(state.wellness).filter(([d])=>dateFromIso(d)>=ws&&dateFromIso(d)<=we).map(([,w])=>wellnessScore(w)).filter(Boolean); const rhr=Object.entries(state.wellness).filter(([d])=>dateFromIso(d)>=ws&&dateFromIso(d)<=we).map(([,w])=>w.restHr).filter(Boolean);
   const kpis=[['Volume semaine',`${km.toFixed(1)} km`],['Temps',minutesToH(min)],['Charge',Math.round(load)],['Bien-être',wellnessVals.length?(wellnessVals.reduce((a,b)=>a+b,0)/wellnessVals.length).toFixed(1)+'/10':'—'],['FC repos',rhr.length?Math.round(rhr.reduce((a,b)=>a+b,0)/rhr.length)+' bpm':'—']];
   $('#kpiStrip').innerHTML=kpis.map(([a,b])=>`<div class="kpi"><span>${a}</span><strong>${b}</strong></div>`).join('');
@@ -96,9 +96,9 @@ function renderCharts(){
   const done = state.sessions.filter(s=>s.status==='done').map(s=>({...s, d:dateFromIso(s.date)})).sort((a,b)=>a.d-b.d);
   if(!done.length) return;
   const first=weekStart(done[0].d), last=weekStart(new Date(Math.max(new Date(), done.at(-1).d)));
-  const weeks=[]; for(let d=new Date(first); d<=last; d=addDays(d,7)){ const start=new Date(d), end=addDays(start,6); const ss=done.filter(s=>s.d>=start&&s.d<=end); weeks.push({label:`${start.getDate()}.${start.getMonth()+1}`,km:ss.filter(s=>s.sport==='Course à pied').reduce((a,s)=>a+(s.distance||0),0),load:ss.reduce((a,s)=>a+(s.duration||0)*(s.rpe||0),0)}); }
+  const weeks=[]; for(let d=new Date(first); d<=last; d=addDays(d,7)){ const start=new Date(d), end=addDays(start,6); const ss=done.filter(s=>s.d>=start&&s.d<=end); weeks.push({label:`${start.getDate()}.${start.getMonth()+1}`,km:ss.reduce((a,s)=>a+(s.distance||0),0),load:ss.reduce((a,s)=>a+(s.duration||0)*(s.rpe||0),0)}); }
   const shown=weeks.slice(-12);
-  chart('volumeChart','bar',{labels:shown.map(x=>x.label),datasets:[{label:'km course',data:shown.map(x=>+x.km.toFixed(1)),backgroundColor:'rgba(32,120,255,.55)',borderColor:'#2078ff'}]});
+  chart('volumeChart','bar',{labels:shown.map(x=>x.label),datasets:[{label:'km tous sports',data:shown.map(x=>+x.km.toFixed(1)),backgroundColor:'rgba(32,120,255,.55)',borderColor:'#2078ff'}]});
   let ctl=35,atl=35; const fit=shown.map(x=>{ctl=ctl*.82+(x.load/35)*.18; atl=atl*.55+(x.load/35)*.45; return {ctl:+ctl.toFixed(1),atl:+atl.toFixed(1),tsb:+(ctl-atl).toFixed(1)};});
   chart('fitnessChart','line',{labels:shown.map(x=>x.label),datasets:[{label:'CTL',data:fit.map(x=>x.ctl),borderColor:'#2078ff',tension:.35},{label:'ATL',data:fit.map(x=>x.atl),borderColor:'#ff9f1c',tension:.35},{label:'TSB',data:fit.map(x=>x.tsb),borderColor:'#35b86b',tension:.35}]});
   const since=addDays(new Date(),-60), by={}; done.filter(s=>s.d>=since).forEach(s=>by[s.sport]=(by[s.sport]||0)+(s.duration||0));
