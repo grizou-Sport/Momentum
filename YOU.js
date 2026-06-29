@@ -1,3 +1,32 @@
+async function loadPassport() {
+  const { data: sessionData } = await momentumDB.auth.getSession();
+  const user = sessionData.session?.user;
+
+  if (!user) return;
+
+  const { data, error } = await momentumDB
+    .from("passports")
+    .select("*")
+    .eq("user_id", user.id)
+    .single();
+
+  if (error) {
+    console.error("Erreur passeport :", error);
+    return;
+  }
+
+  document.getElementById("passportName").textContent =
+    data.display_name || user.email;
+
+  document.getElementById("passportLocation").textContent =
+    data.country || "—";
+
+  document.getElementById("passportQuote").textContent =
+    `“${data.quote || "Écris la prochaine ligne."}”`;
+}
+
+loadPassport();
+
 const youDetail = document.getElementById("youDetail");
 const youButtons = document.querySelectorAll("[data-you-section]");
 
