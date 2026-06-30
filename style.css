@@ -585,3 +585,9 @@ a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}.
 .you-form .full{
   grid-column:1 / -1;
 }
+.you-avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:999px;
+}

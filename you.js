@@ -11,8 +11,9 @@ function calculateAge(birthYear) {
 }
 
 function renderPassportCard() {
-  document.getElementById("passportName").textContent =
-    passport?.display_name || currentUser?.email || "—";
+  const name = passport?.display_name || currentUser?.email || "—";
+
+  document.getElementById("passportName").textContent = name;
 
   document.getElementById("passportLocation").textContent =
     [passport?.city, passport?.country].filter(Boolean).join(", ") || "—";
@@ -28,6 +29,19 @@ function renderPassportCard() {
 
   document.getElementById("passportWeight").textContent =
     passport?.weight_kg ? `${passport.weight_kg} kg` : "—";
+
+  const avatar = document.getElementById("passportAvatar");
+
+  if (passport?.avatar_url) {
+    avatar.innerHTML = `<img src="${passport.avatar_url}" alt="${name}" />`;
+  } else {
+    avatar.textContent = name
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+  }
 }
 
 async function loadYou() {
@@ -92,6 +106,10 @@ function renderSection(section) {
           <textarea name="quote" rows="3">${passport?.quote || ""}</textarea>
         </label>
 
+        <label class="full">Photo / avatar URL
+  <input name="avatar_url" value="${passport?.avatar_url || ""}" />
+</label>
+
         <button class="login-primary full" type="submit">Enregistrer</button>
         <p id="passportMessage" class="login-message full"></p>
       </form>
@@ -127,6 +145,7 @@ async function savePassport(event) {
 
   const updates = {
     display_name: form.get("display_name")?.trim(),
+    avatar_url: form.get("avatar_url")?.trim(),
     city: form.get("city")?.trim(),
     country: form.get("country")?.trim(),
     quote: form.get("quote")?.trim(),
@@ -136,7 +155,11 @@ async function savePassport(event) {
     updated_at: new Date().toISOString(),
   };
 
-  message.textContent = "Sauvegarde...";
+  message.textContent = "Sauvegardé.";
+
+setTimeout(() => {
+  message.textContent = "";
+}, 1800);
 
   const { data, error } = await window.momentumDB
     .from("passports")
