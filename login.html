@@ -3,33 +3,39 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Momentum Alpha — Connexion</title>
+  <title>Momentum — Login</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body class="login-body">
-  <main class="story-section">
-    <div class="section-kicker">Momentum Alpha</div>
-    <h2>Connexion</h2>
-    <p class="lead">Crée ton compte ou connecte-toi à ton espace Momentum.</p>
-
-    <form id="authForm" class="profile-form">
-      <label class="full">
-        Email
-        <input type="email" name="email" required />
-      </label>
-
-      <label class="full">
-        Mot de passe
-        <input type="password" name="password" required minlength="6" />
-      </label>
-
-      <div class="form-actions full">
-        <button class="primary" type="button" id="loginBtn">Se connecter</button>
-        <button class="secondary" type="button" id="signupBtn">Créer un compte</button>
+  <main class="login-shell">
+    <section class="login-panel">
+      <div class="login-brand">
+        <span class="mark">△</span>
+        <strong>MOMENTUM</strong>
       </div>
 
-      <p class="hint full" id="authMessage"></p>
-    </form>
+      <div class="login-content">
+        <p class="section-kicker">Commence ton aventure</p>
+        <h1>Bienvenue</h1>
+        <p>Connecte-toi ou crée ton espace Momentum.</p>
+
+        <form id="authForm" class="login-form">
+          <input name="displayName" type="text" placeholder="Nom complet" />
+          <input name="email" type="email" placeholder="Adresse e-mail" required />
+          <input name="password" type="password" placeholder="Mot de passe" required minlength="6" />
+
+          <button class="login-primary" id="signupBtn" type="button">Créer un compte</button>
+          <button class="login-secondary" id="loginBtn" type="button">Se connecter</button>
+
+          <p id="authMessage" class="login-message"></p>
+        </form>
+      </div>
+    </section>
+
+    <section class="login-image">
+      <img src="IMG_4510.JPG" alt="Momentum" />
+    </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
