@@ -239,23 +239,33 @@ a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}.
 .you-mini-stats{
   margin-top:auto;
   display:grid;
-  gap:16px;
+  gap:14px;
 }
 
 .you-mini-stats div{
   display:flex;
   justify-content:space-between;
-  gap:12px;
+  align-items:center;
+  gap:16px;
+  padding:10px 0;
+  border-bottom:1px solid var(--line);
   color:#456891;
+}
+
+.you-mini-stats div:last-child{
+  border-bottom:0;
 }
 
 .you-mini-stats span{
   color:var(--muted);
+  font-weight:800;
 }
 
 .you-mini-stats strong{
   color:var(--ink);
+  text-align:right;
 }
+
 
 .you-edit-btn{
   margin-top:24px;
