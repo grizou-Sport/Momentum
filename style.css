@@ -545,3 +545,67 @@ a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}.
     padding:16px;
   }
 }
+/* v0.09 — HOME météo / calendrier */
+.home-grid{
+  width:min(1120px,calc(100% - 32px));
+  margin:0 auto 22px;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:18px;
+}
+
+.home-card{
+  background:var(--card);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow);
+  border-radius:34px;
+  backdrop-filter:blur(18px);
+  padding:26px;
+  min-height:210px;
+}
+
+.home-card h2{
+  margin:8px 0 12px;
+  font-size:28px;
+  line-height:1.05;
+}
+
+.card-label{
+  display:block;
+  color:var(--blue);
+  text-transform:uppercase;
+  letter-spacing:.14em;
+  font-size:12px;
+  font-weight:950;
+}
+
+.big-value{
+  font-size:24px;
+  font-weight:950;
+  margin:10px 0;
+}
+
+.muted{
+  color:var(--muted);
+  font-weight:700;
+}
+
+.activity-card{
+  min-height:180px;
+}
+
+.home-import{
+  width:min(1120px,calc(100% - 32px));
+  margin:0 auto 60px;
+}
+
+@media(max-width:900px){
+  .home-grid{
+    grid-template-columns:1fr;
+  }
+
+  .home-card{
+    border-radius:26px;
+    padding:22px;
+  }
+}
