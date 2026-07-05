@@ -609,3 +609,64 @@ a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}.
     padding:22px;
   }
 }
+/* v0.09 — YOU menu enrichi */
+.you-menu-item{
+  grid-template-columns:40px 1fr 28px;
+}
+
+.you-menu-item strong{
+  display:block;
+}
+
+.you-menu-item small{
+  display:block;
+  margin-top:5px;
+  color:var(--muted);
+  font-size:13px;
+  font-weight:800;
+  line-height:1.25;
+}
+
+.you-card-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:14px;
+  margin-top:28px;
+}
+
+.you-small-card{
+  background:rgba(255,255,255,.76);
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:20px;
+  min-height:145px;
+}
+
+.you-small-card.active{
+  border-color:rgba(32,120,255,.35);
+  background:linear-gradient(135deg,#ffffff,#eef7ff);
+}
+
+.you-small-card span{
+  display:block;
+  font-size:34px;
+  margin-bottom:14px;
+}
+
+.you-small-card strong{
+  display:block;
+  font-size:20px;
+  margin-bottom:6px;
+}
+
+.you-small-card em{
+  font-style:normal;
+  color:var(--muted);
+  font-weight:800;
+}
+
+@media(max-width:620px){
+  .you-card-grid{
+    grid-template-columns:1fr;
+  }
+}
