@@ -4,14 +4,15 @@ const logoutBtn = document.getElementById("logoutBtn");
 
 let currentUser = null;
 let passport = null;
+let currentMission = null;
 
 function calculateAge(birthYear) {
   if (!birthYear) return "—";
-  return `${new Date().getFullYear() - birthYear} ans`;
+  return `${new Date().getFullYear() - Number(birthYear)} ans`;
 }
 
 function safe(value, fallback = "—") {
-  return value || fallback;
+  return value === null || value === undefined || value === "" ? fallback : value;
 }
 
 function renderPassportCard() {
@@ -22,6 +23,7 @@ function renderPassportCard() {
     [passport?.city, passport?.country].filter(Boolean).join(", ") || "—";
   document.getElementById("passportQuote").textContent =
     `“${passport?.quote || "Écris la prochaine ligne."}”`;
+
   document.getElementById("passportAge").textContent = calculateAge(passport?.birth_year);
   document.getElementById("passportHeight").textContent =
     passport?.height_cm ? `${passport.height_cm} cm` : "—";
@@ -44,11 +46,11 @@ function renderPassportCard() {
 
 function renderMenuPreviews() {
   const previews = {
-    mission: passport?.mission_name || "Mission à définir",
+    mission: currentMission?.title || "Mission à définir",
     sports: "Course · Vélo · Trail",
     equipment: "Montre · Chaussures · Vélo",
     wellbeing: `${passport?.weight_kg || "—"} kg · ${passport?.height_cm || "—"} cm`,
-    data: "Import FIT / GPX bientôt",
+    data: "FIT / GPX / export",
     collections: "Souvenirs sportifs",
     about: passport?.display_name || "Ton identité",
   };
@@ -56,14 +58,16 @@ function renderMenuPreviews() {
   youButtons.forEach((button) => {
     const section = button.dataset.youSection;
     const strong = button.querySelector("strong");
+    if (!strong) return;
 
-    if (strong && !button.querySelector("small")) {
-      const small = document.createElement("small");
-      small.textContent = previews[section] || "";
+    let small = button.querySelector("small");
+
+    if (!small) {
+      small = document.createElement("small");
       strong.after(small);
-    } else if (button.querySelector("small")) {
-      button.querySelector("small").textContent = previews[section] || "";
     }
+
+    small.textContent = previews[section] || "";
   });
 }
 
@@ -73,18 +77,33 @@ async function loadYou() {
 
   if (!currentUser) return;
 
-  const { data: passportData, error } = await window.momentumDB
+  const { data: passportData, error: passportError } = await window.momentumDB
     .from("passports")
     .select("*")
     .eq("user_id", currentUser.id)
     .single();
 
-  if (error) {
-    console.error(error);
+  if (passportError) {
+    console.error(passportError);
     return;
   }
 
   passport = passportData;
+
+  const { data: missionData, error: missionError } = await window.momentumDB
+    .from("missions")
+    .select("*")
+    .eq("user_id", currentUser.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (missionError) {
+    console.error(missionError);
+  }
+
+  currentMission = missionData;
+
   renderPassportCard();
   renderMenuPreviews();
   renderSection("mission");
@@ -98,39 +117,140 @@ function setActiveSection(section) {
 function renderSection(section) {
   setActiveSection(section);
 
-  if (section === "about") return renderAbout();
   if (section === "mission") return renderMission();
   if (section === "sports") return renderSports();
   if (section === "equipment") return renderEquipment();
   if (section === "wellbeing") return renderWellbeing();
   if (section === "data") return renderData();
   if (section === "collections") return renderCollections();
+  if (section === "about") return renderAbout();
 }
 
 function renderMission() {
   youDetail.innerHTML = `
     <p class="section-kicker">Mission actuelle</p>
-    <h2>${safe(passport?.mission_name, "Mission à définir")}</h2>
+    <h2>${safe(currentMission?.title, "Créer une mission")}</h2>
     <p class="you-detail-lead">
-      L’objectif qui donne une direction à ton entraînement.
+      ${safe(currentMission?.tagline, "L’objectif qui donne une direction à ton entraînement.")}
     </p>
 
     <div class="you-progress-line">
-      <i style="width:${passport?.mission_progress || 12}%"></i>
+      <i style="width:${currentMission ? 22 : 8}%"></i>
     </div>
 
     <div class="you-detail-stats">
-      <div><span>Objectif</span><strong>${safe(passport?.mission_goal, "À définir")}</strong></div>
-      <div><span>Échéance</span><strong>${safe(passport?.mission_date, "Libre")}</strong></div>
-      <div><span>Progression</span><strong>${passport?.mission_progress || 12} %</strong></div>
-      <div><span>Statut</span><strong>En construction</strong></div>
+      <div><span>Objectif</span><strong>${safe(currentMission?.goal, "À définir")}</strong></div>
+      <div><span>Date cible</span><strong>${safe(currentMission?.target_date, "Libre")}</strong></div>
+      <div><span>Temps cible</span><strong>${safe(currentMission?.target_time, "—")}</strong></div>
+      <div><span>Allure cible</span><strong>${safe(currentMission?.target_pace, "—")}</strong></div>
     </div>
 
     <div class="you-note-box">
       <span>Lecture Momentum</span>
-      <p>${safe(passport?.quote, "La mission n’est pas encore écrite, mais le passeport existe déjà.")}</p>
+      <p>
+        ${
+          currentMission
+            ? "Cette mission devient le fil rouge de ton passeport."
+            : "Aucune mission n’est encore enregistrée. Crée le premier objectif de ton aventure."
+        }
+      </p>
     </div>
+
+    <button class="primary" id="editMissionBtn" type="button">
+      ${currentMission ? "Modifier la mission" : "Créer une mission"}
+    </button>
   `;
+
+  document.getElementById("editMissionBtn").addEventListener("click", renderMissionForm);
+}
+
+function renderMissionForm() {
+  youDetail.innerHTML = `
+    <p class="section-kicker">Mission actuelle</p>
+    <h2>${currentMission ? "Modifier la mission" : "Créer une mission"}</h2>
+
+    <form id="missionForm" class="you-form">
+      <label class="full">Titre de la mission
+        <input name="title" value="${currentMission?.title || ""}" placeholder="100 km de Bienne" />
+      </label>
+
+      <label class="full">Objectif
+        <input name="goal" value="${currentMission?.goal || ""}" placeholder="Terminer, sub 10h, sub 3h..." />
+      </label>
+
+      <label>Date cible
+        <input name="target_date" type="date" value="${currentMission?.target_date || ""}" />
+      </label>
+
+      <label>Temps cible
+        <input name="target_time" value="${currentMission?.target_time || ""}" placeholder="2h59'59" />
+      </label>
+
+      <label>Allure cible
+        <input name="target_pace" value="${currentMission?.target_pace || ""}" placeholder="4'15/km" />
+      </label>
+
+      <label class="full">Phrase / intention
+        <textarea name="tagline" rows="3">${currentMission?.tagline || ""}</textarea>
+      </label>
+
+      <button class="login-primary full" type="submit">Enregistrer la mission</button>
+      <p id="missionMessage" class="login-message full"></p>
+    </form>
+  `;
+
+  document.getElementById("missionForm").addEventListener("submit", saveMission);
+}
+
+async function saveMission(event) {
+  event.preventDefault();
+
+  const form = new FormData(event.target);
+  const message = document.getElementById("missionMessage");
+
+  message.textContent = "Sauvegarde…";
+
+  const payload = {
+    user_id: currentUser.id,
+    title: form.get("title")?.trim(),
+    goal: form.get("goal")?.trim(),
+    target_date: form.get("target_date") || null,
+    target_time: form.get("target_time")?.trim(),
+    target_pace: form.get("target_pace")?.trim(),
+    tagline: form.get("tagline")?.trim(),
+  };
+
+  let result;
+
+  if (currentMission?.id) {
+    result = await window.momentumDB
+      .from("missions")
+      .update(payload)
+      .eq("id", currentMission.id)
+      .select()
+      .single();
+  } else {
+    result = await window.momentumDB
+      .from("missions")
+      .insert(payload)
+      .select()
+      .single();
+  }
+
+  if (result.error) {
+    console.error(result.error);
+    message.textContent = result.error.message;
+    return;
+  }
+
+  currentMission = result.data;
+  renderMenuPreviews();
+
+  message.textContent = "Mission sauvegardée.";
+
+  setTimeout(() => {
+    renderMission();
+  }, 700);
 }
 
 function renderSports() {
@@ -182,7 +302,7 @@ function renderData() {
   youDetail.innerHTML = `
     <p class="section-kicker">Données</p>
     <h2>Importer le réel</h2>
-    <p class="you-detail-lead">Bientôt, tes fichiers FIT / GPX alimenteront ton récit.</p>
+    <p class="you-detail-lead">Tes fichiers FIT / GPX alimenteront ton récit.</p>
 
     <div class="you-card-grid">
       <div class="you-small-card"><span>📥</span><strong>Importer FIT</strong><em>Bientôt</em></div>
@@ -243,7 +363,7 @@ function renderAbout() {
       </label>
 
       <label class="full">Photo de profil
-        <input id="avatarFile" name="avatar_file" type="file" accept="image/*" />
+        <input name="avatar_file" type="file" accept="image/*" />
       </label>
 
       <button class="login-primary full" type="submit">Enregistrer</button>
@@ -287,6 +407,7 @@ async function savePassport(event) {
 
   try {
     const avatarFile = form.get("avatar_file");
+
     const avatarUrl =
       avatarFile && avatarFile.size > 0
         ? await uploadAvatar(avatarFile)
@@ -314,6 +435,7 @@ async function savePassport(event) {
     if (error) throw error;
 
     passport = data;
+
     renderPassportCard();
     renderMenuPreviews();
 
