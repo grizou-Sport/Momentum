@@ -4,168 +4,107 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Momentum — YOU</title>
+
   <link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/you.css">
+  <link rel="stylesheet" href="css/you.css">
 </head>
 
 <body class="you-body">
   <header class="you-topbar">
-    <a class="you-brand" href="index.html" aria-label="Retour à Momentum">
+    <a class="you-brand" href="index.html">
       <span>△</span>
       <strong>Momentum</strong>
       <em>YOU v1.0</em>
     </a>
 
-    <nav class="you-nav" aria-label="Navigation principale">
+    <nav class="you-nav">
       <a href="index.html">Home</a>
       <a class="active" href="you.html">YOU</a>
       <a href="journal.html">Journal</a>
     </nav>
+
+    <button id="logoutBtn" class="you-logout" type="button">Déconnexion</button>
   </header>
 
   <main class="you-page">
     <section class="you-hero">
-      <p class="you-kicker">Passeport personnel</p>
+      <p class="section-kicker">Passeport personnel</p>
       <h1>YOU</h1>
-      <p class="you-lead">Un espace simple pour raconter qui tu es, ce que tu pratiques, ce que tu utilises et ce que tu construis.</p>
+      <p class="you-lead">
+        Un espace simple pour raconter qui tu es, ce que tu pratiques,
+        ce que tu utilises et ce que tu construis.
+      </p>
     </section>
 
-    <section class="you-grid" aria-label="Cartes YOU">
-      <article class="you-card you-card-large" data-card="about">
-        <button class="you-card-button" type="button" aria-expanded="true" aria-controls="panel-about">
-          <span class="you-card-label">À propos de toi</span>
-          <strong id="youName">Christophe</strong>
-          <em id="youQuote">Transformer la donnée en histoire.</em>
-        </button>
+    <section class="you-layout">
+      <aside class="you-overview-card">
+        <div class="you-portrait" id="passportAvatar"></div>
 
-        <div class="you-card-panel is-open" id="panel-about">
-          <div class="you-about-layout">
-            <figure class="you-portrait">
-              <img id="youAvatar" src="" alt="Portrait" />
-              <figcaption id="youInitials">CG</figcaption>
-            </figure>
+        <h2 id="passportName">—</h2>
+        <p id="passportLocation" class="you-location">—</p>
+        <p id="passportQuote" class="you-quote">—</p>
 
-            <div class="you-about-content">
-              <dl class="you-facts">
-                <div>
-                  <dt>Ville</dt>
-                  <dd id="youLocation">Suisse</dd>
-                </div>
-                <div>
-                  <dt>Âge</dt>
-                  <dd><span id="youAge">—</span></dd>
-                </div>
-                <div>
-                  <dt>Taille</dt>
-                  <dd><span id="youHeight">—</span></dd>
-                </div>
-                <div>
-                  <dt>Poids</dt>
-                  <dd><span id="youWeight">—</span></dd>
-                </div>
-              </dl>
-
-              <form class="you-form" id="aboutForm">
-                <label>
-                  Nom
-                  <input id="nameInput" name="name" type="text" placeholder="Ton nom" />
-                </label>
-                <label>
-                  Ville
-                  <input id="locationInput" name="location" type="text" placeholder="Ta ville" />
-                </label>
-                <label>
-                  Âge
-                  <input id="ageInput" name="age" type="number" min="0" placeholder="48" />
-                </label>
-                <label>
-                  Taille
-                  <input id="heightInput" name="height" type="text" placeholder="177 cm" />
-                </label>
-                <label>
-                  Poids
-                  <input id="weightInput" name="weight" type="text" placeholder="76 kg" />
-                </label>
-                <label>
-                  Photo
-                  <input id="avatarInput" name="avatar" type="url" placeholder="URL de la photo" />
-                </label>
-                <label class="full">
-                  Phrase
-                  <textarea id="quoteInput" name="quote" rows="3" placeholder="Ta phrase, ton humeur, ton fil rouge"></textarea>
-                </label>
-                <div class="you-actions full">
-                  <button class="you-primary" type="submit">Enregistrer</button>
-                  <span id="saveState" aria-live="polite"></span>
-                </div>
-              </form>
-            </div>
+        <div class="you-mini-stats">
+          <div>
+            <span>Âge</span>
+            <strong id="passportAge">—</strong>
+          </div>
+          <div>
+            <span>Taille</span>
+            <strong id="passportHeight">—</strong>
+          </div>
+          <div>
+            <span>Poids</span>
+            <strong id="passportWeight">—</strong>
           </div>
         </div>
-      </article>
+      </aside>
 
-      <article class="you-card" data-card="sports">
-        <button class="you-card-button" type="button" aria-expanded="false" aria-controls="panel-sports">
-          <span class="you-card-label">Sports</span>
-          <strong>Pratiques</strong>
-          <em>Course, vélo, padel, randonnée…</em>
-        </button>
-        <div class="you-card-panel" id="panel-sports">
-          <div class="you-choice-grid" id="sportsGrid">
-            <button type="button" class="you-choice active" data-value="course">Course à pied</button>
-            <button type="button" class="you-choice" data-value="velo">Vélo</button>
-            <button type="button" class="you-choice" data-value="trail">Trail</button>
-            <button type="button" class="you-choice" data-value="padel">Padel</button>
-            <button type="button" class="you-choice" data-value="rando">Randonnée</button>
-            <button type="button" class="you-choice" data-value="renfo">Renforcement</button>
-          </div>
-        </div>
-      </article>
+      <section class="you-main">
+        <div class="you-menu">
+          <button class="you-menu-item active" data-you-section="mission" type="button">
+            <span>Mission</span>
+            <strong>Mission actuelle</strong>
+          </button>
 
-      <article class="you-card" data-card="equipment">
-        <button class="you-card-button" type="button" aria-expanded="false" aria-controls="panel-equipment">
-          <span class="you-card-label">Équipements</span>
-          <strong>Matériel</strong>
-          <em>Montre, chaussures, vélo, capteurs…</em>
-        </button>
-        <div class="you-card-panel" id="panel-equipment">
-          <div class="you-item-list" id="equipmentList">
-            <div class="you-item"><strong>Montre</strong><span>Coros Apex 4</span></div>
-            <div class="you-item"><strong>Chaussures</strong><span>À compléter</span></div>
-            <div class="you-item"><strong>Vélo</strong><span>À compléter</span></div>
-            <div class="you-item"><strong>Capteurs</strong><span>À compléter</span></div>
-          </div>
-        </div>
-      </article>
+          <button class="you-menu-item" data-you-section="sports" type="button">
+            <span>Sports</span>
+            <strong>Sports</strong>
+          </button>
 
-      <article class="you-card" data-card="goals">
-        <button class="you-card-button" type="button" aria-expanded="false" aria-controls="panel-goals">
-          <span class="you-card-label">Objectifs</span>
-          <strong>Ce qui donne du sens</strong>
-          <em>Prochains défis et lignes directrices.</em>
-        </button>
-        <div class="you-card-panel" id="panel-goals">
-          <div class="you-note">Définir le prochain objectif sans se précipiter. Construire d’abord une base solide.</div>
-        </div>
-      </article>
+          <button class="you-menu-item" data-you-section="equipment" type="button">
+            <span>Équipement</span>
+            <strong>Équipement</strong>
+          </button>
 
-      <article class="you-card" data-card="health">
-        <button class="you-card-button" type="button" aria-expanded="false" aria-controls="panel-health">
-          <span class="you-card-label">Santé</span>
-          <strong>Équilibre</strong>
-          <em>Sommeil, poids, récupération, sensations.</em>
-        </button>
-        <div class="you-card-panel" id="panel-health">
-          <div class="you-item-list">
-            <div class="you-item"><strong>Sommeil</strong><span>À suivre</span></div>
-            <div class="you-item"><strong>Récupération</strong><span>À suivre</span></div>
-            <div class="you-item"><strong>Énergie</strong><span>À suivre</span></div>
-          </div>
+          <button class="you-menu-item" data-you-section="wellbeing" type="button">
+            <span>Bien-être</span>
+            <strong>Bien-être</strong>
+          </button>
+
+          <button class="you-menu-item" data-you-section="data" type="button">
+            <span>Données</span>
+            <strong>Données</strong>
+          </button>
+
+          <button class="you-menu-item" data-you-section="collections" type="button">
+            <span>Collections</span>
+            <strong>Collections</strong>
+          </button>
+
+          <button class="you-menu-item" data-you-section="about" type="button">
+            <span>Profil</span>
+            <strong>À propos de toi</strong>
+          </button>
         </div>
-      </article>
+
+        <div id="youDetail" class="you-detail"></div>
+      </section>
     </section>
   </main>
 
-  <script src="you_v1_0.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/you.js"></script>
 </body>
 </html>
