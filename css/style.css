@@ -1,0 +1,718 @@
+/* =========================================================
+   MOMENTUM — style.css commun v1.0
+   ---------------------------------------------------------
+   Rôle de ce fichier :
+   - socle commun à toute l'application
+   - variables, reset, typographie, topbar, boutons, formulaires
+   - composants génériques réutilisables
+
+   Important :
+   - ne pas mettre ici le design spécifique des pages
+   - YOU doit être dans css/you.css
+   - HOME devra aller dans css/home.css
+   - JOURNAL devra aller dans css/journal.css
+   ========================================================= */
+
+:root{
+  /* Couleurs principales — nouvelle direction minimaliste */
+  --bg:#f7f7f5;
+  --surface:#ffffff;
+  --surface-soft:#f1f1ef;
+  --surface-muted:#e8e8e5;
+
+  --ink:#111111;
+  --ink-soft:#2f2f2f;
+  --muted:#737373;
+  --muted-2:#9a9a9a;
+
+  --line:#dededb;
+  --line-strong:#c9c9c5;
+
+  --accent:#111111;
+  --accent-soft:#ededeb;
+
+  --success:#2f8f46;
+  --warning:#b7791f;
+  --danger:#b42318;
+
+  /* Ombres */
+  --shadow-sm:0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 12px 30px rgba(0,0,0,.07);
+  --shadow-lg:0 24px 70px rgba(0,0,0,.10);
+
+  /* Rayons */
+  --radius-sm:10px;
+  --radius-md:16px;
+  --radius-lg:24px;
+  --radius-xl:32px;
+  --radius-pill:999px;
+
+  /* Layout */
+  --page-width:1180px;
+  --page-gutter:24px;
+  --topbar-height:68px;
+
+  /* Typographie */
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Arial,sans-serif;
+}
+
+/* Reset minimal */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:var(--font);
+  background:var(--bg);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+img,svg,video,canvas{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+
+::selection{
+  background:#111;
+  color:#fff;
+}
+
+/* Accessibilité */
+:focus-visible{
+  outline:2px solid #111;
+  outline-offset:3px;
+}
+
+/* =========================================================
+   Layout commun
+   ========================================================= */
+
+.page-shell{
+  width:min(var(--page-width),calc(100% - var(--page-gutter) * 2));
+  margin:0 auto;
+  padding:120px 0 72px;
+}
+
+.page-section{
+  margin-top:42px;
+}
+
+.section-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:24px;
+  margin-bottom:22px;
+}
+
+.section-kicker,
+.card-label{
+  display:block;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.16em;
+  font-size:12px;
+  font-weight:850;
+  margin-bottom:10px;
+}
+
+h1,h2,h3,p{margin-top:0}
+h1{
+  font-size:clamp(42px,6vw,84px);
+  line-height:.92;
+  letter-spacing:-.06em;
+  margin-bottom:18px;
+}
+h2{
+  font-size:clamp(30px,4vw,52px);
+  line-height:1;
+  letter-spacing:-.045em;
+  margin-bottom:12px;
+}
+h3{
+  font-size:24px;
+  line-height:1.12;
+  letter-spacing:-.025em;
+  margin-bottom:10px;
+}
+p{
+  color:var(--ink-soft);
+  line-height:1.55;
+}
+
+.lead{
+  max-width:780px;
+  color:var(--muted);
+  font-size:clamp(18px,2vw,22px);
+  line-height:1.45;
+}
+
+.muted{color:var(--muted)}
+.small{font-size:13px}
+
+/* =========================================================
+   Topbar commune
+   ========================================================= */
+
+.topbar{
+  position:fixed;
+  z-index:50;
+  top:16px;
+  left:50%;
+  transform:translateX(-50%);
+  width:min(var(--page-width),calc(100% - 32px));
+  min-height:var(--topbar-height);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  padding:10px 12px;
+  border:1px solid rgba(0,0,0,.08);
+  background:rgba(247,247,245,.82);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  border-radius:var(--radius-pill);
+  box-shadow:var(--shadow-sm);
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+  padding:0 12px;
+  font-weight:900;
+}
+
+.brand strong{
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  font-size:14px;
+}
+
+.brand em{
+  color:var(--muted);
+  font-style:normal;
+  font-size:12px;
+  font-weight:700;
+}
+
+.mark{
+  display:inline-grid;
+  place-items:center;
+  width:26px;
+  height:26px;
+  border-radius:9px;
+  background:#111;
+  color:#fff;
+  font-size:14px;
+  line-height:1;
+}
+
+.topbar nav{
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+
+.topbar nav a{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:42px;
+  padding:0 16px;
+  border-radius:var(--radius-pill);
+  color:var(--muted);
+  font-size:14px;
+  font-weight:800;
+  transition:background .18s ease,color .18s ease;
+}
+
+.topbar nav a:hover,
+.topbar nav a.active-nav{
+  background:#fff;
+  color:#111;
+}
+
+.disabled-link{
+  opacity:.35;
+  pointer-events:none;
+}
+
+.top-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+/* =========================================================
+   Boutons communs
+   ========================================================= */
+
+.primary,
+.secondary,
+.small-btn,
+.round-btn,
+.icon-btn{
+  border:1px solid transparent;
+  border-radius:var(--radius-pill);
+  font-weight:850;
+  transition:transform .18s ease,box-shadow .18s ease,background .18s ease,border-color .18s ease;
+}
+
+.primary:hover,
+.secondary:hover,
+.small-btn:hover,
+.round-btn:hover,
+.icon-btn:hover{
+  transform:translateY(-1px);
+}
+
+.primary{
+  min-height:46px;
+  padding:0 18px;
+  background:#111;
+  color:#fff;
+  box-shadow:var(--shadow-sm);
+}
+
+.primary:hover{
+  box-shadow:var(--shadow-md);
+}
+
+.secondary{
+  min-height:46px;
+  padding:0 18px;
+  background:#fff;
+  color:#111;
+  border-color:var(--line);
+}
+
+.small-btn{
+  min-height:42px;
+  padding:0 14px;
+  background:#fff;
+  color:#111;
+  border-color:var(--line);
+  font-size:13px;
+}
+
+.small-btn input{display:none}
+
+.round-btn,
+.icon-btn{
+  display:inline-grid;
+  place-items:center;
+  min-width:44px;
+  min-height:44px;
+  padding:0 14px;
+  background:#fff;
+  color:#111;
+  border-color:var(--line);
+}
+
+.icon-btn{
+  width:44px;
+  padding:0;
+}
+
+.form-actions,
+.actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+/* =========================================================
+   Cartes génériques
+   ========================================================= */
+
+.card,
+.story-card,
+.chart-card,
+.home-card,
+.month-grid,
+.living-week{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-sm);
+}
+
+.card{
+  padding:24px;
+}
+
+.card-soft{
+  background:var(--surface-soft);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:22px;
+}
+
+.grid-2{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:18px;
+}
+
+.grid-3{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:18px;
+}
+
+.grid-4{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:18px;
+}
+
+/* =========================================================
+   Formulaires communs
+   ========================================================= */
+
+input,select,textarea{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:var(--radius-md);
+  background:#fff;
+  color:#111;
+  padding:13px 14px;
+  outline:0;
+  transition:border-color .18s ease,box-shadow .18s ease,background .18s ease;
+}
+
+input:focus,select:focus,textarea:focus{
+  border-color:#111;
+  box-shadow:0 0 0 4px rgba(0,0,0,.06);
+}
+
+textarea{
+  resize:vertical;
+  min-height:110px;
+}
+
+label{
+  color:var(--muted);
+  font-weight:800;
+}
+
+.form-grid,
+.profile-form,
+.mini-form{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:16px;
+}
+
+.form-grid label,
+.profile-form label,
+.mini-form label{
+  display:grid;
+  gap:8px;
+}
+
+.full{
+  grid-column:1/-1;
+}
+
+.hint{
+  color:var(--muted);
+  font-size:14px;
+}
+
+/* =========================================================
+   Badges / états communs
+   ========================================================= */
+
+.chip,
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  border-radius:var(--radius-pill);
+  background:var(--surface-soft);
+  color:#111;
+  border:1px solid var(--line);
+  padding:8px 12px;
+  font-size:13px;
+  font-weight:850;
+}
+
+.status{
+  display:inline-flex;
+  align-items:center;
+  border-radius:var(--radius-pill);
+  padding:6px 10px;
+  font-size:12px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+
+.status.done{
+  background:#edf7ef;
+  color:var(--success);
+}
+
+.status.planned{
+  background:#f0f0ef;
+  color:#111;
+}
+
+.readiness,
+.read-dot{
+  display:inline-block;
+  width:9px;
+  height:9px;
+  border-radius:999px;
+}
+
+.excellent{background:var(--success)}
+.good{background:#6f9f3f}
+.average{background:var(--warning)}
+.hard{background:var(--danger)}
+.missing{background:#b7b7b2}
+
+/* =========================================================
+   Dialog commun
+   ========================================================= */
+
+.dialog,
+.day-dialog{
+  width:min(780px,calc(100% - 32px));
+  border:0;
+  border-radius:var(--radius-xl);
+  padding:0;
+  background:#fff;
+  color:#111;
+  box-shadow:var(--shadow-lg);
+}
+
+.dialog::backdrop,
+.day-dialog::backdrop{
+  background:rgba(0,0,0,.38);
+  backdrop-filter:blur(6px);
+}
+
+.close-btn{
+  position:absolute;
+  top:18px;
+  right:18px;
+  width:42px;
+  height:42px;
+  border-radius:var(--radius-pill);
+  border:1px solid var(--line);
+  background:#fff;
+  color:#111;
+  font-size:22px;
+  cursor:pointer;
+  z-index:2;
+}
+
+/* =========================================================
+   Login minimal — commun temporaire
+   Peut être déplacé plus tard dans login.css
+   ========================================================= */
+
+.login-body{
+  margin:0;
+  background:#fff;
+}
+
+.login-shell{
+  min-height:100vh;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+}
+
+.login-panel{
+  display:flex;
+  flex-direction:column;
+  padding:56px 68px;
+}
+
+.login-brand{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  font-weight:950;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+
+.login-content{
+  margin:auto 0;
+  max-width:520px;
+}
+
+.login-content h1{
+  font-size:clamp(42px,5vw,64px);
+  line-height:.95;
+  margin:16px 0 12px;
+}
+
+.login-content p{
+  font-size:20px;
+  color:var(--muted);
+}
+
+.login-form{
+  display:grid;
+  gap:16px;
+  margin-top:34px;
+}
+
+.login-form input,
+.login-primary,
+.login-secondary{
+  min-height:58px;
+  border-radius:14px;
+  font-size:16px;
+}
+
+.login-primary,
+.login-secondary{
+  border:0;
+  font-weight:900;
+}
+
+.login-primary{
+  background:#111;
+  color:#fff;
+}
+
+.login-secondary{
+  background:var(--surface-soft);
+  color:#111;
+}
+
+.login-message{
+  font-size:14px!important;
+  color:var(--muted)!important;
+}
+
+.login-image{
+  min-height:100vh;
+  overflow:hidden;
+}
+
+.login-image img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+/* =========================================================
+   Responsive commun
+   ========================================================= */
+
+@media(max-width:980px){
+  :root{
+    --page-gutter:18px;
+  }
+
+  .topbar{
+    top:10px;
+    width:calc(100% - 20px);
+    border-radius:22px;
+  }
+
+  .topbar nav{
+    display:none;
+  }
+
+  .page-shell{
+    padding-top:104px;
+  }
+
+  .section-head{
+    display:block;
+  }
+
+  .grid-2,
+  .grid-3,
+  .grid-4,
+  .form-grid,
+  .profile-form,
+  .mini-form{
+    grid-template-columns:1fr;
+  }
+}
+
+@media(max-width:760px){
+  .brand{
+    padding:0 6px;
+  }
+
+  .brand strong{
+    font-size:13px;
+  }
+
+  .brand em{
+    font-size:11px;
+  }
+
+  .top-actions{
+    margin-left:auto;
+  }
+
+  .small-btn{
+    min-height:38px;
+    padding:0 11px;
+    font-size:12px;
+  }
+
+  .primary,
+  .secondary{
+    width:100%;
+  }
+
+  .form-actions,
+  .actions{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .dialog,
+  .day-dialog{
+    width:100%;
+    max-width:none;
+    height:100svh;
+    max-height:100svh;
+    border-radius:0;
+    margin:0;
+  }
+
+  .close-btn{
+    position:fixed;
+    top:14px;
+    right:14px;
+  }
+
+  .login-shell{
+    grid-template-columns:1fr;
+  }
+
+  .login-image{
+    display:none;
+  }
+
+  .login-panel{
+    min-height:100vh;
+    padding:34px 22px;
+  }
+}
+
+@media(max-width:430px){
+  .top-actions{
+    display:none;
+  }
+
+  .page-shell{
+    width:calc(100% - 24px);
+  }
+}
