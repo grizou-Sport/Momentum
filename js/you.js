@@ -318,40 +318,49 @@ async function saveMission(event) {
 /* -------------------- SPORTS -------------------- */
 
 function renderSports() {
-  const selectedIds = userSports.map((item) => item.sport_id);
-
   youDetail.innerHTML = `
     <p class="section-kicker">Sports</p>
     <h2>Tes terrains d’expression</h2>
-    <p class="you-detail-lead">Sélectionne les sports qui construisent ton identité.</p>
+    <p class="you-detail-lead">Sélectionne tes sports et définis leur rôle.</p>
 
     <div class="you-card-grid">
-      ${sportsCatalog
-        .map((sport) => {
-          const selected = selectedIds.includes(sport.id);
-          const link = userSports.find((item) => item.sport_id === sport.id);
+      ${sportsCatalog.map((sport) => {
+        const link = userSports.find((item) => item.sport_id === sport.id);
+        const selected = !!link && link.active !== false;
 
-          return `
-            <button class="you-small-card ${selected && link?.active !== false ? "active" : ""}" data-sport-id="${sport.id}" type="button">
-              <span>${sport.emoji || "✨"}</span>
-              <strong>${sport.name}</strong>
-              <em>${selected ? safe(link?.role, "Secondaire") : "Ajouter"}</em>
+        return `
+          <div class="you-small-card ${selected ? "active" : ""}">
+            <span>${sport.emoji || "•"}</span>
+            <strong>${sport.name}</strong>
+
+            <select data-sport-role="${sport.id}">
+              <option value="Principal" ${link?.role === "Principal" ? "selected" : ""}>Principal</option>
+              <option value="Secondaire" ${link?.role === "Secondaire" ? "selected" : ""}>Secondaire</option>
+              <option value="Occasionnel" ${link?.role === "Occasionnel" ? "selected" : ""}>Occasionnel</option>
+            </select>
+
+            <button class="you-mini-action" data-sport-toggle="${sport.id}" type="button">
+              ${selected ? "Retirer" : "Ajouter"}
             </button>
-          `;
-        })
-        .join("")}
+          </div>
+        `;
+      }).join("")}
     </div>
 
     <p id="sportsMessage" class="login-message"></p>
   `;
 
-  document.querySelectorAll("[data-sport-id]").forEach((button) => {
-    button.addEventListener("click", () => toggleSport(button.dataset.sportId));
+  document.querySelectorAll("[data-sport-toggle]").forEach((button) => {
+    button.addEventListener("click", () => toggleSport(button.dataset.sportToggle));
   });
 }
 
 async function toggleSport(sportId) {
+  const message = document.getElementById("sportsMessage");
   const existing = userSports.find((item) => item.sport_id === sportId);
+  const role = document.querySelector(`[data-sport-role="${sportId}"]`)?.value || "Secondaire";
+
+  message.textContent = "Sauvegarde…";
 
   if (existing) {
     const { error } = await window.momentumDB
@@ -361,6 +370,7 @@ async function toggleSport(sportId) {
 
     if (error) {
       console.error(error);
+      message.textContent = error.message;
       return;
     }
 
@@ -371,7 +381,7 @@ async function toggleSport(sportId) {
       .insert({
         user_id: currentUser.id,
         sport_id: sportId,
-        role: "Secondaire",
+        role,
         active: true,
       })
       .select("*, sports(*)")
@@ -379,6 +389,7 @@ async function toggleSport(sportId) {
 
     if (error) {
       console.error(error);
+      message.textContent = error.message;
       return;
     }
 
@@ -392,40 +403,50 @@ async function toggleSport(sportId) {
 /* -------------------- EQUIPMENT -------------------- */
 
 function renderEquipment() {
-  const selectedIds = userEquipment.map((item) => item.equipment_id);
-
   youDetail.innerHTML = `
     <p class="section-kicker">Équipement</p>
     <h2>Ton matériel</h2>
-    <p class="you-detail-lead">Les objets qui accompagnent le chemin.</p>
+    <p class="you-detail-lead">Sélectionne ton matériel et définis son usage.</p>
 
     <div class="you-card-grid">
-      ${equipmentCatalog
-        .map((item) => {
-          const selected = selectedIds.includes(item.id);
-          const link = userEquipment.find((eq) => eq.equipment_id === item.id);
+      ${equipmentCatalog.map((item) => {
+        const link = userEquipment.find((eq) => eq.equipment_id === item.id);
+        const selected = !!link && link.active !== false;
 
-          return `
-            <button class="you-small-card ${selected && link?.active !== false ? "active" : ""}" data-equipment-id="${item.id}" type="button">
-              <span>${item.emoji || "🎒"}</span>
-              <strong>${item.brand ? item.brand + " " : ""}${item.name}</strong>
-              <em>${selected ? safe(link?.usage, item.category) : item.category}</em>
+        return `
+          <div class="you-small-card ${selected ? "active" : ""}">
+            <span>${item.emoji || "•"}</span>
+            <strong>${item.brand ? item.brand + " " : ""}${item.name}</strong>
+            <em>${item.category || "Matériel"}</em>
+
+            <select data-equipment-usage="${item.id}">
+              <option value="Principal" ${link?.usage === "Principal" ? "selected" : ""}>Principal</option>
+              <option value="Secondaire" ${link?.usage === "Secondaire" ? "selected" : ""}>Secondaire</option>
+              <option value="Occasionnel" ${link?.usage === "Occasionnel" ? "selected" : ""}>Occasionnel</option>
+            </select>
+
+            <button class="you-mini-action" data-equipment-toggle="${item.id}" type="button">
+              ${selected ? "Retirer" : "Ajouter"}
             </button>
-          `;
-        })
-        .join("")}
+          </div>
+        `;
+      }).join("")}
     </div>
 
     <p id="equipmentMessage" class="login-message"></p>
   `;
 
-  document.querySelectorAll("[data-equipment-id]").forEach((button) => {
-    button.addEventListener("click", () => toggleEquipment(button.dataset.equipmentId));
+  document.querySelectorAll("[data-equipment-toggle]").forEach((button) => {
+    button.addEventListener("click", () => toggleEquipment(button.dataset.equipmentToggle));
   });
 }
 
 async function toggleEquipment(equipmentId) {
+  const message = document.getElementById("equipmentMessage");
   const existing = userEquipment.find((item) => item.equipment_id === equipmentId);
+  const usage = document.querySelector(`[data-equipment-usage="${equipmentId}"]`)?.value || "Principal";
+
+  message.textContent = "Sauvegarde…";
 
   if (existing) {
     const { error } = await window.momentumDB
@@ -435,6 +456,7 @@ async function toggleEquipment(equipmentId) {
 
     if (error) {
       console.error(error);
+      message.textContent = error.message;
       return;
     }
 
@@ -445,7 +467,7 @@ async function toggleEquipment(equipmentId) {
       .insert({
         user_id: currentUser.id,
         equipment_id: equipmentId,
-        usage: "Principal",
+        usage,
         active: true,
       })
       .select("*, equipment(*)")
@@ -453,6 +475,7 @@ async function toggleEquipment(equipmentId) {
 
     if (error) {
       console.error(error);
+      message.textContent = error.message;
       return;
     }
 

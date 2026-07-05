@@ -246,3 +246,30 @@ button,input,textarea,select{font:inherit}
   .you-menu-item{min-height:96px}
   .you-small-card{min-height:142px}
 }
+.you-small-card select{
+  width:100%;
+  margin-top:16px;
+  border:1px solid #ddd;
+  border-radius:12px;
+  padding:10px 12px;
+  background:#fff;
+  color:#111;
+  font-weight:700;
+}
+
+.you-mini-action{
+  width:100%;
+  margin-top:12px;
+  border:0;
+  border-radius:999px;
+  padding:11px 14px;
+  background:#111;
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.you-small-card.active .you-mini-action{
+  background:#eee;
+  color:#111;
+}
