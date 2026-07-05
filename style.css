@@ -547,3 +547,417 @@ textarea{resize:vertical}
   .context-grid{grid-template-columns:1fr}
   .leaflet-map{height:220px}
 }
+
+/* =========================================================
+   MOMENTUM — YOU v0.11 minimal
+   Nouvelle esthétique noir / gris / blanc
+   Suppression de la colonne passeport gauche
+   Cartes sports / équipements plus larges et visibles
+   ========================================================= */
+
+:root{
+  --you-bg:#f4f4f2;
+  --you-surface:#ffffff;
+  --you-surface-soft:#fafafa;
+  --you-ink:#111111;
+  --you-muted:#747474;
+  --you-line:#e4e4e0;
+  --you-line-strong:#cfcfca;
+  --you-shadow:0 18px 50px rgba(0,0,0,.07);
+  --you-shadow-soft:0 10px 28px rgba(0,0,0,.045);
+  --you-radius:28px;
+}
+
+body.you-body{
+  background:
+    radial-gradient(circle at 75% 0%,rgba(0,0,0,.045),transparent 28%),
+    linear-gradient(180deg,#f7f7f5 0%,#ffffff 48%,#eeeeeb 100%);
+  color:var(--you-ink);
+}
+
+/* Topbar minimaliste uniquement sur YOU */
+.you-body .topbar{
+  background:rgba(255,255,255,.78);
+  border:1px solid var(--you-line);
+  box-shadow:0 12px 36px rgba(0,0,0,.055);
+}
+
+.you-body .mark,
+.you-body .active-nav{
+  color:var(--you-ink)!important;
+}
+
+.you-body .topbar nav a{
+  color:#2b2b2b;
+}
+
+.you-body .topbar nav a:hover,
+.you-body .active-nav{
+  background:#f0f0ed;
+}
+
+.you-body .small-btn,
+.you-body .round-btn,
+.you-body .secondary{
+  background:#f2f2ef;
+  color:#171717;
+  border:1px solid var(--you-line);
+  box-shadow:none;
+}
+
+.you-body .primary{
+  background:#111;
+  color:#fff;
+  box-shadow:0 14px 30px rgba(0,0,0,.18);
+}
+
+/* Structure : on supprime la grande carte passeport de gauche */
+.you-shell{
+  width:min(1280px,calc(100% - 40px));
+  padding:128px 0 76px;
+  display:block;
+}
+
+.you-passport-card{
+  display:none!important;
+}
+
+.you-main-card{
+  width:100%;
+  min-height:auto;
+  display:grid;
+  grid-template-columns:minmax(230px,280px) minmax(0,1fr);
+  gap:20px;
+  padding:20px;
+  background:rgba(255,255,255,.76);
+  border:1px solid var(--you-line);
+  border-radius:34px;
+  box-shadow:var(--you-shadow);
+  backdrop-filter:blur(18px);
+}
+
+.you-menu{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  min-width:0;
+}
+
+.you-menu-item{
+  grid-template-columns:34px 1fr 18px;
+  gap:10px;
+  padding:16px;
+  border-radius:22px;
+  background:var(--you-surface-soft);
+  border:1px solid var(--you-line);
+  color:var(--you-ink);
+  box-shadow:none;
+}
+
+.you-menu-item:hover{
+  transform:translateY(-2px);
+  box-shadow:var(--you-shadow-soft);
+  border-color:var(--you-line-strong);
+}
+
+.you-menu-item.active{
+  background:#111;
+  color:#fff;
+  border-color:#111;
+}
+
+.you-menu-item.active small,
+.you-menu-item.active em{
+  color:rgba(255,255,255,.62);
+}
+
+.you-menu-item span{
+  font-size:22px;
+  filter:grayscale(1);
+}
+
+.you-menu-item strong{
+  font-size:16px;
+  letter-spacing:-.01em;
+}
+
+.you-menu-item small{
+  color:var(--you-muted);
+  font-size:12px;
+}
+
+.you-menu-item em{
+  color:var(--you-muted);
+  font-size:22px;
+}
+
+.you-detail{
+  min-width:0;
+  min-height:620px;
+  padding:38px;
+  border-radius:28px;
+  background:var(--you-surface);
+  border:1px solid var(--you-line);
+  box-shadow:none;
+  overflow:visible;
+}
+
+.you-detail h2{
+  margin:0 0 12px;
+  color:var(--you-ink);
+  font-size:clamp(38px,5vw,72px);
+  line-height:.92;
+  letter-spacing:-.06em;
+}
+
+.you-detail-lead,
+.you-note-box p,
+.you-list span,
+.you-form label{
+  color:var(--you-muted);
+}
+
+.you-progress-line{
+  height:7px;
+  background:#ececea;
+}
+
+.you-progress-line i{
+  background:#111;
+}
+
+.you-detail-stats div,
+.you-note-box{
+  background:var(--you-surface-soft);
+  border:1px solid var(--you-line);
+  border-radius:22px;
+}
+
+.you-detail-stats span,
+.you-note-box span{
+  color:var(--you-muted);
+}
+
+.you-detail-stats strong,
+.you-list strong{
+  color:var(--you-ink);
+}
+
+.you-list p{
+  border-bottom:1px solid var(--you-line);
+}
+
+.you-form input,
+.you-form textarea,
+.you-form select{
+  background:#fff;
+  border:1px solid var(--you-line);
+  color:var(--you-ink);
+}
+
+.you-form input:focus,
+.you-form textarea:focus,
+.you-form select:focus{
+  outline:2px solid #111;
+  outline-offset:2px;
+}
+
+/* Cartes : plus de place, grille automatique, jamais écrasée */
+.you-card-grid,
+.you-sports-grid,
+.you-equipment-grid,
+.sports-grid,
+.equipment-grid{
+  display:grid!important;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:14px;
+  width:100%;
+  margin-top:28px;
+  align-items:stretch;
+}
+
+.you-small-card,
+.you-sport-card,
+.you-equipment-card,
+.sport-card,
+.equipment-card{
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  min-height:172px;
+  padding:20px;
+  border-radius:24px;
+  background:#fff;
+  border:1px solid var(--you-line);
+  color:var(--you-ink);
+  box-shadow:none;
+  overflow:hidden;
+}
+
+.you-small-card:hover,
+.you-sport-card:hover,
+.you-equipment-card:hover,
+.sport-card:hover,
+.equipment-card:hover{
+  transform:translateY(-3px);
+  border-color:#111;
+  box-shadow:var(--you-shadow-soft);
+}
+
+.you-small-card.active,
+.you-sport-card.active,
+.you-equipment-card.active,
+.sport-card.active,
+.equipment-card.active{
+  background:#111;
+  color:#fff;
+  border-color:#111;
+  box-shadow:none;
+}
+
+.you-small-card span,
+.you-sport-card span,
+.you-equipment-card span,
+.sport-card span,
+.equipment-card span{
+  font-size:30px;
+  margin-bottom:18px;
+  filter:grayscale(1);
+}
+
+.you-small-card strong,
+.you-sport-card strong,
+.you-equipment-card strong,
+.sport-card strong,
+.equipment-card strong{
+  font-size:20px;
+  line-height:1.05;
+  letter-spacing:-.03em;
+}
+
+.you-small-card em,
+.you-sport-card em,
+.you-equipment-card em,
+.sport-card em,
+.equipment-card em{
+  color:var(--you-muted);
+  font-size:13px;
+}
+
+.you-small-card.active em,
+.you-sport-card.active em,
+.you-equipment-card.active em,
+.sport-card.active em,
+.equipment-card.active em{
+  color:rgba(255,255,255,.66);
+}
+
+.you-small-card.active::after,
+.you-sport-card.active::after,
+.you-equipment-card.active::after,
+.sport-card.active::after,
+.equipment-card.active::after{
+  content:"Sélectionné";
+  background:rgba(255,255,255,.12);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.18);
+  width:max-content;
+}
+
+/* Photo portrait 4:3 dans la carte “À propos de toi”
+   Ajouter idéalement class="you-portrait" sur le conteneur image. */
+.you-portrait,
+.you-about-photo,
+.about-photo,
+.profile-photo-card{
+  width:min(360px,100%);
+  aspect-ratio:3 / 4;
+  border-radius:24px;
+  overflow:hidden;
+  background:#e9e9e6;
+  border:1px solid var(--you-line);
+  box-shadow:var(--you-shadow-soft);
+}
+
+.you-portrait img,
+.you-about-photo img,
+.about-photo img,
+.profile-photo-card img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+/* Cas où l’image est directement rendue dans le détail à propos */
+.you-detail img.you-portrait-img,
+.you-detail img.profile-photo,
+.you-detail img.about-photo{
+  width:min(360px,100%);
+  aspect-ratio:3 / 4;
+  object-fit:cover;
+  display:block;
+  border-radius:24px;
+  border:1px solid var(--you-line);
+  background:#e9e9e6;
+}
+
+@media(max-width:980px){
+  .you-shell{
+    width:calc(100% - 28px);
+    padding-top:112px;
+  }
+
+  .you-main-card{
+    grid-template-columns:1fr;
+    padding:14px;
+    border-radius:28px;
+  }
+
+  .you-menu{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .you-detail{
+    min-height:auto;
+    padding:28px;
+  }
+}
+
+@media(max-width:640px){
+  .you-shell{
+    width:calc(100% - 20px);
+    padding-top:104px;
+  }
+
+  .you-main-card{
+    padding:10px;
+    border-radius:24px;
+  }
+
+  .you-menu{
+    grid-template-columns:1fr;
+  }
+
+  .you-menu-item{
+    padding:14px;
+  }
+
+  .you-detail{
+    padding:22px;
+    border-radius:22px;
+  }
+
+  .you-detail h2{
+    font-size:40px;
+  }
+
+  .you-card-grid,
+  .you-sports-grid,
+  .you-equipment-grid,
+  .sports-grid,
+  .equipment-grid{
+    grid-template-columns:1fr;
+  }
+}
