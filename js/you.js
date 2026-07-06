@@ -12,9 +12,6 @@ let userSports = [];
 let equipmentCatalog = [];
 let userEquipment = [];
 
-let collectionsCatalog = [];
-let userCollections = [];
-
 let wellbeingProfile = null;
 
 function safe(value, fallback = "—") {
@@ -57,44 +54,56 @@ function renderPassportCard() {
 
 function renderMenuPreviews() {
   const activeSports = userSports
-    .filter((item) => item.active)
+    .filter((item) => item.active !== false)
     .map((item) => item.sports?.name)
     .filter(Boolean)
     .slice(0, 3)
     .join(" · ");
 
   const activeEquipment = userEquipment
-    .filter((item) => item.active)
-    .map((item) => item.equipment?.name)
+    .filter((item) => item.active !== false)
+    .map((item) => {
+      const eq = item.equipment;
+      if (!eq) return null;
+      return `${eq.brand ? eq.brand + " " : ""}${eq.name}`;
+    })
     .filter(Boolean)
     .slice(0, 3)
     .join(" · ");
 
-  const unlockedCollections = userCollections.length;
-
   const previews = {
-    mission: currentMission?.title || "Mission à définir",
-    sports: activeSports || "Choisir tes sports",
-    equipment: activeEquipment || "Ajouter ton matériel",
+    mission: currentMission?.title || "Aucun objectif",
+    sports: activeSports || "Apparaîtra avec tes activités",
     wellbeing: `${passport?.weight_kg || "—"} kg · VO₂ ${wellbeingProfile?.vo2max || "—"}`,
+    equipment: activeEquipment || "Ajouter ton matériel",
     data: "FIT / GPX / export",
-    collections: `${unlockedCollections} souvenir${unlockedCollections > 1 ? "s" : ""}`,
-    about: passport?.display_name || "Ton identité",
+    about: passport?.display_name || "Ton passeport",
+  };
+
+  const labels = {
+    mission: "En ligne de mire",
+    sports: "Je vis pour",
+    wellbeing: "Mon équilibre",
+    equipment: "Mon matériel",
+    data: "Mes activités",
+    about: "Passeport",
   };
 
   youButtons.forEach((button) => {
     const section = button.dataset.youSection;
+    const span = button.querySelector("span");
     const strong = button.querySelector("strong");
-    if (!strong) return;
-
     let small = button.querySelector("small");
+
+    if (span) span.textContent = labels[section] || section;
+    if (strong) strong.textContent = previews[section] || "";
 
     if (!small) {
       small = document.createElement("small");
-      strong.after(small);
+      strong?.after(small);
     }
 
-    small.textContent = previews[section] || "";
+    small.textContent = "";
   });
 }
 
@@ -102,7 +111,10 @@ async function loadYou() {
   const { data } = await window.momentumDB.auth.getSession();
   currentUser = data.session?.user;
 
-  if (!currentUser) return;
+  if (!currentUser) {
+    window.location.href = "login.html";
+    return;
+  }
 
   const [
     passportResult,
@@ -111,8 +123,6 @@ async function loadYou() {
     userSportsResult,
     equipmentResult,
     userEquipmentResult,
-    collectionsResult,
-    userCollectionsResult,
     wellbeingResult,
   ] = await Promise.all([
     window.momentumDB
@@ -150,16 +160,6 @@ async function loadYou() {
       .eq("user_id", currentUser.id),
 
     window.momentumDB
-      .from("collections")
-      .select("*")
-      .order("order_index", { ascending: true }),
-
-    window.momentumDB
-      .from("user_collections")
-      .select("*, collections(*)")
-      .eq("user_id", currentUser.id),
-
-    window.momentumDB
       .from("wellbeing_profile")
       .select("*")
       .eq("user_id", currentUser.id)
@@ -180,9 +180,6 @@ async function loadYou() {
   equipmentCatalog = equipmentResult.data || [];
   userEquipment = userEquipmentResult.data || [];
 
-  collectionsCatalog = collectionsResult.data || [];
-  userCollections = userCollectionsResult.data || [];
-
   wellbeingProfile = wellbeingResult.data || null;
 
   renderPassportCard();
@@ -200,19 +197,18 @@ function renderSection(section) {
 
   if (section === "mission") return renderMission();
   if (section === "sports") return renderSports();
-  if (section === "equipment") return renderEquipment();
   if (section === "wellbeing") return renderWellbeing();
+  if (section === "equipment") return renderEquipment();
   if (section === "data") return renderData();
-  if (section === "collections") return renderCollections();
   if (section === "about") return renderAbout();
 }
 
-/* -------------------- MISSION -------------------- */
+/* -------------------- EN LIGNE DE MIRE -------------------- */
 
 function renderMission() {
   youDetail.innerHTML = `
-    <p class="section-kicker">Mission actuelle</p>
-    <h2>${safe(currentMission?.title, "Créer une mission")}</h2>
+    <p class="section-kicker">En ligne de mire</p>
+    <h2>${safe(currentMission?.title, "Aucun objectif")}</h2>
     <p class="you-detail-lead">
       ${safe(currentMission?.tagline, "L’objectif qui donne une direction à ton entraînement.")}
     </p>
@@ -230,11 +226,11 @@ function renderMission() {
 
     <div class="you-note-box">
       <span>Lecture Momentum</span>
-      <p>${currentMission ? "Cette mission devient le fil rouge de ton passeport." : "Aucune mission n’est encore enregistrée. Crée le premier objectif de ton aventure."}</p>
+      <p>${currentMission ? "Cet objectif donne une direction à ton aventure." : "Aucun objectif n’est encore enregistré."}</p>
     </div>
 
     <button class="primary" id="editMissionBtn" type="button">
-      ${currentMission ? "Modifier la mission" : "Créer une mission"}
+      ${currentMission ? "Modifier" : "Créer"}
     </button>
   `;
 
@@ -243,16 +239,16 @@ function renderMission() {
 
 function renderMissionForm() {
   youDetail.innerHTML = `
-    <p class="section-kicker">Mission actuelle</p>
-    <h2>${currentMission ? "Modifier la mission" : "Créer une mission"}</h2>
+    <p class="section-kicker">En ligne de mire</p>
+    <h2>${currentMission ? "Modifier l’objectif" : "Créer un objectif"}</h2>
 
     <form id="missionForm" class="you-form">
-      <label class="full">Titre de la mission
-        <input name="title" value="${currentMission?.title || ""}" placeholder="100 km de Bienne" />
+      <label class="full">Nom de l’objectif
+        <input name="title" value="${currentMission?.title || ""}" placeholder="Marathon" />
       </label>
 
       <label class="full">Objectif
-        <input name="goal" value="${currentMission?.goal || ""}" placeholder="Terminer, sub 10h, sub 3h..." />
+        <input name="goal" value="${currentMission?.goal || ""}" placeholder="Terminer, sub 3h, retrouver du plaisir..." />
       </label>
 
       <label>Date cible
@@ -271,7 +267,7 @@ function renderMissionForm() {
         <textarea name="tagline" rows="3">${currentMission?.tagline || ""}</textarea>
       </label>
 
-      <button class="login-primary full" type="submit">Enregistrer la mission</button>
+      <button class="login-primary full" type="submit">Enregistrer</button>
       <p id="missionMessage" class="login-message full"></p>
     </form>
   `;
@@ -310,189 +306,57 @@ async function saveMission(event) {
   currentMission = result.data;
   renderMenuPreviews();
 
-  message.textContent = "Mission sauvegardée.";
-
+  message.textContent = "Sauvegardé.";
   setTimeout(renderMission, 700);
 }
 
-/* -------------------- SPORTS -------------------- */
+/* -------------------- JE VIS POUR -------------------- */
 
 function renderSports() {
+  const activeSports = userSports
+    .filter((item) => item.active !== false)
+    .map((item) => item.sports)
+    .filter(Boolean);
+
   youDetail.innerHTML = `
-    <p class="section-kicker">Sports</p>
+    <p class="section-kicker">Je vis pour</p>
     <h2>Tes terrains d’expression</h2>
-    <p class="you-detail-lead">Sélectionne tes sports et définis leur rôle.</p>
+    <p class="you-detail-lead">
+      Les sports apparaîtront ici naturellement, au fil des activités enregistrées.
+    </p>
 
-    <div class="you-card-grid">
-      ${sportsCatalog.map((sport) => {
-        const link = userSports.find((item) => item.sport_id === sport.id);
-        const selected = !!link && link.active !== false;
-
-        return `
-          <div class="you-small-card ${selected ? "active" : ""}">
-            <span>${sport.emoji || "•"}</span>
-            <strong>${sport.name}</strong>
-
-            <select data-sport-role="${sport.id}">
-              <option value="Principal" ${link?.role === "Principal" ? "selected" : ""}>Principal</option>
-              <option value="Secondaire" ${link?.role === "Secondaire" ? "selected" : ""}>Secondaire</option>
-              <option value="Occasionnel" ${link?.role === "Occasionnel" ? "selected" : ""}>Occasionnel</option>
-            </select>
-
-            <button class="you-mini-action" data-sport-toggle="${sport.id}" type="button">
-              ${selected ? "Retirer" : "Ajouter"}
-            </button>
+    ${
+      activeSports.length
+        ? `
+          <div class="you-card-grid">
+            ${activeSports
+              .map((sport) => `
+                <div class="you-small-card active">
+                  <span>${sport.emoji || "•"}</span>
+                  <strong>${sport.name}</strong>
+                  <em>Pratiqué</em>
+                </div>
+              `)
+              .join("")}
           </div>
-        `;
-      }).join("")}
-    </div>
-
-    <p id="sportsMessage" class="login-message"></p>
-  `;
-
-  document.querySelectorAll("[data-sport-toggle]").forEach((button) => {
-    button.addEventListener("click", () => toggleSport(button.dataset.sportToggle));
-  });
-}
-
-async function toggleSport(sportId) {
-  const message = document.getElementById("sportsMessage");
-  const existing = userSports.find((item) => item.sport_id === sportId);
-  const role = document.querySelector(`[data-sport-role="${sportId}"]`)?.value || "Secondaire";
-
-  message.textContent = "Sauvegarde…";
-
-  if (existing) {
-    const { error } = await window.momentumDB
-      .from("user_sports")
-      .delete()
-      .eq("id", existing.id);
-
-    if (error) {
-      console.error(error);
-      message.textContent = error.message;
-      return;
-    }
-
-    userSports = userSports.filter((item) => item.id !== existing.id);
-  } else {
-    const { data, error } = await window.momentumDB
-      .from("user_sports")
-      .insert({
-        user_id: currentUser.id,
-        sport_id: sportId,
-        role,
-        active: true,
-      })
-      .select("*, sports(*)")
-      .single();
-
-    if (error) {
-      console.error(error);
-      message.textContent = error.message;
-      return;
-    }
-
-    userSports.push(data);
-  }
-
-  renderMenuPreviews();
-  renderSports();
-}
-
-/* -------------------- EQUIPMENT -------------------- */
-
-function renderEquipment() {
-  youDetail.innerHTML = `
-    <p class="section-kicker">Équipement</p>
-    <h2>Ton matériel</h2>
-    <p class="you-detail-lead">Sélectionne ton matériel et définis son usage.</p>
-
-    <div class="you-card-grid">
-      ${equipmentCatalog.map((item) => {
-        const link = userEquipment.find((eq) => eq.equipment_id === item.id);
-        const selected = !!link && link.active !== false;
-
-        return `
-          <div class="you-small-card ${selected ? "active" : ""}">
-            <span>${item.emoji || "•"}</span>
-            <strong>${item.brand ? item.brand + " " : ""}${item.name}</strong>
-            <em>${item.category || "Matériel"}</em>
-
-            <select data-equipment-usage="${item.id}">
-              <option value="Principal" ${link?.usage === "Principal" ? "selected" : ""}>Principal</option>
-              <option value="Secondaire" ${link?.usage === "Secondaire" ? "selected" : ""}>Secondaire</option>
-              <option value="Occasionnel" ${link?.usage === "Occasionnel" ? "selected" : ""}>Occasionnel</option>
-            </select>
-
-            <button class="you-mini-action" data-equipment-toggle="${item.id}" type="button">
-              ${selected ? "Retirer" : "Ajouter"}
-            </button>
+        `
+        : `
+          <div class="you-note-box">
+            <span>Momentum observe</span>
+            <p>Aucun sport n’est encore lié à tes activités. Ils apparaîtront automatiquement après tes premiers imports.</p>
           </div>
-        `;
-      }).join("")}
-    </div>
-
-    <p id="equipmentMessage" class="login-message"></p>
+        `
+    }
   `;
-
-  document.querySelectorAll("[data-equipment-toggle]").forEach((button) => {
-    button.addEventListener("click", () => toggleEquipment(button.dataset.equipmentToggle));
-  });
 }
 
-async function toggleEquipment(equipmentId) {
-  const message = document.getElementById("equipmentMessage");
-  const existing = userEquipment.find((item) => item.equipment_id === equipmentId);
-  const usage = document.querySelector(`[data-equipment-usage="${equipmentId}"]`)?.value || "Principal";
-
-  message.textContent = "Sauvegarde…";
-
-  if (existing) {
-    const { error } = await window.momentumDB
-      .from("user_equipment")
-      .delete()
-      .eq("id", existing.id);
-
-    if (error) {
-      console.error(error);
-      message.textContent = error.message;
-      return;
-    }
-
-    userEquipment = userEquipment.filter((item) => item.id !== existing.id);
-  } else {
-    const { data, error } = await window.momentumDB
-      .from("user_equipment")
-      .insert({
-        user_id: currentUser.id,
-        equipment_id: equipmentId,
-        usage,
-        active: true,
-      })
-      .select("*, equipment(*)")
-      .single();
-
-    if (error) {
-      console.error(error);
-      message.textContent = error.message;
-      return;
-    }
-
-    userEquipment.push(data);
-  }
-
-  renderMenuPreviews();
-  renderEquipment();
-}
-
-/* -------------------- WELLBEING -------------------- */
+/* -------------------- MON ÉQUILIBRE -------------------- */
 
 function renderWellbeing() {
   youDetail.innerHTML = `
-    <p class="section-kicker">Bien-être</p>
-    <h2>Ton état intérieur</h2>
-    <p class="you-detail-lead">Le corps ne ment pas. Il donne le rythme.</p>
+    <p class="section-kicker">Mon équilibre</p>
+    <h2>Ton état du moment</h2>
+    <p class="you-detail-lead">Sommeil, récupération, poids, sensations et énergie.</p>
 
     <div class="you-detail-stats">
       <div><span>Âge</span><strong>${calculateAge(passport?.birth_year)}</strong></div>
@@ -504,7 +368,7 @@ function renderWellbeing() {
     </div>
 
     <button class="primary" id="editWellbeingBtn" type="button">
-      Modifier le bien-être
+      Modifier
     </button>
   `;
 
@@ -513,7 +377,7 @@ function renderWellbeing() {
 
 function renderWellbeingForm() {
   youDetail.innerHTML = `
-    <p class="section-kicker">Bien-être</p>
+    <p class="section-kicker">Mon équilibre</p>
     <h2>Profil physiologique</h2>
 
     <form id="wellbeingForm" class="you-form">
@@ -588,67 +452,50 @@ async function saveWellbeing(event) {
   renderMenuPreviews();
 
   message.textContent = "Sauvegardé.";
-
   setTimeout(renderWellbeing, 700);
 }
 
-/* -------------------- DATA -------------------- */
+/* -------------------- MON MATÉRIEL -------------------- */
 
-function renderData() {
-  youDetail.innerHTML = `
-    <p class="section-kicker">Données</p>
-    <h2>Importer le réel</h2>
-    <p class="you-detail-lead">Tes fichiers FIT / GPX alimenteront ton récit.</p>
-
-    <div class="you-card-grid">
-      <div class="you-small-card"><span>📥</span><strong>Importer FIT</strong><em>Bientôt</em></div>
-      <div class="you-small-card"><span>🗺️</span><strong>Importer GPX</strong><em>Bientôt</em></div>
-      <div class="you-small-card"><span>📤</span><strong>Exporter</strong><em>Bientôt</em></div>
-      <div class="you-small-card"><span>🔗</span><strong>Synchroniser</strong><em>Plus tard</em></div>
-    </div>
-  `;
-}
-
-/* -------------------- COLLECTIONS -------------------- */
-
-function renderCollections() {
-  const unlockedIds = userCollections.map((item) => item.collection_id);
+function renderEquipment() {
+  const selectedIds = userEquipment.map((item) => String(item.equipment_id));
 
   youDetail.innerHTML = `
-    <p class="section-kicker">Collections</p>
-    <h2>Les chapitres importants</h2>
-    <p class="you-detail-lead">Pas des badges. Des souvenirs.</p>
+    <p class="section-kicker">Mon matériel</p>
+    <h2>Les objets de route</h2>
+    <p class="you-detail-lead">Montres, chaussures, vélos, capteurs, nutrition et accessoires.</p>
 
     <div class="you-card-grid">
-      ${collectionsCatalog
-        .map((collection) => {
-          const unlocked = unlockedIds.includes(collection.id);
+      ${equipmentCatalog
+        .map((item) => {
+          const selected = selectedIds.includes(String(item.id));
+          const link = userEquipment.find((eq) => String(eq.equipment_id) === String(item.id));
 
           return `
-            <button class="you-small-card ${unlocked ? "active" : ""}" data-collection-id="${collection.id}" type="button">
-              <span>${collection.emoji || "🖼️"}</span>
-              <strong>${collection.name}</strong>
-              <em>${unlocked ? "Débloqué" : collection.category || "À débloquer"}</em>
+            <button class="you-small-card ${selected && link?.active !== false ? "active" : ""}" data-equipment-id="${item.id}" type="button">
+              <span>${item.emoji || "•"}</span>
+              <strong>${item.brand ? item.brand + " " : ""}${item.name}</strong>
+              <em>${selected ? safe(link?.usage, item.category) : item.category || "Ajouter"}</em>
             </button>
           `;
         })
         .join("")}
     </div>
 
-    <p id="collectionsMessage" class="login-message"></p>
+    <p id="equipmentMessage" class="login-message"></p>
   `;
 
-  document.querySelectorAll("[data-collection-id]").forEach((button) => {
-    button.addEventListener("click", () => toggleCollection(button.dataset.collectionId));
+  document.querySelectorAll("[data-equipment-id]").forEach((button) => {
+    button.addEventListener("click", () => toggleEquipment(button.dataset.equipmentId));
   });
 }
 
-async function toggleCollection(collectionId) {
-  const existing = userCollections.find((item) => item.collection_id === collectionId);
+async function toggleEquipment(equipmentId) {
+  const existing = userEquipment.find((item) => String(item.equipment_id) === String(equipmentId));
 
   if (existing) {
     const { error } = await window.momentumDB
-      .from("user_collections")
+      .from("user_equipment")
       .delete()
       .eq("id", existing.id);
 
@@ -657,15 +504,17 @@ async function toggleCollection(collectionId) {
       return;
     }
 
-    userCollections = userCollections.filter((item) => item.id !== existing.id);
+    userEquipment = userEquipment.filter((item) => item.id !== existing.id);
   } else {
     const { data, error } = await window.momentumDB
-      .from("user_collections")
+      .from("user_equipment")
       .insert({
         user_id: currentUser.id,
-        collection_id: collectionId,
+        equipment_id: equipmentId,
+        usage: "Principal",
+        active: true,
       })
-      .select("*, collections(*)")
+      .select("*, equipment(*)")
       .single();
 
     if (error) {
@@ -673,19 +522,49 @@ async function toggleCollection(collectionId) {
       return;
     }
 
-    userCollections.push(data);
+    userEquipment.push(data);
   }
 
   renderMenuPreviews();
-  renderCollections();
+  renderEquipment();
 }
 
-/* -------------------- ABOUT / AVATAR -------------------- */
+/* -------------------- MES ACTIVITÉS -------------------- */
+
+function renderData() {
+  youDetail.innerHTML = `
+    <p class="section-kicker">Mes activités</p>
+    <h2>Ce que tu as vécu</h2>
+    <p class="you-detail-lead">Les activités importées construiront progressivement ton histoire.</p>
+
+    <div class="you-card-grid">
+      <div class="you-small-card">
+        <span>FIT</span>
+        <strong>Importer une activité</strong>
+        <em>Bientôt</em>
+      </div>
+
+      <div class="you-small-card">
+        <span>GPX</span>
+        <strong>Importer un tracé</strong>
+        <em>Bientôt</em>
+      </div>
+
+      <div class="you-small-card">
+        <span>Journal</span>
+        <strong>Voir les activités</strong>
+        <em>À venir</em>
+      </div>
+    </div>
+  `;
+}
+
+/* -------------------- PASSEPORT -------------------- */
 
 function renderAbout() {
   youDetail.innerHTML = `
-    <p class="section-kicker">À propos de toi</p>
-    <h2>Ton passeport</h2>
+    <p class="section-kicker">Passeport</p>
+    <h2>Qui tu es</h2>
 
     <form id="passportForm" class="you-form">
       <label>Nom complet
