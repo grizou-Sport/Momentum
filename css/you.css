@@ -650,3 +650,274 @@ button.you-small-card{
     font-size:76px;
   }
 }
+.equipment-list{
+  display:grid;
+  gap:28px;
+  margin-top:34px;
+}
+
+.equipment-group{
+  display:grid;
+  gap:12px;
+}
+
+.equipment-group-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  color:#777;
+  font-size:12px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.14em;
+}
+
+.equipment-items{
+  display:grid;
+  gap:10px;
+}
+
+.equipment-row{
+  width:100%;
+  border:1px solid #e8e8e5;
+  background:#fff;
+  border-radius:22px;
+  padding:20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  text-align:left;
+  cursor:pointer;
+  transition:.18s ease;
+}
+
+.equipment-row:hover{
+  transform:translateY(-2px);
+  border-color:#111;
+}
+
+.equipment-row strong{
+  display:block;
+  font-size:19px;
+  color:#111;
+}
+
+.equipment-row em{
+  display:block;
+  margin-top:5px;
+  font-style:normal;
+  color:#777;
+  font-size:14px;
+}
+
+.equipment-row > span{
+  font-size:12px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:#777;
+}
+.equipment-modal-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:100;
+  background:rgba(10,10,10,.42);
+  backdrop-filter:blur(10px);
+  display:grid;
+  place-items:center;
+  padding:24px;
+}
+
+.equipment-modal{
+  width:min(720px,100%);
+  max-height:92vh;
+  overflow:auto;
+  background:#fff;
+  border:1px solid #e6e6e3;
+  border-radius:28px;
+  padding:34px;
+  box-shadow:0 30px 100px rgba(0,0,0,.18);
+  position:relative;
+}
+
+.equipment-modal h2{
+  margin:8px 0 24px;
+  font-size:clamp(34px,5vw,56px);
+  letter-spacing:-.06em;
+  line-height:.95;
+}
+
+.equipment-modal-close{
+  position:absolute;
+  right:22px;
+  top:22px;
+  width:42px;
+  height:42px;
+  border:1px solid #e5e5e2;
+  background:#f7f7f5;
+  border-radius:999px;
+  cursor:pointer;
+  font-size:24px;
+}
+
+.equipment-modal-actions{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:8px;
+}
+
+.equipment-danger{
+  border:0;
+  border-radius:999px;
+  padding:13px 18px;
+  background:#f1f1ef;
+  color:#111;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.equipment-check{
+  display:flex!important;
+  grid-template-columns:auto 1fr!important;
+  align-items:center;
+  gap:10px!important;
+}
+
+.equipment-check input{
+  width:18px;
+  height:18px;
+}
+
+@media(max-width:640px){
+  .equipment-modal{
+    border-radius:22px;
+    padding:24px;
+  }
+
+  .equipment-modal-actions{
+    flex-direction:column-reverse;
+  }
+
+  .equipment-modal-actions button{
+    width:100%;
+  }
+}
+/* Mission modal */
+.mission-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+}
+
+.mission-modal.open {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.mission-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 18, 15, 0.45);
+  backdrop-filter: blur(10px);
+}
+
+.mission-modal-panel {
+  position: relative;
+  z-index: 1;
+  width: min(760px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 28px;
+  border-radius: 28px;
+  background: #f7f4ee;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.28);
+}
+
+.mission-modal-head,
+.mission-modal-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.mission-modal-close {
+  border: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  background: rgba(20, 18, 15, 0.08);
+  cursor: pointer;
+  font-size: 1.4rem;
+}
+
+.mission-form {
+  margin-top: 22px;
+}
+
+.mission-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.mission-tabs button {
+  border: 1px solid rgba(20, 18, 15, 0.12);
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.mission-tabs button.active {
+  background: #171512;
+  color: white;
+}
+
+.mission-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.mission-form label {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 14px;
+  font-weight: 700;
+  color: rgba(20, 18, 15, 0.72);
+}
+
+.mission-form input,
+.mission-form textarea {
+  width: 100%;
+  border: 1px solid rgba(20, 18, 15, 0.12);
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.78);
+  font: inherit;
+}
+
+.mission-pace-preview {
+  margin: 4px 0 18px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(20, 18, 15, 0.06);
+}
+
+.mission-modal-actions {
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+@media (max-width: 720px) {
+  .mission-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
