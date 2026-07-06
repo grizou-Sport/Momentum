@@ -357,7 +357,7 @@ function renderSports() {
 
 async function toggleSport(sportId) {
   const message = document.getElementById("sportsMessage");
-  const existing = userSports.find((item) => item.sport_id === sportId);
+  const existing = userSports.find((item) => String(item.sport_id) === String(sportId));
   const role = document.querySelector(`[data-sport-role="${sportId}"]`)?.value || "Secondaire";
 
   message.textContent = "Sauvegarde…";
@@ -443,7 +443,8 @@ function renderEquipment() {
 
 async function toggleEquipment(equipmentId) {
   const message = document.getElementById("equipmentMessage");
-  const existing = userEquipment.find((item) => item.equipment_id === equipmentId);
+  const selectedIds = userEquipment.map((item) => String(item.equipment_id));
+const selected = selectedIds.includes(String(item.id));
   const usage = document.querySelector(`[data-equipment-usage="${equipmentId}"]`)?.value || "Principal";
 
   message.textContent = "Sauvegarde…";
