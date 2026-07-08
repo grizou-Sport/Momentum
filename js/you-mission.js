@@ -194,6 +194,11 @@ async function saveMission(event) {
 
   if (status) status.textContent = "Enregistrement...";
 
+  console.log("Utilisateur connecté :", user);
+console.log("user.id =", user.id);
+
+console.log("Payload =", payload);
+
   const payload = {
     user_id: user.id,
     title,
@@ -215,11 +220,16 @@ async function saveMission(event) {
 
   const { data, error } = await query.select().single();
 
-  if (error) {
-    console.error("Erreur sauvegarde horizon:", error);
-    if (status) status.textContent = "Erreur lors de l’enregistrement.";
-    return;
+ if (error) {
+  console.error("Erreur sauvegarde horizon:", error);
+
+  if (status) {
+    status.textContent =
+      error.message || "Erreur lors de l’enregistrement.";
   }
+
+  return;
+}
 
   currentMission = data;
   renderMissionView(currentMission);
