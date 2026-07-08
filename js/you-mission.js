@@ -2,6 +2,25 @@
 
 let currentMission = null;
 
+const MISSION_CATEGORIES = [
+  { value: "health", label: "Santé" },
+  { value: "competition", label: "Compétition" },
+  { value: "pleasure", label: "Plaisir" },
+  { value: "adventure", label: "Aventure" },
+];
+
+const MISSION_INTENTIONS = [
+  { value: "discovery", label: "Découverte" },
+  { value: "challenge", label: "Challenge" },
+  { value: "progression", label: "Progression" },
+  { value: "performance", label: "Performance" },
+  { value: "transformation", label: "Transformation" },
+  { value: "sharing", label: "Partage" },
+  { value: "wellbeing", label: "Bien-être" },
+  { value: "escape", label: "Évasion" },
+];
+
+
 function formatMissionDate(dateValue) {
   if (!dateValue) return "";
   const date = new Date(dateValue + "T00:00:00");
@@ -16,8 +35,17 @@ function formatMissionDate(dateValue) {
 function setMissionMenuTitle(title) {
   const menuTitle = document.getElementById("missionMenuTitle");
   if (!menuTitle) return;
-
   menuTitle.textContent = title?.trim() || "Aucun horizon";
+}
+
+function getOptionList(options, selectedValue = "") {
+  return options
+    .map((option) => `
+      <option value="${option.value}" ${option.value === selectedValue ? "selected" : ""}>
+        ${option.label}
+      </option>
+    `)
+    .join("");
 }
 
 function renderMissionEmpty() {
@@ -33,7 +61,10 @@ function renderMissionEmpty() {
           <p class="section-kicker">Mon Horizon</p>
           <h2>Aucun horizon défini</h2>
         </div>
-        <button class="you-primary-btn" id="openMissionFormBtn" type="button">Créer</button>
+
+        <button class="you-primary-btn" id="openMissionFormBtn" type="button">
+          Créer
+        </button>
       </div>
 
       <p class="you-panel-text">
@@ -42,7 +73,8 @@ function renderMissionEmpty() {
     </section>
   `;
 
-  document.getElementById("openMissionFormBtn")
+  document
+    .getElementById("openMissionFormBtn")
     ?.addEventListener("click", () => renderMissionForm());
 }
 
@@ -52,6 +84,20 @@ function renderMissionView(mission) {
 
   setMissionMenuTitle(mission?.title);
 
+  const categoryLabel =
+  MISSION_CATEGORIES.find((item) => item.value === mission.category)?.label;
+
+const intentionLabel =
+  MISSION_INTENTIONS.find((item) => item.value === mission.subcategory)?.label;
+
+const meta = [
+  categoryLabel,
+  intentionLabel,
+  mission.target_date ? formatMissionDate(mission.target_date) : null,
+]
+    .filter(Boolean)
+    .join(" · ");
+
   youDetail.innerHTML = `
     <section class="you-panel">
       <div class="you-panel-header">
@@ -59,24 +105,31 @@ function renderMissionView(mission) {
           <p class="section-kicker">Mon Horizon</p>
           <h2>${mission.title}</h2>
         </div>
-        <button class="you-secondary-btn" id="editMissionBtn" type="button">Modifier</button>
+
+        <button class="you-secondary-btn" id="editMissionBtn" type="button">
+          Modifier
+        </button>
       </div>
 
       <p class="you-panel-text">
         ${mission.description || "Choisis une direction qui te donne envie d’avancer."}
       </p>
 
-      ${mission.target_date ? `<p class="you-panel-meta">Horizon cible · ${formatMissionDate(mission.target_date)}</p>` : ""}
+      ${meta ? `<p class="you-panel-meta">${meta}</p>` : ""}
     </section>
   `;
 
-  document.getElementById("editMissionBtn")
+  document
+    .getElementById("editMissionBtn")
     ?.addEventListener("click", () => renderMissionForm(mission));
 }
 
 function renderMissionForm(mission = null) {
   const youDetail = document.getElementById("youDetail");
   if (!youDetail) return;
+
+  const selectedCategory = mission?.category || "Santé";
+  const selectedIntention = mission?.subcategory || "Progression";
 
   youDetail.innerHTML = `
     <section class="you-panel">
@@ -90,25 +143,62 @@ function renderMissionForm(mission = null) {
       <form class="you-form" id="missionForm">
         <label>
           Titre
-          <input id="missionTitleInput" type="text" value="${mission?.title || ""}" required>
+          <input
+            id="missionTitleInput"
+            type="text"
+            value="${mission?.title || ""}"
+            placeholder="Ex. Courir les 100 km de Bienne"
+            required
+          >
         </label>
 
         <label>
           Description
-          <textarea id="missionDescriptionInput" rows="5">${mission?.description || ""}</textarea>
+          <textarea
+            id="missionDescriptionInput"
+            rows="5"
+            placeholder="Pourquoi cet horizon compte pour toi ?"
+          >${mission?.description || ""}</textarea>
+        </label>
+
+        <label>
+          Catégorie
+          <select id="missionCategoryInput" required>
+            ${getOptionList(MISSION_CATEGORIES, selectedCategory)}
+          </select>
+        </label>
+
+        <label>
+          Intention
+          <select id="missionIntentionInput" required>
+            ${getOptionList(MISSION_INTENTIONS, selectedIntention)}
+          </select>
         </label>
 
         <label>
           Date cible
-          <input id="missionTargetDateInput" type="date" value="${mission?.target_date || ""}">
+          <input
+            id="missionTargetDateInput"
+            type="date"
+            value="${mission?.target_date || ""}"
+          >
         </label>
 
         <div class="you-form-actions">
-          ${mission ? `<button class="you-danger-btn" id="deleteMissionBtn" type="button">Supprimer</button>` : `<span></span>`}
+          ${
+            mission
+              ? `<button class="you-danger-btn" id="deleteMissionBtn" type="button">Supprimer</button>`
+              : `<span></span>`
+          }
 
           <div class="you-form-actions-right">
-            <button class="you-secondary-btn" id="cancelMissionBtn" type="button">Annuler</button>
-            <button class="you-primary-btn" type="submit">Enregistrer</button>
+            <button class="you-secondary-btn" id="cancelMissionBtn" type="button">
+              Annuler
+            </button>
+
+            <button class="you-primary-btn" type="submit">
+              Enregistrer
+            </button>
           </div>
         </div>
 
@@ -117,15 +207,18 @@ function renderMissionForm(mission = null) {
     </section>
   `;
 
-  document.getElementById("missionForm")
+  document
+    .getElementById("missionForm")
     ?.addEventListener("submit", saveMission);
 
-  document.getElementById("cancelMissionBtn")
+  document
+    .getElementById("cancelMissionBtn")
     ?.addEventListener("click", () => {
       currentMission ? renderMissionView(currentMission) : renderMissionEmpty();
     });
 
-  document.getElementById("deleteMissionBtn")
+  document
+    .getElementById("deleteMissionBtn")
     ?.addEventListener("click", deleteMission);
 }
 
@@ -168,7 +261,6 @@ async function loadMission() {
   }
 
   currentMission = data || null;
-
   currentMission ? renderMissionView(currentMission) : renderMissionEmpty();
 }
 
@@ -184,23 +276,29 @@ async function saveMission(event) {
   }
 
   const title = document.getElementById("missionTitleInput")?.value.trim();
-  const description = document.getElementById("missionDescriptionInput")?.value.trim() || null;
-  const targetDate = document.getElementById("missionTargetDateInput")?.value || null;
+  const description =
+    document.getElementById("missionDescriptionInput")?.value.trim() || null;
+  const category = document.getElementById("missionCategoryInput")?.value;
+  const subcategory = document.getElementById("missionIntentionInput")?.value;
+  const targetDate =
+    document.getElementById("missionTargetDateInput")?.value || null;
 
   if (!title) {
     if (status) status.textContent = "Ajoute un titre à ton horizon.";
     return;
   }
 
+  if (!category || !subcategory) {
+    if (status) status.textContent = "Choisis une catégorie et une intention.";
+    return;
+  }
+
   if (status) status.textContent = "Enregistrement...";
-
-  console.log("Utilisateur connecté :", user);
-console.log("user.id =", user.id);
-
-console.log("Payload =", payload);
 
   const payload = {
     user_id: user.id,
+    category,
+    subcategory,
     title,
     description,
     target_date: targetDate,
@@ -214,22 +312,17 @@ console.log("Payload =", payload);
         .update(payload)
         .eq("id", currentMission.id)
         .eq("user_id", user.id)
-    : window.momentumDB
-        .from("user_missions")
-        .insert(payload);
+    : window.momentumDB.from("user_missions").insert(payload);
 
   const { data, error } = await query.select().single();
 
- if (error) {
-  console.error("Erreur sauvegarde horizon:", error);
-
-  if (status) {
-    status.textContent =
-      error.message || "Erreur lors de l’enregistrement.";
+  if (error) {
+    console.error("Erreur sauvegarde horizon:", error);
+    if (status) {
+      status.textContent = error.message || "Erreur lors de l’enregistrement.";
+    }
+    return;
   }
-
-  return;
-}
 
   currentMission = data;
   renderMissionView(currentMission);
