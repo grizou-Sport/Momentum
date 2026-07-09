@@ -3,10 +3,10 @@
 let currentMission = null;
 
 const MISSION_CATEGORIES = [
-  { value: "health", label: "Santé" },
-  { value: "competition", label: "Compétition" },
-  { value: "pleasure", label: "Plaisir" },
-  { value: "adventure", label: "Aventure" },
+  { value: "health", label: "Santé", icon: "❤️" },
+  { value: "competition", label: "Compétition", icon: "🏁" },
+  { value: "pleasure", label: "Plaisir", icon: "🌿" },
+  { value: "adventure", label: "Aventure", icon: "🧭" },
 ];
 
 const MISSION_INTENTIONS = [
@@ -20,6 +20,45 @@ const MISSION_INTENTIONS = [
   { value: "escape", label: "Évasion" },
 ];
 
+const MISSION_SPORTS = [
+  "Course à pied",
+  "Trail",
+  "Vélo",
+  "Gravel",
+  "Natation",
+  "Padel",
+  "Randonnée",
+  "Ski",
+  "Autre",
+];
+
+function getMissionLabel(list, value) {
+  return list.find((item) => item.value === value)?.label || value || "";
+}
+
+function getMissionIcon(value) {
+  return MISSION_CATEGORIES.find((item) => item.value === value)?.icon || "";
+}
+
+function getOptionList(options, selectedValue = "") {
+  return options
+    .map((option) => `
+      <option value="${option.value}" ${option.value === selectedValue ? "selected" : ""}>
+        ${option.icon ? `${option.icon} ` : ""}${option.label}
+      </option>
+    `)
+    .join("");
+}
+
+function getTextOptionList(options, selectedValue = "") {
+  return options
+    .map((option) => `
+      <option value="${option}" ${option === selectedValue ? "selected" : ""}>
+        ${option}
+      </option>
+    `)
+    .join("");
+}
 
 function formatMissionDate(dateValue) {
   if (!dateValue) return "";
@@ -32,20 +71,30 @@ function formatMissionDate(dateValue) {
   });
 }
 
+function formatTime(seconds) {
+  if (!seconds) return "";
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  return h > 0 ? `${h} h ${String(m).padStart(2, "0")}` : `${m} min`;
+}
+
+function timeToSeconds(value) {
+  if (!value) return null;
+  const [hours, minutes] = value.split(":").map(Number);
+  return hours * 3600 + minutes * 60;
+}
+
+function secondsToTime(seconds) {
+  if (!seconds) return "";
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
 function setMissionMenuTitle(title) {
   const menuTitle = document.getElementById("missionMenuTitle");
   if (!menuTitle) return;
   menuTitle.textContent = title?.trim() || "Aucun horizon";
-}
-
-function getOptionList(options, selectedValue = "") {
-  return options
-    .map((option) => `
-      <option value="${option.value}" ${option.value === selectedValue ? "selected" : ""}>
-        ${option.label}
-      </option>
-    `)
-    .join("");
 }
 
 function renderMissionEmpty() {
@@ -63,7 +112,7 @@ function renderMissionEmpty() {
         </div>
 
         <button class="you-primary-btn" id="openMissionFormBtn" type="button">
-          Créer
+          Créer mon horizon
         </button>
       </div>
 
@@ -75,7 +124,7 @@ function renderMissionEmpty() {
 
   document
     .getElementById("openMissionFormBtn")
-    ?.addEventListener("click", () => renderMissionForm());
+    ?.addEventListener("click", () => openMissionModal());
 }
 
 function renderMissionView(mission) {
@@ -84,19 +133,25 @@ function renderMissionView(mission) {
 
   setMissionMenuTitle(mission?.title);
 
-  const categoryLabel =
-  MISSION_CATEGORIES.find((item) => item.value === mission.category)?.label;
+  const categoryLabel = getMissionLabel(MISSION_CATEGORIES, mission.category);
+  const categoryIcon = getMissionIcon(mission.category);
+  const intentionLabel = getMissionLabel(MISSION_INTENTIONS, mission.subcategory);
 
-const intentionLabel =
-  MISSION_INTENTIONS.find((item) => item.value === mission.subcategory)?.label;
+  const detailItems = [];
 
-const meta = [
-  categoryLabel,
-  intentionLabel,
-  mission.target_date ? formatMissionDate(mission.target_date) : null,
-]
-    .filter(Boolean)
-    .join(" · ");
+  if (mission.category) detailItems.push(`${categoryIcon} ${categoryLabel}`);
+  if (mission.subcategory) detailItems.push(`🎯 ${intentionLabel}`);
+  if (mission.category !== "health" && mission.sport) detailItems.push(`🏃 ${mission.sport}`);
+  if (mission.target_date) detailItems.push(`📅 ${formatMissionDate(mission.target_date)}`);
+
+  if (mission.category === "competition") {
+    if (mission.distance_km) detailItems.push(`📏 ${mission.distance_km} km`);
+    if (mission.target_time_seconds) detailItems.push(`⏱ ${formatTime(mission.target_time_seconds)}`);
+  }
+
+  if (mission.category === "adventure" && mission.duration_days) {
+    detailItems.push(`🗓 ${mission.duration_days} jour${mission.duration_days > 1 ? "s" : ""}`);
+  }
 
   youDetail.innerHTML = `
     <section class="you-panel">
@@ -111,36 +166,63 @@ const meta = [
         </button>
       </div>
 
-      <p class="you-panel-text">
-        ${mission.description || "Choisis une direction qui te donne envie d’avancer."}
-      </p>
+      <div class="you-panel-meta">
+        ${detailItems.map((item) => `<span>${item}</span>`).join("")}
+      </div>
 
-      ${meta ? `<p class="you-panel-meta">${meta}</p>` : ""}
+      ${
+        mission.description
+          ? `
+            <div class="you-horizon-intention">
+              <p class="section-kicker">Pourquoi ?</p>
+              <p class="you-panel-text">${mission.description}</p>
+            </div>
+          `
+          : ""
+      }
     </section>
   `;
 
   document
     .getElementById("editMissionBtn")
-    ?.addEventListener("click", () => renderMissionForm(mission));
+    ?.addEventListener("click", () => openMissionModal(mission));
 }
 
-function renderMissionForm(mission = null) {
-  const youDetail = document.getElementById("youDetail");
-  if (!youDetail) return;
+function openMissionModal(mission = null) {
+  closeMissionModal();
 
-  const selectedCategory = mission?.category || "Santé";
-  const selectedIntention = mission?.subcategory || "Progression";
+  const modal = document.createElement("div");
+  modal.className = "you-modal";
+  modal.id = "missionModal";
 
-  youDetail.innerHTML = `
-    <section class="you-panel">
-      <div class="you-panel-header">
+  modal.innerHTML = `
+    <div class="you-modal-backdrop" id="missionModalBackdrop"></div>
+
+    <section class="you-modal-panel">
+      <div class="you-modal-header">
         <div>
           <p class="section-kicker">Mon Horizon</p>
           <h2>${mission ? "Modifier mon horizon" : "Créer mon horizon"}</h2>
         </div>
+
+        <button class="you-modal-close" id="closeMissionModalBtn" type="button">×</button>
       </div>
 
       <form class="you-form" id="missionForm">
+        <label>
+          Catégorie
+          <select id="missionCategoryInput" required>
+            ${getOptionList(MISSION_CATEGORIES, mission?.category || "health")}
+          </select>
+        </label>
+
+        <label>
+          Intention
+          <select id="missionIntentionInput" required>
+            ${getOptionList(MISSION_INTENTIONS, mission?.subcategory || "progression")}
+          </select>
+        </label>
+
         <label>
           Titre
           <input
@@ -152,27 +234,46 @@ function renderMissionForm(mission = null) {
           >
         </label>
 
-        <label>
-          Description
-          <textarea
-            id="missionDescriptionInput"
-            rows="5"
-            placeholder="Pourquoi cet horizon compte pour toi ?"
-          >${mission?.description || ""}</textarea>
-        </label>
-
-        <label>
-          Catégorie
-          <select id="missionCategoryInput" required>
-            ${getOptionList(MISSION_CATEGORIES, selectedCategory)}
+        <label class="mission-conditional mission-sport-field">
+          Sport / activité
+          <select id="missionSportInput">
+            <option value="">Choisir une activité</option>
+            ${getTextOptionList(MISSION_SPORTS, mission?.sport || "")}
           </select>
         </label>
 
-        <label>
-          Intention
-          <select id="missionIntentionInput" required>
-            ${getOptionList(MISSION_INTENTIONS, selectedIntention)}
-          </select>
+        <div class="mission-conditional mission-competition-fields">
+          <label>
+            Distance
+            <input
+              id="missionDistanceInput"
+              type="number"
+              step="0.1"
+              min="0"
+              value="${mission?.distance_km || ""}"
+              placeholder="Ex. 100"
+            >
+          </label>
+
+          <label>
+            Temps visé
+            <input
+              id="missionTimeInput"
+              type="time"
+              value="${secondsToTime(mission?.target_time_seconds)}"
+            >
+          </label>
+        </div>
+
+        <label class="mission-conditional mission-adventure-field">
+          Durée de l’aventure
+          <input
+            id="missionDurationInput"
+            type="number"
+            min="1"
+            value="${mission?.duration_days || ""}"
+            placeholder="Nombre de jours"
+          >
         </label>
 
         <label>
@@ -184,6 +285,15 @@ function renderMissionForm(mission = null) {
           >
         </label>
 
+        <label>
+          Pourquoi cet horizon compte-t-il pour toi ?
+          <textarea
+            id="missionDescriptionInput"
+            rows="5"
+            placeholder="Ex. Je veux découvrir jusqu’où je suis capable d’aller."
+          >${mission?.description || ""}</textarea>
+        </label>
+
         <div class="you-form-actions">
           ${
             mission
@@ -192,13 +302,8 @@ function renderMissionForm(mission = null) {
           }
 
           <div class="you-form-actions-right">
-            <button class="you-secondary-btn" id="cancelMissionBtn" type="button">
-              Annuler
-            </button>
-
-            <button class="you-primary-btn" type="submit">
-              Enregistrer
-            </button>
+            <button class="you-secondary-btn" id="cancelMissionBtn" type="button">Annuler</button>
+            <button class="you-primary-btn" type="submit">Enregistrer mon horizon</button>
           </div>
         </div>
 
@@ -207,19 +312,40 @@ function renderMissionForm(mission = null) {
     </section>
   `;
 
-  document
-    .getElementById("missionForm")
-    ?.addEventListener("submit", saveMission);
+  document.body.appendChild(modal);
 
-  document
-    .getElementById("cancelMissionBtn")
-    ?.addEventListener("click", () => {
-      currentMission ? renderMissionView(currentMission) : renderMissionEmpty();
-    });
+  document.getElementById("missionCategoryInput")?.addEventListener("change", updateMissionConditionalFields);
+  document.getElementById("missionForm")?.addEventListener("submit", saveMission);
+  document.getElementById("deleteMissionBtn")?.addEventListener("click", deleteMission);
+  document.getElementById("cancelMissionBtn")?.addEventListener("click", closeMissionModal);
+  document.getElementById("closeMissionModalBtn")?.addEventListener("click", closeMissionModal);
+  document.getElementById("missionModalBackdrop")?.addEventListener("click", closeMissionModal);
 
-  document
-    .getElementById("deleteMissionBtn")
-    ?.addEventListener("click", deleteMission);
+  updateMissionConditionalFields();
+}
+
+function closeMissionModal() {
+  document.getElementById("missionModal")?.remove();
+}
+
+function updateMissionConditionalFields() {
+  const category = document.getElementById("missionCategoryInput")?.value;
+
+  document.querySelectorAll(".mission-conditional").forEach((item) => {
+    item.style.display = "none";
+  });
+
+  if (category !== "health") {
+    document.querySelector(".mission-sport-field").style.display = "block";
+  }
+
+  if (category === "competition") {
+    document.querySelector(".mission-competition-fields").style.display = "grid";
+  }
+
+  if (category === "adventure") {
+    document.querySelector(".mission-adventure-field").style.display = "block";
+  }
 }
 
 async function getCurrentUser() {
@@ -275,21 +401,19 @@ async function saveMission(event) {
     return;
   }
 
-  const title = document.getElementById("missionTitleInput")?.value.trim();
-  const description =
-    document.getElementById("missionDescriptionInput")?.value.trim() || null;
   const category = document.getElementById("missionCategoryInput")?.value;
   const subcategory = document.getElementById("missionIntentionInput")?.value;
-  const targetDate =
-    document.getElementById("missionTargetDateInput")?.value || null;
+  const title = document.getElementById("missionTitleInput")?.value.trim();
+  const sport = document.getElementById("missionSportInput")?.value || null;
+  const description = document.getElementById("missionDescriptionInput")?.value.trim() || null;
+  const targetDate = document.getElementById("missionTargetDateInput")?.value || null;
+
+  const distanceKm = document.getElementById("missionDistanceInput")?.value || null;
+  const targetTime = document.getElementById("missionTimeInput")?.value || null;
+  const durationDays = document.getElementById("missionDurationInput")?.value || null;
 
   if (!title) {
     if (status) status.textContent = "Ajoute un titre à ton horizon.";
-    return;
-  }
-
-  if (!category || !subcategory) {
-    if (status) status.textContent = "Choisis une catégorie et une intention.";
     return;
   }
 
@@ -301,6 +425,10 @@ async function saveMission(event) {
     subcategory,
     title,
     description,
+    sport: category === "health" ? null : sport,
+    distance_km: category === "competition" && distanceKm ? Number(distanceKm) : null,
+    target_time_seconds: category === "competition" && targetTime ? timeToSeconds(targetTime) : null,
+    duration_days: category === "adventure" && durationDays ? Number(durationDays) : null,
     target_date: targetDate,
     status: "active",
     updated_at: new Date().toISOString(),
@@ -318,13 +446,12 @@ async function saveMission(event) {
 
   if (error) {
     console.error("Erreur sauvegarde horizon:", error);
-    if (status) {
-      status.textContent = error.message || "Erreur lors de l’enregistrement.";
-    }
+    if (status) status.textContent = error.message || "Erreur lors de l’enregistrement.";
     return;
   }
 
   currentMission = data;
+  closeMissionModal();
   renderMissionView(currentMission);
 }
 
@@ -347,6 +474,7 @@ async function deleteMission() {
   }
 
   currentMission = null;
+  closeMissionModal();
   renderMissionEmpty();
 }
 
