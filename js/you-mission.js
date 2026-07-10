@@ -7,10 +7,10 @@ let currentMission = null;
 // =====================================================
 
 const MISSION_CATEGORIES = [
-  { value: "health", label: "Santé", icon: "❤️" },
-  { value: "competition", label: "Compétition", icon: "🏁" },
-  { value: "pleasure", label: "Plaisir", icon: "🌿" },
-  { value: "adventure", label: "Aventure", icon: "🧭" },
+  { value: "health", label: "Santé" },
+  { value: "competition", label: "Compétition" },
+  { value: "pleasure", label: "Plaisir" },
+  { value: "adventure", label: "Aventure" },
 ];
 
 const MISSION_INTENTIONS = [
@@ -41,7 +41,7 @@ function getOptionList(options, selectedValue = "") {
     .map(
       (option) => `
         <option value="${option.value}" ${option.value === selectedValue ? "selected" : ""}>
-          ${option.icon ? `${option.icon} ` : ""}${option.label}
+          ${option.label}
         </option>
       `
     )
@@ -163,15 +163,15 @@ async function loadMission() {
   const youDetail = document.getElementById("youDetail");
   if (!youDetail || !window.momentumDB) return;
 
-  if (!window.MomentumSports) {
+  if (!window.MomentumSports || !window.MomentumIcons) {
     console.error(
-      "MomentumSports n’est pas chargé. Vérifie que momentum-sports.js est placé avant you-mission.js."
+      "MomentumSports ou MomentumIcons n’est pas chargé. Vérifie l’ordre des scripts dans you.html."
     );
 
     youDetail.innerHTML = `
       <section class="you-panel">
         <p class="you-panel-text">
-          Impossible de charger le référentiel des sports.
+          Impossible de charger le référentiel des sports ou les icônes.
         </p>
       </section>
     `;
@@ -424,29 +424,65 @@ async function renderMissionCard(mission) {
 
   const identityItems = [];
 
-  if (mission.category) identityItems.push(`${categoryIcon} ${categoryLabel}`);
-  if (mission.subcategory) identityItems.push(`🎯 ${intentionLabel}`);
+  if (mission.category) {
+    identityItems.push(`
+      <span class="mission-meta-label">Catégorie</span>
+      <span>${categoryLabel}</span>
+    `);
+  }
+
+  if (mission.subcategory) {
+    identityItems.push(`
+      <span class="mission-meta-label">Intention</span>
+      <span>${intentionLabel}</span>
+    `);
+  }
+
   if (mission.category !== "health" && mission.sport) {
-    identityItems.push(`🏃 ${getMissionSportLabel(mission.sport)}`);
+    const sportIcon = window.MomentumIcons.renderSport(mission.sport, {
+      size: 20,
+      className: "mission-inline-icon",
+      decorative: true,
+    });
+
+    identityItems.push(`
+      ${sportIcon}
+      <span>${getMissionSportLabel(mission.sport)}</span>
+    `);
   }
 
   const targetItems = [];
 
   if (mission.target_date) {
-    targetItems.push(`📅 ${formatMissionDate(mission.target_date)}`);
+    targetItems.push(`
+      <span class="mission-meta-label">Date</span>
+      <span>${formatMissionDate(mission.target_date)}</span>
+    `);
   }
 
   if (mission.category === "competition") {
-    if (mission.distance_km) targetItems.push(`📏 ${mission.distance_km} km`);
+    if (mission.distance_km) {
+      targetItems.push(`
+        <span class="mission-meta-label">Distance</span>
+        <span>${mission.distance_km} km</span>
+      `);
+    }
+
     if (mission.target_time_seconds) {
-      targetItems.push(`⏱ ${formatTime(mission.target_time_seconds)}`);
+      targetItems.push(`
+        <span class="mission-meta-label">Temps visé</span>
+        <span>${formatTime(mission.target_time_seconds)}</span>
+      `);
     }
   }
 
   if (mission.category === "adventure" && mission.duration_days) {
-    targetItems.push(
-      `🗓 ${mission.duration_days} jour${mission.duration_days > 1 ? "s" : ""}`
-    );
+    targetItems.push(`
+      <span class="mission-meta-label">Durée</span>
+      <span>
+        ${mission.duration_days} jour${mission.duration_days > 1 ? "s" : ""}
+      </span>
+    `);
   }
 
   youDetail.innerHTML = `
@@ -610,8 +646,11 @@ async function renderMissionPath() {
 }
 
 function renderMissionPathItem(mission) {
-  const categoryLabel = getMissionLabel(MISSION_CATEGORIES, mission.category);
-  const categoryIcon = getMissionIcon(mission.category);
+  const categoryLabel = getMissionLabel(
+    MISSION_CATEGORIES,
+    mission.category
+  );
+
   const intentionLabel = getMissionLabel(
     MISSION_INTENTIONS,
     mission.subcategory
@@ -619,6 +658,19 @@ function renderMissionPathItem(mission) {
 
   const closedDate = mission.moved_to_history_at
     ? formatMissionDate(mission.moved_to_history_at.slice(0, 10))
+    : "";
+
+  const sportLine = mission.sport
+    ? `
+      <span class="mission-path-meta-item">
+        ${window.MomentumIcons.renderSport(mission.sport, {
+          size: 18,
+          className: "mission-inline-icon mission-inline-icon-small",
+          decorative: true,
+        })}
+        <span>${getMissionSportLabel(mission.sport)}</span>
+      </span>
+    `
     : "";
 
   return `
@@ -629,15 +681,31 @@ function renderMissionPathItem(mission) {
 
       <h3>${mission.title}</h3>
 
-      <p class="you-panel-meta">
-        ${categoryIcon} ${categoryLabel}
-        ${mission.subcategory ? ` · 🎯 ${intentionLabel}` : ""}
+      <div class="you-panel-meta mission-path-meta">
         ${
-          mission.sport
-            ? ` · 🏃 ${getMissionSportLabel(mission.sport)}`
+          mission.category
+            ? `
+              <span class="mission-path-meta-item">
+                <span class="mission-meta-label">Catégorie</span>
+                <span>${categoryLabel}</span>
+              </span>
+            `
             : ""
         }
-      </p>
+
+        ${
+          mission.subcategory
+            ? `
+              <span class="mission-path-meta-item">
+                <span class="mission-meta-label">Intention</span>
+                <span>${intentionLabel}</span>
+              </span>
+            `
+            : ""
+        }
+
+        ${sportLine}
+      </div>
 
       ${
         mission.description
@@ -657,6 +725,7 @@ function renderMissionPathItem(mission) {
     </article>
   `;
 }
+
 // =====================================================
 // MODALES — CRÉATION / MODIFICATION
 // =====================================================

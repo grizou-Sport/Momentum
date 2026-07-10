@@ -330,12 +330,7 @@ p{
    Cartes génériques
    ========================================================= */
 
-.card,
-.story-card,
-.chart-card,
-.home-card,
-.month-grid,
-.living-week{
+.card{
   background:var(--surface);
   border:1px solid var(--line);
   border-radius:var(--radius-lg);

@@ -1036,3 +1036,37 @@ button.you-small-card{
 .mission-actions button {
   width: 100%;
 }
+/* =====================================================
+   MOMENTUM — ICÔNES INLINE
+   ===================================================== */
+
+.mission-line {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.mission-inline-icon {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+.mission-inline-icon-small {
+  width: 18px;
+  height: 18px;
+}
+
+.mission-symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  font-size: 1rem;
+  line-height: 1;
+}

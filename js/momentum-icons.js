@@ -1,48 +1,82 @@
-// ===================================================== // MOMENTUM —
-BIBLIOTHÈQUE D’ICÔNES //
-===================================================== // //
-Responsabilité de ce fichier : // - construire le chemin d’un SVG ; // -
-générer son HTML ; // - créer un élément réutilisable ; // - fournir une
-icône de secours si nécessaire. // // Les sports et leurs clés d’icônes
-restent définis dans : // js/momentum-sports.js // // Convention : //
-icon: “running” // correspond à : // assets/icons/sports/running.svg //
+// =====================================================
+// MOMENTUM — BIBLIOTHÈQUE D’ICÔNES
+// =====================================================
+//
+// Responsabilité de ce fichier :
+// - construire le chemin d’un SVG ;
+// - générer son HTML ;
+// - créer un élément <img> réutilisable ;
+// - fournir une icône de secours si nécessaire.
+//
+// Les sports et leurs clés d’icônes restent définis dans :
+// js/momentum-sports.js
+//
+// Convention :
+// icon: "running"
+// correspond à :
+// assets/icons/sports/running.svg
+//
 // =====================================================
 
-(function initializeMomentumIcons() { const DEFAULT_OPTIONS =
-Object.freeze({ basePath: “assets/icons”, fallbackIcon:
-“circle-ellipsis”, defaultSize: 24, });
+(function initializeMomentumIcons() {
+  const DEFAULT_OPTIONS = Object.freeze({
+    basePath: "assets/icons",
+    fallbackIcon: "circle-ellipsis",
+    defaultSize: 24,
+  });
 
-let configuration = { …DEFAULT_OPTIONS, };
+  let configuration = {
+    ...DEFAULT_OPTIONS,
+  };
 
-// =================================================== // UTILITAIRES
-INTERNES // ===================================================
+  // ===================================================
+  // UTILITAIRES INTERNES
+  // ===================================================
 
-function sanitizeSegment(value) { return String(value || ““) .trim()
-.toLowerCase() .replace(/[^a-z0-9-_]/g,”“); }
+  function sanitizeSegment(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9-_]/g, "");
+  }
 
-function normalizeSize(value) { const size = Number(value);
+  function normalizeSize(value) {
+    const size = Number(value);
 
     return Number.isFinite(size) && size > 0
       ? size
       : configuration.defaultSize;
+  }
 
-}
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
 
-function escapeHtml(value) { return String(value ?? ““)
-.replace(/&/g,”&“) .replace(/</g,”<“) .replace(/>/g,”>“) .replace(/”/g,
-“"“) .replace(/’/g,”'“); }
+  function getSafeIconKey(iconKey) {
+    return (
+      sanitizeSegment(iconKey) ||
+      sanitizeSegment(configuration.fallbackIcon)
+    );
+  }
 
-function getSafeIconKey(iconKey) { return ( sanitizeSegment(iconKey) ||
-sanitizeSegment(configuration.fallbackIcon) ); }
+  function getSafeCollection(collection) {
+    return sanitizeSegment(collection) || "sports";
+  }
 
-function getSafeCollection(collection) { return
-sanitizeSegment(collection) || “sports”; }
+  // ===================================================
+  // CONFIGURATION
+  // ===================================================
 
-// =================================================== // CONFIGURATION
-// ===================================================
-
-function configure(options = {}) { configuration = { …configuration,
-…options, };
+  function configure(options = {}) {
+    configuration = {
+      ...configuration,
+      ...options,
+    };
 
     configuration.basePath = String(
       configuration.basePath || DEFAULT_OPTIONS.basePath
@@ -57,26 +91,30 @@ function configure(options = {}) { configuration = { …configuration,
     );
 
     return getConfiguration();
+  }
 
-}
+  function getConfiguration() {
+    return Object.freeze({
+      ...configuration,
+    });
+  }
 
-function getConfiguration() { return Object.freeze({ …configuration, });
-}
+  // ===================================================
+  // CHEMINS
+  // ===================================================
 
-// =================================================== // CHEMINS //
-===================================================
-
-function getPath(iconKey, options = {}) { const collection =
-getSafeCollection(options.collection); const safeIconKey =
-getSafeIconKey(iconKey); const basePath = String( options.basePath ||
-configuration.basePath ).replace(//+$/, ““);
+  function getPath(iconKey, options = {}) {
+    const collection = getSafeCollection(options.collection);
+    const safeIconKey = getSafeIconKey(iconKey);
+    const basePath = String(
+      options.basePath || configuration.basePath
+    ).replace(/\/+$/, "");
 
     return `${basePath}/${collection}/${safeIconKey}.svg`;
+  }
 
-}
-
-function getSportPath(sportOrId, options = {}) { let iconKey =
-sportOrId;
+  function getSportPath(sportOrId, options = {}) {
+    let iconKey = sportOrId;
 
     if (
       window.MomentumSports &&
@@ -95,15 +133,22 @@ sportOrId;
       ...options,
       collection: "sports",
     });
+  }
 
-}
+  // ===================================================
+  // GÉNÉRATION HTML
+  // ===================================================
 
-// =================================================== // GÉNÉRATION
-HTML // ===================================================
-
-function render(iconKey, options = {}) { const { collection = “sports”,
-size = configuration.defaultSize, className = ““, alt =”“, title =”“,
-decorative = !alt, loading =”lazy”, } = options;
+  function render(iconKey, options = {}) {
+    const {
+      collection = "sports",
+      size = configuration.defaultSize,
+      className = "",
+      alt = "",
+      title = "",
+      decorative = !alt,
+      loading = "lazy",
+    } = options;
 
     const normalizedSize = normalizeSize(size);
     const src = getPath(iconKey, { collection });
@@ -134,10 +179,10 @@ decorative = !alt, loading =”lazy”, } = options;
       'class="momentum-icon ${safeClassName}".trim()',
       `class="momentum-icon${safeClassName ? ` ${safeClassName}` : ""}"`
     );
+  }
 
-}
-
-function renderSport(sportOrId, options = {}) { let sport = sportOrId;
+  function renderSport(sportOrId, options = {}) {
+    let sport = sportOrId;
 
     if (
       window.MomentumSports &&
@@ -168,15 +213,23 @@ function renderSport(sportOrId, options = {}) { let sport = sportOrId;
           ? options.decorative
           : true,
     });
+  }
 
-}
+  // ===================================================
+  // CRÉATION DOM
+  // ===================================================
 
-// =================================================== // CRÉATION DOM
-// ===================================================
-
-function create(iconKey, options = {}) { const { collection = “sports”,
-size = configuration.defaultSize, className = ““, alt =”“, title =”“,
-decorative = !alt, loading =”lazy”, fallback = true, } = options;
+  function create(iconKey, options = {}) {
+    const {
+      collection = "sports",
+      size = configuration.defaultSize,
+      className = "",
+      alt = "",
+      title = "",
+      decorative = !alt,
+      loading = "lazy",
+      fallback = true,
+    } = options;
 
     const image = document.createElement("img");
     const normalizedSize = normalizeSize(size);
@@ -223,10 +276,10 @@ decorative = !alt, loading =”lazy”, fallback = true, } = options;
     }
 
     return image;
+  }
 
-}
-
-function createSport(sportOrId, options = {}) { let sport = sportOrId;
+  function createSport(sportOrId, options = {}) {
+    let sport = sportOrId;
 
     if (
       window.MomentumSports &&
@@ -257,12 +310,20 @@ function createSport(sportOrId, options = {}) { let sport = sportOrId;
           ? options.decorative
           : true,
     });
+  }
 
-}
+  // ===================================================
+  // API PUBLIQUE
+  // ===================================================
 
-// =================================================== // API PUBLIQUE
-// ===================================================
-
-window.MomentumIcons = Object.freeze({ configure, getConfiguration,
-getPath, getSportPath, render, renderSport, create, createSport, });
+  window.MomentumIcons = Object.freeze({
+    configure,
+    getConfiguration,
+    getPath,
+    getSportPath,
+    render,
+    renderSport,
+    create,
+    createSport,
+  });
 })();
