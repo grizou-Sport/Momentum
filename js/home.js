@@ -58,7 +58,12 @@ function defaultState() {
     profile: {
       athlete: "Chris",
       project: "Mission actuelle",
-      tagline: "Transformer la donnée en histoire."
+      tagline: "Transformer la donnée en histoire.",
+
+      // Temporaire : sera ensuite chargé depuis le profil Supabase.
+      locationName: "Mervelier",
+      latitude: 47.343,
+      longitude: 7.5
     },
     sessions: [],
     context: {}
@@ -118,18 +123,25 @@ function routeCenter(route) {
   };
 }
 
-async function getIpLocation() {
-  const res = await fetch("https://ipapi.co/json/");
-  if (!res.ok) throw new Error("IP location failed");
+function getDefaultUserLocation() {
+  const profile = state.profile || {};
 
-  const data = await res.json();
+  const latitude = Number(profile.latitude);
+  const longitude = Number(profile.longitude);
+
+  if (
+    !profile.locationName ||
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude)
+  ) {
+    return null;
+  }
 
   return {
-    locationName: data.city || "Lieu actuel",
-    country: data.country_name || "",
-    latitude: data.latitude,
-    longitude: data.longitude,
-    source: "ip"
+    locationName: profile.locationName,
+    latitude,
+    longitude,
+    source: "profile"
   };
 }
 
@@ -193,61 +205,67 @@ async function getWeather(latitude, longitude, date) {
 async function getContextForDate(date) {
   state.context = state.context || {};
 
-  const sessions = sessionsOn(date);
-  const activityWithRoute = sessions.find((s) => s.route?.points?.length);
   const existing = state.context[date] || {};
+  const location = getDefaultUserLocation();
 
-  if (existing.weather && existing.locationName) {
+  if (!location) {
+    return {
+      locationName: "Lieu non défini",
+      weatherError: true,
+      missingDefaultLocation: true
+    };
+  }
+
+  const sameLocation =
+    existing.source === "profile" &&
+    existing.locationName === location.locationName &&
+    Number(existing.latitude) === location.latitude &&
+    Number(existing.longitude) === location.longitude;
+
+  if (existing.weather && sameLocation) {
     return existing;
   }
 
   try {
-    let location;
-
-    if (activityWithRoute) {
-      const center = routeCenter(activityWithRoute.route);
-
-      const placeName =
-        activityWithRoute.placeName ||
-        activityWithRoute.locationName ||
-        (await reverseGeocode(center.latitude, center.longitude));
-
-      location = {
-        locationName: placeName,
-        latitude: center.latitude,
-        longitude: center.longitude,
-        source: "activity"
-      };
-    } else {
-      location = await getIpLocation();
-    }
-
-    const weather = await getWeather(location.latitude, location.longitude, date);
+    const weather = await getWeather(
+      location.latitude,
+      location.longitude,
+      date
+    );
 
     state.context[date] = {
-      ...existing,
       ...location,
       weather,
       fetchedAt: new Date().toISOString()
     };
 
     saveState();
+
     return state.context[date];
   } catch (error) {
-    state.context[date] = {
-      ...existing,
-      locationName: existing.locationName || "Lieu indisponible",
+    console.error("Erreur météo :", error);
+
+    return {
+      ...location,
       weatherError: true
     };
-
-    saveState();
-    return state.context[date];
   }
 }
 
 function renderWeatherCard(context) {
   const el = $("#weatherCard");
   if (!el) return;
+  if (context.missingDefaultLocation) {
+  el.innerHTML = `
+    <span class="card-label">Météo</span>
+    <h2>Lieu à définir</h2>
+    <p>
+      Ajoute ton lieu par défaut dans ton profil pour afficher
+      la météo locale.
+    </p>
+  `;
+  return;
+}
 
   if (context.weatherError) {
     el.innerHTML = `

@@ -318,18 +318,21 @@ main{
 .main-day-card{
   min-height:520px;
   padding:42px;
+
   display:flex;
   flex-direction:column;
   justify-content:flex-end;
-   background:
-        linear-gradient(
-            180deg,
-            rgba(0,0,0,.02) 0%,
-            rgba(0,0,0,.70) 100%
-        ),
-        url("../Assets/photography/mountain/mountain-002.jpeg")
-        center center / cover no-repeat;
 
+  background:
+    linear-gradient(
+      180deg,
+      rgba(0,0,0,.03) 0%,
+      rgba(0,0,0,.68) 100%
+    ),
+    url("../Assets/photography/mountain/mountain-002.jpeg")
+    center center / cover no-repeat;
+
+  color:#fff;
 }
 
 .main-day-card h2,
@@ -342,7 +345,7 @@ main{
 
 .main-day-card p{
   max-width:660px;
-  color:rgba(255,255,255,.8);
+  color:rgba(255,255,255,.80);
 }
 
 .planned-card{
@@ -763,7 +766,6 @@ main{
 }
 
 @media(max-width:480px){
-  
 
   .hero{
     min-height:760px;
