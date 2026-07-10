@@ -24,18 +24,6 @@ const MISSION_INTENTIONS = [
   { value: "escape", label: "Évasion" },
 ];
 
-const MISSION_SPORTS = [
-  "Course à pied",
-  "Trail",
-  "Vélo",
-  "Gravel",
-  "Natation",
-  "Padel",
-  "Randonnée",
-  "Ski",
-  "Autre",
-];
-
 // =====================================================
 // UTILITAIRES
 // =====================================================
@@ -60,13 +48,43 @@ function getOptionList(options, selectedValue = "") {
     .join("");
 }
 
-function getTextOptionList(options, selectedValue = "") {
-  return options
+function getMissionSport(value) {
+  if (!window.MomentumSports) return null;
+  return window.MomentumSports.resolve(value);
+}
+
+function getMissionSportLabel(value) {
+  return getMissionSport(value)?.label || value || "";
+}
+
+function getMissionSportOptionList(selectedValue = "") {
+  if (!window.MomentumSports) {
+    console.error(
+      "MomentumSports n’est pas chargé. Vérifie que momentum-sports.js est placé avant you-mission.js."
+    );
+    return "";
+  }
+
+  const selectedSportId =
+    window.MomentumSports.resolveId(selectedValue) || selectedValue || "";
+
+  return window.MomentumSports.getGroupedOptions()
     .map(
-      (option) => `
-        <option value="${option}" ${option === selectedValue ? "selected" : ""}>
-          ${option}
-        </option>
+      (group) => `
+        <optgroup label="${group.label}">
+          ${group.sports
+            .map(
+              (sport) => `
+                <option
+                  value="${sport.id}"
+                  ${sport.id === selectedSportId ? "selected" : ""}
+                >
+                  ${sport.label}
+                </option>
+              `
+            )
+            .join("")}
+        </optgroup>
       `
     )
     .join("");
@@ -145,6 +163,21 @@ async function loadMission() {
   const youDetail = document.getElementById("youDetail");
   if (!youDetail || !window.momentumDB) return;
 
+  if (!window.MomentumSports) {
+    console.error(
+      "MomentumSports n’est pas chargé. Vérifie que momentum-sports.js est placé avant you-mission.js."
+    );
+
+    youDetail.innerHTML = `
+      <section class="you-panel">
+        <p class="you-panel-text">
+          Impossible de charger le référentiel des sports.
+        </p>
+      </section>
+    `;
+    return;
+  }
+
   youDetail.innerHTML = `
     <section class="you-panel">
       <p class="you-panel-text">Chargement de ton horizon...</p>
@@ -192,7 +225,12 @@ async function saveMission(event) {
   const category = document.getElementById("missionCategoryInput")?.value;
   const subcategory = document.getElementById("missionIntentionInput")?.value;
   const title = document.getElementById("missionTitleInput")?.value.trim();
-  const sport = document.getElementById("missionSportInput")?.value || null;
+  const selectedSport =
+    document.getElementById("missionSportInput")?.value || null;
+
+  const sport = selectedSport
+    ? window.MomentumSports.resolveId(selectedSport) || selectedSport
+    : null;
   const description =
     document.getElementById("missionDescriptionInput")?.value.trim() || null;
   const targetDate =
@@ -389,7 +427,7 @@ async function renderMissionCard(mission) {
   if (mission.category) identityItems.push(`${categoryIcon} ${categoryLabel}`);
   if (mission.subcategory) identityItems.push(`🎯 ${intentionLabel}`);
   if (mission.category !== "health" && mission.sport) {
-    identityItems.push(`🏃 ${mission.sport}`);
+    identityItems.push(`🏃 ${getMissionSportLabel(mission.sport)}`);
   }
 
   const targetItems = [];
@@ -594,7 +632,11 @@ function renderMissionPathItem(mission) {
       <p class="you-panel-meta">
         ${categoryIcon} ${categoryLabel}
         ${mission.subcategory ? ` · 🎯 ${intentionLabel}` : ""}
-        ${mission.sport ? ` · 🏃 ${mission.sport}` : ""}
+        ${
+          mission.sport
+            ? ` · 🏃 ${getMissionSportLabel(mission.sport)}`
+            : ""
+        }
       </p>
 
       ${
@@ -672,7 +714,7 @@ function openMissionModal(mission = null) {
           Sport / activité
           <select id="missionSportInput">
             <option value="">Choisir une activité</option>
-            ${getTextOptionList(MISSION_SPORTS, mission?.sport || "")}
+            ${getMissionSportOptionList(mission?.sport || "")}
           </select>
         </label>
 
@@ -773,15 +815,22 @@ function updateMissionConditionalFields() {
   });
 
   if (category !== "health") {
-    document.querySelector(".mission-sport-field").style.display = "block";
+    const sportField = document.querySelector(".mission-sport-field");
+    if (sportField) sportField.style.display = "block";
   }
 
   if (category === "competition") {
-    document.querySelector(".mission-competition-fields").style.display = "grid";
+    const competitionFields = document.querySelector(
+      ".mission-competition-fields"
+    );
+    if (competitionFields) competitionFields.style.display = "grid";
   }
 
   if (category === "adventure") {
-    document.querySelector(".mission-adventure-field").style.display = "block";
+    const adventureField = document.querySelector(
+      ".mission-adventure-field"
+    );
+    if (adventureField) adventureField.style.display = "block";
   }
 }
 
