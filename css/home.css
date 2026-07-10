@@ -46,6 +46,7 @@ main{
    ========================================================= */
 
 .home-body .topbar{
+  top:36px;
   border:1px solid rgba(255,255,255,.20);
 
   background:rgba(255,255,255,.12);
@@ -100,6 +101,7 @@ main{
 
 .hero{
   position:relative;
+  background-color:#1d2529;
   min-height:100svh;
   display:flex;
   align-items:flex-end;
@@ -317,6 +319,7 @@ main{
 
 .main-day-card{
   min-height:520px;
+  background-color:#242a2d;
   padding:42px;
 
   display:flex;
@@ -334,7 +337,6 @@ main{
 
   color:#fff;
 }
-
 .main-day-card h2,
 .main-day-card h3,
 .main-day-card p{
@@ -369,7 +371,6 @@ main{
   font-weight:850;
   letter-spacing:-.05em;
 }
-
 
 /* =========================================================
    Fenêtre vivante
@@ -650,13 +651,8 @@ main{
 @media(max-width:760px){
 
   .home-body .topbar{
-  top:18px;
-}
-
-.hero-content{
-  padding-left:8px;
-  padding-right:8px;
-}
+    top:18px;
+  }
 
   .story-section{
     padding:78px 0;
@@ -667,8 +663,7 @@ main{
   }
 
   .hero-content{
-    padding-top:160px;
-    padding-bottom:104px;
+    padding:160px 8px 104px;
   }
 
   .hero h1{
@@ -772,10 +767,10 @@ main{
   }
 
   .hero-content{
-  width:calc(100% - 28px);
-  padding-left:0;
-  padding-right:0;
-}
+    width:calc(100% - 28px);
+    padding-left:0;
+    padding-right:0;
+  }
 
   .hero h1{
     font-size:48px;
