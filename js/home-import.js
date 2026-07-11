@@ -60,6 +60,50 @@ function routeCenter(route) {
   };
 }
 
+function simplifyRoutePoints(points, maximumPoints = 350) {
+  const validPoints = (points || []).filter((point) =>
+    Number.isFinite(Number(point?.lat)) &&
+    Number.isFinite(Number(point?.lon))
+  );
+
+  if (validPoints.length <= maximumPoints) {
+    return validPoints;
+  }
+
+  const step = (validPoints.length - 1) / (maximumPoints - 1);
+
+  return Array.from(
+    { length: maximumPoints },
+    (_, index) => validPoints[Math.round(index * step)]
+  );
+}
+
+function createRouteSummary(fileName, points, extra = {}) {
+  if (!Array.isArray(points) || points.length < 2) return null;
+
+  const mapPoints = simplifyRoutePoints(points).map((point) => [
+    Number(Number(point.lat).toFixed(6)),
+    Number(Number(point.lon).toFixed(6))
+  ]);
+
+  if (mapPoints.length < 2) return null;
+
+  const middle = mapPoints[Math.floor(mapPoints.length / 2)];
+
+  return {
+    file_name: fileName,
+    point_count: points.length,
+    map_points: mapPoints,
+    start: mapPoints[0],
+    end: mapPoints[mapPoints.length - 1],
+    center: {
+      latitude: middle[0],
+      longitude: middle[1]
+    },
+    ...extra
+  };
+}
+
 async function reverseGeocode(latitude, longitude) {
   const params = new URLSearchParams({
     format: "jsonv2",
@@ -152,16 +196,16 @@ function fitDate(value) {
 }
 
 function fitSportLabel(value) {
-  const labels = {
-    1: "Course à pied",
-    2: "Vélo",
-    5: "Natation",
-    11: "Randonnée",
-    13: "Fitness",
-    15: "Marche"
+  const sportIds = {
+    1: "running",
+    2: "cycling",
+    5: "swimming",
+    11: "hiking",
+    13: "fitness",
+    15: "walking"
   };
 
-  return labels[Number(value)] || "Autre";
+  return sportIds[Number(value)] || "other";
 }
 
 function readFitValue(view, offset, baseType, littleEndian) {
@@ -241,6 +285,19 @@ function fitEpochToDate(seconds) {
   );
 }
 
+function fitSemicirclesToDegrees(value) {
+  const semicircles = Number(value);
+
+  if (
+    !Number.isFinite(semicircles) ||
+    semicircles === 0x7fffffff
+  ) {
+    return null;
+  }
+
+  return semicircles * 180 / 2147483648;
+}
+
 async function parseFit(file) {
   const buffer = await file.arrayBuffer();
   const view = new DataView(buffer);
@@ -264,6 +321,7 @@ async function parseFit(file) {
 
   let offset = headerSize;
   let session = null;
+  const fitPoints = [];
 
   while (offset < dataEnd) {
     const header = view.getUint8(offset);
@@ -440,12 +498,52 @@ async function parseFit(file) {
           values[22] ?? null
       };
     }
+
+    // Message global 20 = record. Les positions sont exprimées
+    // en semicircles dans les champs 0 (latitude) et 1 (longitude).
+    if (definition.globalMessageNumber === 20) {
+      const latitude = fitSemicirclesToDegrees(values[0]);
+      const longitude = fitSemicirclesToDegrees(values[1]);
+
+      if (
+        Number.isFinite(latitude) &&
+        Number.isFinite(longitude) &&
+        latitude >= -90 && latitude <= 90 &&
+        longitude >= -180 && longitude <= 180
+      ) {
+        fitPoints.push({
+          lat: latitude,
+          lon: longitude
+        });
+      }
+    }
   }
 
   if (!session) {
     throw new Error(
       "Aucune séance n'a été trouvée dans ce fichier FIT."
     );
+  }
+
+  const routeSummary = createRouteSummary(
+    file.name,
+    fitPoints
+  );
+
+  let locationName = "";
+
+  if (routeSummary?.center) {
+    try {
+      locationName = await reverseGeocode(
+        routeSummary.center.latitude,
+        routeSummary.center.longitude
+      );
+    } catch (error) {
+      console.warn(
+        "HOME : lieu FIT non résolu.",
+        error
+      );
+    }
   }
 
   return {
@@ -478,7 +576,9 @@ async function parseFit(file) {
     avgHr:
       session.avgHeartRate || "",
 
-    locationName: ""
+    locationName,
+
+    routeSummary
   };
 }
 
@@ -515,7 +615,7 @@ async function parseActivityFile(file) {
           ? iso(new Date(route.startTime))
           : iso(new Date()),
 
-      sport: "Course à pied",
+      sport: "running",
 
       type:
         file.name.replace(/\.gpx$/i, ""),
@@ -530,13 +630,14 @@ async function parseActivityFile(file) {
       avgHr: "",
       locationName,
 
-      routeSummary: {
-        file_name: file.name,
-        point_count: route.points.length,
-        start_time: route.startTime,
-        end_time: route.endTime,
-        center
-      }
+      routeSummary: createRouteSummary(
+        file.name,
+        route.points,
+        {
+          start_time: route.startTime,
+          end_time: route.endTime
+        }
+      )
     };
   }
 

@@ -106,6 +106,11 @@ function openDay(date) {
   const sessions = sessionsOn(date);
   dialog.dataset.date = date;
 
+  content.querySelectorAll("[data-route-map]")
+    .forEach((mapElement) => {
+      window.MomentumMap?.clear(mapElement);
+    });
+
   content.innerHTML = `
     <div class="day-dialog-head">
       <div>
@@ -148,6 +153,16 @@ function openDay(date) {
                 ${session.sourceFileType
                   ? `<span class="day-file-label">Fichier ${escapeHtml(session.sourceFileType.toUpperCase())}</span>`
                   : ""}
+                ${Array.isArray(session.routeSummary?.map_points) &&
+                  session.routeSummary.map_points.length >= 2
+                  ? `
+                    <div
+                      class="momentum-map activity-route-map"
+                      data-route-map="${escapeHtml(session.id)}"
+                      aria-label="Trace de ${escapeHtml(sessionLabel(session))}"
+                    ></div>
+                  `
+                  : ""}
               </div>
 
               <div class="day-moment-actions">
@@ -186,4 +201,18 @@ function openDay(date) {
   if (typeof dialog.showModal === "function" && !dialog.open) {
     dialog.showModal();
   }
+
+  content.querySelectorAll("[data-route-map]")
+    .forEach((mapElement) => {
+      const session = sessions.find(
+        (item) => item.id === mapElement.dataset.routeMap
+      );
+
+      if (session?.routeSummary?.map_points) {
+        window.MomentumMap?.renderRoute(
+          mapElement,
+          session.routeSummary.map_points
+        );
+      }
+    });
 }

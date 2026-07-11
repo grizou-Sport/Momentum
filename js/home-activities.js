@@ -8,16 +8,25 @@ function sessionLabel(session) {
   return (
     session.type ||
     session.activity_type ||
-    session.sport ||
+    activitySportLabel(session.sport) ||
     "Moment"
   );
+}
+
+function activitySportLabel(value) {
+  if (!value) return "";
+
+  return window.MomentumSports?.getLabel(
+    value,
+    String(value)
+  ) || String(value);
 }
 
 function sessionMeta(session) {
   const parts = [];
 
   if (session.sport) {
-    parts.push(session.sport);
+    parts.push(activitySportLabel(session.sport));
   }
 
   const distance =
@@ -218,9 +227,11 @@ function updateActivityFormCategory() {
 function initialiseActivityForm() {
   const form = $("#activityForm");
 
-  if (!form || form.dataset.initialised === "true") {
-    return;
-  }
+  if (!form) return;
+
+  populateActivitySportOptions(form);
+
+  if (form.dataset.initialised === "true") return;
 
   form
     .querySelectorAll(
@@ -236,23 +247,67 @@ function initialiseActivityForm() {
   form.dataset.initialised = "true";
 }
 
+function populateActivitySportOptions(form) {
+  const field = form.elements.sport;
+
+  if (
+    !field ||
+    field.dataset.populated === "true" ||
+    !window.MomentumSports
+  ) {
+    return;
+  }
+
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Choisir une activité";
+
+  field.replaceChildren(placeholder);
+
+  window.MomentumSports
+    .getGroupedOptions()
+    .forEach((group) => {
+      const optionGroup = document.createElement("optgroup");
+      optionGroup.label = group.label;
+
+      group.sports.forEach((sport) => {
+        const option = document.createElement("option");
+        option.value = sport.id;
+        option.textContent = sport.label;
+        optionGroup.append(option);
+      });
+
+      field.append(optionGroup);
+    });
+
+  field.dataset.populated = "true";
+}
+
 function setSelectValue(form, name, value) {
   const field = form.elements[name];
 
   if (!field || !value) return;
 
+  const normalizedValue =
+    name === "sport"
+      ? (window.MomentumSports?.resolveId(value) || String(value))
+      : String(value);
+
   const hasOption = [...field.options]
-    .some((option) => option.value === String(value));
+    .some((option) => option.value === normalizedValue);
 
   if (!hasOption) {
     const option = document.createElement("option");
-    option.value = String(value);
-    option.textContent = String(value);
+    option.value = normalizedValue;
+    option.textContent =
+      name === "sport"
+        ? activitySportLabel(value)
+        : String(value);
     option.dataset.temporary = "true";
     field.append(option);
   }
 
-  field.value = String(value);
+  field.value = normalizedValue;
 }
 
 function resetActivityDialogMode(form) {
@@ -510,7 +565,7 @@ function getActivityType(values, category) {
 }
 
 function getActivitySport(values, category) {
-  if (category !== "sport") {
+  if (!["sport", "adventure"].includes(category)) {
     return null;
   }
 

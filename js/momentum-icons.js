@@ -14,13 +14,13 @@
 // Convention :
 // icon: "running"
 // correspond à :
-// assets/icons/sports/running.svg
+// Assets/icons/sports/running.svg
 //
 // =====================================================
 
 (function initializeMomentumIcons() {
   const DEFAULT_OPTIONS = Object.freeze({
-    basePath: "assets/icons",
+    basePath: "Assets/icons",
     fallbackIcon: "circle-ellipsis",
     defaultSize: 24,
   });

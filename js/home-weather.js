@@ -19,6 +19,21 @@ function weatherText(code) {
   return "Conditions variables";
 }
 
+function weatherIconKey(code) {
+  const value = Number(code);
+
+  if (value === 0) return "clear";
+  if ([1, 2].includes(value)) return "partly-cloudy";
+  if (value === 3) return "cloudy";
+  if ([45, 48].includes(value)) return "fog";
+  if (value >= 51 && value <= 67) return "rain";
+  if (value >= 71 && value <= 77) return "snow";
+  if (value >= 80 && value <= 82) return "rain";
+  if (value >= 95) return "thunderstorm";
+
+  return "variable";
+}
+
 function timeOnly(value) {
   if (!value) return "—";
 
@@ -119,6 +134,9 @@ function renderWeatherCard(context) {
   const element = $("#weatherCard");
   if (!element) return;
 
+  window.MomentumMap?.clear("#weatherMap");
+  element.classList.remove("has-map");
+
   if (context.missingDefaultLocation) {
     element.innerHTML = `
       <span class="card-label">Météo</span>
@@ -149,19 +167,53 @@ function renderWeatherCard(context) {
   }
 
   element.innerHTML = `
-    <span class="card-label">Météo</span>
-    <h2>${escapeHtml(context.locationName)}</h2>
-    <p class="big-value">
-      ${Math.round(weather.tMin)}° – ${Math.round(weather.tMax)}°
-    </p>
-    <p>${escapeHtml(weatherText(weather.code))}</p>
-    <p class="muted">
-      Vent ${Math.round(weather.wind || 0)} km/h ·
-      Pluie ${formatNumber(weather.rain || 0)} mm
-    </p>
-    <p class="muted">
-      Lever ${timeOnly(weather.sunrise)} ·
-      Coucher ${timeOnly(weather.sunset)}
-    </p>
+    <div
+      id="weatherMap"
+      class="momentum-map weather-map"
+      aria-label="Carte de ${escapeHtml(context.locationName)}"
+    ></div>
+
+    <div class="weather-content">
+      <div class="weather-heading">
+        <span class="card-label">Météo</span>
+        ${window.MomentumIcons?.render(
+          weatherIconKey(weather.code),
+          {
+            collection: "weather",
+            size: 72,
+            className: "weather-icon",
+            decorative: true,
+            loading: "eager"
+          }
+        ) || ""}
+      </div>
+      <h2>${escapeHtml(context.locationName)}</h2>
+      <p class="big-value">
+        ${Math.round(weather.tMin)}° – ${Math.round(weather.tMax)}°
+      </p>
+      <p>${escapeHtml(weatherText(weather.code))}</p>
+      <p class="muted">
+        Vent ${Math.round(weather.wind || 0)} km/h ·
+        Pluie ${formatNumber(weather.rain || 0)} mm
+      </p>
+      <p class="muted">
+        Lever ${timeOnly(weather.sunrise)} ·
+        Coucher ${timeOnly(weather.sunset)}
+      </p>
+    </div>
   `;
+
+  const mapRendered = window.MomentumMap?.renderLocation(
+    "#weatherMap",
+    {
+      latitude: context.latitude,
+      longitude: context.longitude
+    },
+    {
+      zoom: 10,
+      zoomControl: false
+    }
+  );
+
+  element.classList.toggle("has-map", Boolean(mapRendered));
 }
