@@ -151,7 +151,7 @@ function updateActivityFormCategory() {
     );
 
   sportFields.forEach((element) => {
-    element.hidden = category !== "sport";
+    element.hidden = !["sport", "adventure"].includes(category);
   });
 
   wellbeingFields.forEach((element) => {
@@ -199,14 +199,14 @@ function updateActivityFormCategory() {
 
   if (fileZone) {
     fileZone.hidden =
-      category !== "sport";
+      !["sport", "adventure"].includes(category);
   }
 
   const fileInput =
     form.elements.activity_file;
 
   if (
-    category !== "sport" &&
+    category === "wellbeing" &&
     fileInput
   ) {
     fileInput.value = "";
@@ -236,7 +236,47 @@ function initialiseActivityForm() {
   form.dataset.initialised = "true";
 }
 
-function openActivityDialog() {
+function setSelectValue(form, name, value) {
+  const field = form.elements[name];
+
+  if (!field || !value) return;
+
+  const hasOption = [...field.options]
+    .some((option) => option.value === String(value));
+
+  if (!hasOption) {
+    const option = document.createElement("option");
+    option.value = String(value);
+    option.textContent = String(value);
+    option.dataset.temporary = "true";
+    field.append(option);
+  }
+
+  field.value = String(value);
+}
+
+function resetActivityDialogMode(form) {
+  form.querySelectorAll('option[data-temporary="true"]')
+    .forEach((option) => option.remove());
+
+  delete form.dataset.editActivityId;
+  delete form.dataset.existingSourceFileUrl;
+  delete form.dataset.existingSourceFileType;
+  delete form.dataset.existingGpxUrl;
+
+  const title = $("#activityDialogTitle");
+  const saveButton = $("#saveActivityButton");
+  const existingFile = $("#existingActivityFile");
+
+  if (title) title.textContent = "Ajouter un moment";
+  if (saveButton) saveButton.textContent = "Enregistrer";
+  if (existingFile) {
+    existingFile.hidden = true;
+    existingFile.textContent = "";
+  }
+}
+
+function openActivityDialog(date = null, returnToDay = false) {
   const dialog = $("#activityDialog");
   const form = $("#activityForm");
 
@@ -244,14 +284,20 @@ function openActivityDialog() {
 
   initialiseActivityForm();
 
+  resetActivityDialogMode(form);
   form.reset();
 
   delete form.dataset.routeSummary;
 
-  form.elements.activity_date.value =
-    iso(new Date());
+  const selectedDate =
+    date && /^\d{4}-\d{2}-\d{2}$/.test(date)
+      ? date
+      : iso(new Date());
+
+  form.elements.activity_date.value = selectedDate;
 
   form.elements.status.value = "done";
+  form.dataset.returnToDay = returnToDay ? selectedDate : "";
 
   const defaultCategory =
     form.querySelector(
@@ -269,6 +315,72 @@ function openActivityDialog() {
     typeof dialog.showModal === "function"
   ) {
     dialog.showModal();
+  }
+}
+
+function openEditActivityDialog(activityId) {
+  const session = (state.sessions || []).find(
+    (item) => item.id === activityId
+  );
+
+  if (!session) {
+    window.alert("Ce moment n'est plus disponible.");
+    return;
+  }
+
+  openActivityDialog(session.date, true);
+
+  const form = $("#activityForm");
+  if (!form) return;
+
+  form.dataset.editActivityId = session.id;
+  form.dataset.existingSourceFileUrl = session.sourceFileUrl || "";
+  form.dataset.existingSourceFileType = session.sourceFileType || "";
+  form.dataset.existingGpxUrl = session.gpxUrl || "";
+  form.dataset.routeSummary = session.routeSummary
+    ? JSON.stringify(session.routeSummary)
+    : "";
+
+  const category = session.category || "sport";
+  const categoryInput = form.querySelector(
+    `input[name="activity_category"][value="${category}"]`
+  );
+
+  if (categoryInput) categoryInput.checked = true;
+  updateActivityFormCategory();
+
+  setFormValue(form, "activity_date", session.date);
+  setFormValue(form, "status", session.status);
+  setSelectValue(form, "sport", session.sport);
+  setFormValue(form, "distance_km", session.distance);
+  setFormValue(form, "duration_min", session.duration);
+  setFormValue(form, "elevation_m", session.elevation);
+  setFormValue(form, "avg_hr", session.hr);
+  setFormValue(form, "rpe", session.rpe);
+  setFormValue(form, "gear", session.gear);
+  setFormValue(form, "location_name", session.locationName);
+  setFormValue(form, "notes", session.comment);
+
+  const typeFields = {
+    sport: "sport_activity_type",
+    wellbeing: "wellbeing_activity_type",
+    adventure: "adventure_activity_type"
+  };
+
+  setSelectValue(form, typeFields[category], session.type);
+
+  const title = $("#activityDialogTitle");
+  const saveButton = $("#saveActivityButton");
+  const existingFile = $("#existingActivityFile");
+
+  if (title) title.textContent = "Modifier le moment";
+  if (saveButton) saveButton.textContent = "Enregistrer les modifications";
+
+  if (existingFile && session.sourceFileType) {
+    existingFile.hidden = false;
+    existingFile.textContent =
+      `Fichier ${session.sourceFileType.toUpperCase()} actuellement associé. ` +
+      "Choisis un nouveau fichier uniquement pour le remplacer.";
   }
 }
 
@@ -315,15 +427,7 @@ function fillActivityForm(data) {
 
   if (!form) return;
 
-  const sportCategory =
-    form.querySelector(
-      'input[name="activity_category"][value="sport"]'
-    );
-
-  if (sportCategory) {
-    sportCategory.checked = true;
-  }
-
+  const category = getSelectedActivityCategory(form);
   updateActivityFormCategory();
 
   setFormValue(
@@ -332,17 +436,15 @@ function fillActivityForm(data) {
     data.date
   );
 
-  setFormValue(
-    form,
-    "sport",
-    data.sport
-  );
+  setSelectValue(form, "sport", data.sport);
 
-  setFormValue(
-    form,
-    "sport_activity_type",
-    data.type
-  );
+  const typeFields = {
+    sport: "sport_activity_type",
+    wellbeing: "wellbeing_activity_type",
+    adventure: "adventure_activity_type"
+  };
+
+  setSelectValue(form, typeFields[category], data.type);
 
   setFormValue(
     form,
@@ -512,6 +614,13 @@ async function saveActivity(event) {
       ?.files?.[0] || null;
 
   let uploadedFile = null;
+  const editingId = form.dataset.editActivityId || "";
+  const existingSourceFileUrl =
+    form.dataset.existingSourceFileUrl || "";
+  const existingSourceFileType =
+    form.dataset.existingSourceFileType || "";
+  const existingGpxUrl =
+    form.dataset.existingGpxUrl || "";
 
   try {
     if (file) {
@@ -527,6 +636,17 @@ async function saveActivity(event) {
         );
     }
 
+    const hasActivityMetrics =
+      ["sport", "adventure"].includes(category);
+
+    const retainedSourceFileUrl = hasActivityMetrics
+      ? (uploadedFile?.path || existingSourceFileUrl || null)
+      : null;
+
+    const retainedSourceFileType = hasActivityMetrics
+      ? (uploadedFile?.type || existingSourceFileType || null)
+      : null;
+
     const payload = {
       user_id: user.id,
       activity_date: activityDate,
@@ -541,7 +661,7 @@ async function saveActivity(event) {
         ),
 
       distance_km:
-        category === "sport"
+        hasActivityMetrics
           ? numberOrNull(
               values,
               "distance_km"
@@ -555,7 +675,7 @@ async function saveActivity(event) {
         ),
 
       elevation_m:
-        category === "sport"
+        hasActivityMetrics
           ? numberOrNull(
               values,
               "elevation_m"
@@ -563,7 +683,7 @@ async function saveActivity(event) {
           : null,
 
       avg_hr:
-        category === "sport"
+        hasActivityMetrics
           ? numberOrNull(
               values,
               "avg_hr"
@@ -577,7 +697,7 @@ async function saveActivity(event) {
         ),
 
       gear:
-        category === "sport"
+        hasActivityMetrics
           ? (
               String(
                 values.get("gear") || ""
@@ -597,37 +717,64 @@ async function saveActivity(event) {
         ).trim() || null,
 
       route_summary:
-        category === "sport"
+        hasActivityMetrics
           ? routeSummary
           : null,
 
       source_file_url:
-        uploadedFile?.path || null,
+        retainedSourceFileUrl,
 
       source_file_type:
-        uploadedFile?.type || null,
+        retainedSourceFileType,
 
       gpx_url:
-        uploadedFile?.type === "gpx"
-          ? uploadedFile.path
+        retainedSourceFileType === "gpx"
+          ? (uploadedFile?.path || existingGpxUrl || retainedSourceFileUrl)
           : null
     };
 
     setActivityMessage(
-      "Enregistrement du moment…"
+      editingId
+        ? "Mise à jour du moment…"
+        : "Enregistrement du moment…"
     );
 
-    const { error } =
-      await window.momentumDB
+    let query = window.momentumDB
         .from("activities")
-        .insert(payload);
+        [editingId ? "update" : "insert"](payload);
+
+    if (editingId) {
+      query = query
+        .eq("id", editingId)
+        .eq("user_id", user.id)
+        .select("id")
+        .single();
+    }
+
+    const { error } = await query;
 
     if (error) {
       throw error;
     }
 
+    if (
+      editingId &&
+      existingSourceFileUrl &&
+      existingSourceFileUrl !== retainedSourceFileUrl
+    ) {
+      await removeUploadedActivityFile(existingSourceFileUrl);
+    }
+
+    const returnToDay = editingId
+      ? activityDate
+      : (form.dataset.returnToDay || "");
+
     closeActivityDialog();
     await renderHome();
+
+    if (returnToDay) {
+      openDay(returnToDay);
+    }
   } catch (error) {
     console.error(
       "HOME : moment non enregistré.",
@@ -645,5 +792,49 @@ async function saveActivity(event) {
       "Impossible d’enregistrer le moment.",
       true
     );
+  }
+}
+
+async function deleteActivity(activityId, activityDate) {
+  const session = (state.sessions || []).find(
+    (item) => item.id === activityId
+  );
+
+  if (!session) {
+    window.alert("Ce moment n'est plus disponible.");
+    return;
+  }
+
+  const confirmed = window.confirm(
+    "Supprimer ce moment ?\n\n" +
+    "Le moment et son éventuel fichier FIT ou GPX seront définitivement supprimés."
+  );
+
+  if (!confirmed) return;
+
+  const dialog = $("#dayDialog");
+  dialog?.classList.add("is-busy");
+
+  try {
+    const { error } = await window.momentumDB
+      .from("activities")
+      .delete()
+      .eq("id", activityId);
+
+    if (error) throw error;
+
+    if (session.sourceFileUrl) {
+      await removeUploadedActivityFile(session.sourceFileUrl);
+    }
+
+    await renderHome();
+    openDay(activityDate);
+  } catch (error) {
+    console.error("HOME : suppression impossible.", error);
+    window.alert(
+      error.message || "Impossible de supprimer ce moment."
+    );
+  } finally {
+    dialog?.classList.remove("is-busy");
   }
 }

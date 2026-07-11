@@ -85,7 +85,7 @@ async function reverseGeocode(latitude, longitude) {
     address.municipality ||
     address.county ||
     data.name ||
-    "Lieu de l'activité"
+    "Lieu du moment"
   );
 }
 
@@ -286,6 +286,10 @@ async function parseFit(file) {
         : (header & 0x0f);
 
     if (definitionMessage) {
+      if (offset + 5 > dataEnd) {
+        throw new Error("La définition FIT est incomplète.");
+      }
+
       offset += 1;
 
       const architecture = view.getUint8(offset);
@@ -303,6 +307,10 @@ async function parseFit(file) {
 
       const fields = [];
 
+      if (offset + fieldCount * 3 > dataEnd) {
+        throw new Error("Les champs FIT sont incomplets.");
+      }
+
       for (let index = 0; index < fieldCount; index += 1) {
         fields.push({
           number: view.getUint8(offset),
@@ -313,17 +321,38 @@ async function parseFit(file) {
         offset += 3;
       }
 
+      const developerFields = [];
+
       if (developerData) {
+        if (offset >= dataEnd) {
+          throw new Error("Les champs développeur FIT sont incomplets.");
+        }
+
         const developerFieldCount =
           view.getUint8(offset);
 
-        offset += 1 + developerFieldCount * 3;
+        offset += 1;
+
+        if (offset + developerFieldCount * 3 > dataEnd) {
+          throw new Error("Les champs développeur FIT sont incomplets.");
+        }
+
+        for (let index = 0; index < developerFieldCount; index += 1) {
+          developerFields.push({
+            number: view.getUint8(offset),
+            size: view.getUint8(offset + 1),
+            developerDataIndex: view.getUint8(offset + 2)
+          });
+
+          offset += 3;
+        }
       }
 
       definitions.set(localMessageType, {
         globalMessageNumber,
         littleEndian,
-        fields
+        fields,
+        developerFields
       });
 
       continue;
@@ -358,6 +387,20 @@ async function parseFit(file) {
           offset,
           field.baseType,
           definition.littleEndian
+        );
+      }
+
+      offset += field.size;
+    }
+
+    // Les valeurs des champs développeur suivent les champs standards
+    // dans chaque message de données. Elles ne sont pas encore utilisées
+    // par MOMENTUM, mais doivent être parcourues pour conserver l'alignement
+    // du flux binaire et reconnaître la définition du message suivant.
+    for (const field of definition.developerFields || []) {
+      if (offset + field.size > dataEnd) {
+        throw new Error(
+          "Les données développeur FIT sont incomplètes."
         );
       }
 

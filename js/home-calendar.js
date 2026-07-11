@@ -14,7 +14,7 @@ function renderToday(date, sessions) {
 
   if (narrative) {
     narrative.textContent = sessions.length
-      ? `${sessions.length} activité${sessions.length > 1 ? "s" : ""} inscrite${sessions.length > 1 ? "s" : ""} aujourd'hui.`
+      ? `${sessions.length} moment${sessions.length > 1 ? "s" : ""} inscrit${sessions.length > 1 ? "s" : ""} aujourd'hui.`
       : "La journée est libre ou encore à écrire.";
   }
 
@@ -25,7 +25,7 @@ function renderToday(date, sessions) {
       todayCard.innerHTML = `
         <span class="card-label">Aujourd'hui</span>
         <h3>La page est encore blanche.</h3>
-        <p>Une activité ajoutée ou importée depuis HOME apparaîtra ici.</p>
+        <p>Un moment ajouté depuis cette journée apparaîtra ici.</p>
       `;
     } else {
       const main = completed[0];
@@ -33,7 +33,7 @@ function renderToday(date, sessions) {
       todayCard.innerHTML = `
         <span class="card-label">Réalisé</span>
         <h3>${escapeHtml(sessionLabel(main))}</h3>
-        <p>${escapeHtml(sessionMeta(main) || "Activité enregistrée.")}</p>
+        <p>${escapeHtml(sessionMeta(main) || "Moment enregistré.")}</p>
         <p>${escapeHtml(main.comment || "Une ligne de plus dans le chemin.")}</p>
       `;
     }
@@ -46,7 +46,7 @@ function renderToday(date, sessions) {
       plannedCard.innerHTML = `
         <div>
           <span class="card-label">À venir</span>
-          <h3>Aucune séance prévue</h3>
+          <h3>Aucun moment prévu</h3>
         </div>
         <p class="muted">La journée reste ouverte.</p>
       `;
@@ -58,7 +58,7 @@ function renderToday(date, sessions) {
           <span class="card-label">Prévu</span>
           <h3>${escapeHtml(sessionLabel(next))}</h3>
         </div>
-        <p class="big-value">${escapeHtml(sessionMeta(next) || "Séance planifiée")}</p>
+        <p class="big-value">${escapeHtml(sessionMeta(next) || "Moment planifié")}</p>
         <p class="muted">${escapeHtml(next.comment || "À écrire.")}</p>
       `;
     }
@@ -79,7 +79,7 @@ function renderLivingWeek(centerDate = new Date()) {
 
     const summary = sessions.length
       ? sessions.map((session) => sessionLabel(session)).join(" · ")
-      : "Aucune activité";
+      : "Aucun moment";
 
     return `
       <button
@@ -127,7 +127,7 @@ function renderMonth() {
         <span>${date.getDate()}</span>
         ${
           sessions.length
-            ? `<small>${sessions.length} activité${sessions.length > 1 ? "s" : ""}</small>`
+            ? `<small>${sessions.length} moment${sessions.length > 1 ? "s" : ""}</small>`
             : ""
         }
       </button>
@@ -148,15 +148,25 @@ function renderCalendarCard(date, sessions) {
       main
         ? `
           <p class="big-value">${escapeHtml(sessionLabel(main))}</p>
-          <p>${escapeHtml(sessionMeta(main) || "Séance enregistrée.")}</p>
+          <p>${escapeHtml(sessionMeta(main) || "Moment enregistré.")}</p>
           <p class="muted">${escapeHtml(main.comment || "")}</p>
         `
         : `
-          <p class="big-value">Aucune séance</p>
+          <p class="big-value">Aucun moment</p>
           <p class="muted">La journée est libre ou encore à écrire.</p>
         `
     }
   `;
+}
+
+function dayCategoryLabel(category) {
+  const labels = {
+    sport: "Sport",
+    wellbeing: "Bien-être",
+    adventure: "Aventure"
+  };
+
+  return labels[category] || "Moment";
 }
 
 function openDay(date) {
@@ -166,27 +176,86 @@ function openDay(date) {
   if (!dialog || !content) return;
 
   const sessions = sessionsOn(date);
+  dialog.dataset.date = date;
 
   content.innerHTML = `
-    <span class="section-kicker">Journal</span>
-    <h2>${escapeHtml(fmtDate(date))}</h2>
-    ${
-      sessions.length
+    <div class="day-dialog-head">
+      <div>
+        <span class="section-kicker">La journée</span>
+        <h2>${escapeHtml(fmtDate(date))}</h2>
+        <p class="muted">
+          ${sessions.length
+            ? `${sessions.length} moment${sessions.length > 1 ? "s" : ""} inscrit${sessions.length > 1 ? "s" : ""}.`
+            : "La page est encore blanche."}
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="primary day-add-moment"
+        data-action="add-moment"
+        data-date="${date}"
+      >Ajouter un moment</button>
+    </div>
+
+    <div class="day-moment-list">
+      ${sessions.length
         ? sessions.map((session) => `
-            <article class="card">
-              <span class="card-label">
-                ${session.status === "done" ? "Réalisé" : "Prévu"}
-              </span>
-              <h3>${escapeHtml(sessionLabel(session))}</h3>
-              <p>${escapeHtml(sessionMeta(session))}</p>
-              <p class="muted">${escapeHtml(session.comment || "")}</p>
+            <article class="day-moment-card">
+              <div class="day-moment-content">
+                <span class="card-label">
+                  ${session.status === "done" ? "Réalisé" : "Prévu"}
+                  · ${escapeHtml(dayCategoryLabel(session.category))}
+                </span>
+                <h3>${escapeHtml(sessionLabel(session))}</h3>
+                ${sessionMeta(session)
+                  ? `<p class="day-moment-meta">${escapeHtml(sessionMeta(session))}</p>`
+                  : ""}
+                ${session.locationName
+                  ? `<p class="muted">${escapeHtml(session.locationName)}</p>`
+                  : ""}
+                ${session.comment
+                  ? `<p>${escapeHtml(session.comment)}</p>`
+                  : ""}
+                ${session.sourceFileType
+                  ? `<span class="day-file-label">Fichier ${escapeHtml(session.sourceFileType.toUpperCase())}</span>`
+                  : ""}
+              </div>
+
+              <div class="day-moment-actions">
+                <button
+                  type="button"
+                  class="day-edit-moment"
+                  data-action="edit-moment"
+                  data-activity-id="${session.id}"
+                  data-date="${date}"
+                >Modifier</button>
+
+                <button
+                  type="button"
+                  class="day-delete-moment"
+                  data-action="delete-moment"
+                  data-activity-id="${session.id}"
+                  data-date="${date}"
+                >Supprimer</button>
+              </div>
             </article>
           `).join("")
-        : "<p>Aucune activité pour cette journée.</p>"
-    }
+        : `
+            <div class="day-empty">
+              <p>Aucun moment pour cette journée.</p>
+              <button
+                type="button"
+                class="secondary"
+                data-action="add-moment"
+                data-date="${date}"
+              >Écrire le premier moment</button>
+            </div>
+          `}
+    </div>
   `;
 
-  if (typeof dialog.showModal === "function") {
+  if (typeof dialog.showModal === "function" && !dialog.open) {
     dialog.showModal();
   }
 }

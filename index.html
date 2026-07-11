@@ -73,8 +73,20 @@
       <p class="lead" id="todayNarrative"></p>
 
       <div class="today-grid">
-        <article class="story-card main-day-card" id="todayCard"></article>
-        <article class="story-card planned-card" id="plannedCard"></article>
+        <article
+          class="story-card main-day-card is-day-link"
+          id="todayCard"
+          role="button"
+          tabindex="0"
+          aria-label="Ouvrir la journée d'aujourd'hui"
+        ></article>
+        <article
+          class="story-card planned-card is-day-link"
+          id="plannedCard"
+          role="button"
+          tabindex="0"
+          aria-label="Ouvrir la journée d'aujourd'hui"
+        ></article>
       </div>
     </section>
 
@@ -121,12 +133,6 @@
 
 <section id="activityList" class="home-grid"></section>
 
-<div class="home-import">
-  <button id="openActivityDialog" class="primary" type="button">
-    Ajouter une activité
-  </button>
-</div>
-
     <section id="progression" class="story-section progression-section">
       <div class="section-kicker">Progression</div>
       <h2>Les chiffres ne sont pas l'histoire. Ils en sont la preuve — la donnée devient une histoire.</h2>
@@ -164,7 +170,7 @@
   </section>
 
   <dialog id="dayDialog" class="day-dialog">
-    <button class="close-btn" id="closeDay" type="button">×</button>
+    <button class="close-btn" id="closeDay" type="button" aria-label="Fermer">×</button>
     <div id="dayDialogContent"></div>
   </dialog>
 
@@ -216,10 +222,10 @@
   <div class="activity-dialog-content">
     <p class="section-kicker">HOME</p>
 
-    <h2>Ajouter un moment</h2>
+    <h2 id="activityDialogTitle">Ajouter un moment</h2>
 
     <p class="lead">
-      Une séance, une respiration ou une aventure.
+      Un sport, une respiration ou une aventure.
     </p>
 
     <form
@@ -261,7 +267,6 @@
       <label
         id="activityFileZone"
         class="activity-file-zone full"
-        data-activity-category="sport"
       >
         <span>Importer un fichier</span>
         <strong>FIT ou GPX</strong>
@@ -277,6 +282,8 @@
           type="file"
           accept=".fit,.gpx,application/gpx+xml,application/octet-stream"
         />
+
+        <small id="existingActivityFile" hidden></small>
       </label>
 
       <label>
@@ -637,6 +644,7 @@
         </button>
 
         <button
+          id="saveActivityButton"
           class="primary"
           type="submit"
         >
@@ -646,7 +654,6 @@
     </form>
   </div>
 </dialog>
-
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

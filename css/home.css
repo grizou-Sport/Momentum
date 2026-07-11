@@ -795,7 +795,7 @@ main{
   }
 }
 /* =========================================================
-   Ajouter une activité
+   Ajouter un moment
    ========================================================= */
 
 .activity-dialog{
@@ -917,4 +917,144 @@ main{
   .activity-actions{
     flex-direction:column-reverse;
   }
+}
+.activity-form [hidden] {
+  display: none !important;
+}
+
+.is-day-link{
+  cursor:pointer;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+
+.is-day-link:hover{
+  transform:translateY(-2px);
+  border-color:var(--line-strong);
+  box-shadow:var(--shadow-md);
+}
+
+.is-day-link:focus-visible{
+  outline:3px solid var(--accent);
+  outline-offset:4px;
+}
+
+.day-dialog{
+  position:relative;
+  width:min(880px,calc(100% - 32px));
+  max-height:calc(100svh - 40px);
+  overflow:auto;
+  border:0;
+  border-radius:var(--radius-xl);
+  padding:0;
+  background:var(--surface);
+  color:var(--ink);
+  box-shadow:var(--shadow-lg);
+}
+
+.day-dialog::backdrop{
+  background:rgba(0,0,0,.46);
+  backdrop-filter:blur(8px);
+}
+
+.day-dialog #dayDialogContent{
+  padding:46px;
+}
+
+.day-dialog-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:28px;
+  padding-right:34px;
+  margin-bottom:34px;
+}
+
+.day-dialog-head h2{margin:8px 0 10px}
+.day-dialog-head p{margin:0}
+.day-add-moment{flex:0 0 auto}
+.day-moment-list{display:grid;gap:14px}
+
+.day-moment-card{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:24px;
+  padding:24px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  background:var(--surface-soft);
+}
+
+.day-moment-content{min-width:0}
+.day-moment-card h3{margin:8px 0 10px;font-size:clamp(24px,3vw,34px)}
+.day-moment-card p{margin-bottom:8px}
+.day-moment-meta{color:var(--ink);font-weight:750}
+
+.day-file-label{
+  display:inline-flex;
+  margin-top:10px;
+  padding:7px 10px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+
+.day-delete-moment{
+  flex:0 0 auto;
+  padding:8px 0;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font-size:13px;
+  font-weight:750;
+  cursor:pointer;
+}
+
+.day-moment-actions{
+  display:flex;
+  flex:0 0 auto;
+  gap:16px;
+}
+
+.day-edit-moment{
+  padding:8px 0;
+  border:0;
+  background:transparent;
+  color:var(--ink);
+  font-size:13px;
+  font-weight:750;
+  cursor:pointer;
+}
+
+.day-edit-moment:hover{color:var(--accent)}
+.day-delete-moment:hover{color:var(--danger)}
+
+.day-empty{
+  padding:38px;
+  border:1px dashed var(--line-strong);
+  border-radius:var(--radius-lg);
+  text-align:center;
+}
+
+.day-empty p{margin-bottom:20px;color:var(--muted)}
+.day-dialog.is-busy{pointer-events:none;opacity:.62}
+
+@media(max-width:760px){
+  .day-dialog{
+    width:100%;
+    height:100svh;
+    max-height:100svh;
+    margin:0;
+    border-radius:0;
+  }
+
+  .day-dialog-head{flex-direction:column;padding-right:0}
+  .day-add-moment{width:100%}
+  .day-moment-card{flex-direction:column}
+  .day-moment-actions{align-self:flex-end}
+  .day-dialog #dayDialogContent{padding:72px 20px 28px}
 }

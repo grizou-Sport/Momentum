@@ -18,6 +18,8 @@ function mapActivityRow(row) {
     id: row.id,
     date: row.activity_date,
     status: row.status || "done",
+    category: row.activity_category || "sport",
+    activity_category: row.activity_category || "sport",
     sport: row.sport || "",
     type: row.activity_type || "",
     distance: row.distance_km,
@@ -30,6 +32,9 @@ function mapActivityRow(row) {
     locationName: row.location_name || "",
     placeName: row.location_name || "",
     routeSummary: row.route_summary || null,
+    sourceFileUrl: row.source_file_url || null,
+    sourceFileType: row.source_file_type || null,
+    gpxUrl: row.gpx_url || null,
     weather: row.weather || null,
     createdAt: row.created_at
   };
@@ -68,7 +73,7 @@ async function loadActivitiesForHome(
   const { data, error } = await window.momentumDB
     .from("activities")
     .select(
-      "id,user_id,sport,activity_type,status,distance_km,duration_min,elevation_m,avg_hr,rpe,gear,notes,created_at,activity_date,weather,location_name,route_summary"
+      "id,user_id,sport,activity_type,status,distance_km,duration_min,elevation_m,avg_hr,rpe,gear,notes,created_at,activity_date,weather,location_name,route_summary,activity_category,source_file_url,source_file_type,gpx_url"
     )
     .eq("user_id", user.id)
     .gte("activity_date", iso(rangeStart))

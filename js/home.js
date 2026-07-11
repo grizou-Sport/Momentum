@@ -38,7 +38,6 @@ async function renderHome() {
 }
 
 function bindHome() {
-  $("#openActivityDialog")?.addEventListener("click", openActivityDialog);
   $("#closeActivityDialog")?.addEventListener("click", closeActivityDialog);
   $("#cancelActivity")?.addEventListener("click", closeActivityDialog);
   $("#activityFile")?.addEventListener("change", handleActivityFile);
@@ -76,8 +75,53 @@ function bindHome() {
     if (day?.dataset.date) openDay(day.dataset.date);
   });
 
+  [$("#todayCard"), $("#plannedCard")]
+    .filter(Boolean)
+    .forEach((card) => {
+      const openToday = () => openDay(iso(new Date()));
+
+      card.addEventListener("click", openToday);
+      card.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openToday();
+        }
+      });
+    });
+
   $("#closeDay")?.addEventListener("click", () => {
     $("#dayDialog")?.close();
+  });
+
+  $("#dayDialogContent")?.addEventListener("click", async (event) => {
+    const actionButton = event.target.closest("[data-action]");
+    if (!actionButton) return;
+
+    const action = actionButton.dataset.action;
+    const date =
+      actionButton.dataset.date || $("#dayDialog")?.dataset.date;
+
+    if (action === "add-moment" && date) {
+      $("#dayDialog")?.close();
+      openActivityDialog(date, true);
+      return;
+    }
+
+    if (action === "edit-moment") {
+      const activityId = actionButton.dataset.activityId;
+      if (activityId) {
+        $("#dayDialog")?.close();
+        openEditActivityDialog(activityId);
+      }
+      return;
+    }
+
+    if (action === "delete-moment") {
+      const activityId = actionButton.dataset.activityId;
+      if (activityId && date) {
+        await deleteActivity(activityId, date);
+      }
+    }
   });
 }
 
