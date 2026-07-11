@@ -527,9 +527,12 @@ main{
 
 .living-week > *{
   min-width:0;
-  min-height:210px;
+  min-height:280px;
+  display:flex;
+  flex-direction:column;
   padding:22px 18px;
   border-right:1px solid var(--line);
+  text-align:left;
 }
 
 .living-week > *:last-child{
@@ -545,6 +548,85 @@ main{
 .living-week .is-today p,
 .living-week [data-today="true"] p{
   color:rgba(255,255,255,.68);
+}
+
+.living-weather{
+  display:grid;
+  gap:7px;
+  margin:4px 0 20px;
+  padding:16px 0;
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+}
+
+.living-weather.is-loading,
+.living-weather-missing{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:700;
+}
+
+.living-weather-main{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.living-weather-main strong{
+  color:var(--ink);
+  font-size:16px;
+  line-height:1;
+  letter-spacing:-.035em;
+  white-space:nowrap;
+}
+
+.living-weather-period{
+  color:var(--muted);
+  font-size:9px;
+  font-weight:850;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+
+.living-weather small{
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.35;
+}
+
+.living-moments{
+  margin-top:auto;
+}
+
+.living-moments > strong{
+  display:block;
+  margin-bottom:9px;
+  color:var(--ink);
+  font-size:34px;
+  line-height:1;
+}
+
+.living-moments p{
+  margin:0;
+  font-size:13px;
+}
+
+.living-week [data-today="true"] .living-weather{
+  border-color:rgba(255,255,255,.18);
+}
+
+.living-week [data-today="true"] .living-weather-icon{
+  filter:brightness(0) invert(1);
+}
+
+.living-week [data-today="true"] .living-weather-main strong,
+.living-week [data-today="true"] .living-moments > strong{
+  color:#fff;
+}
+
+.living-week [data-today="true"] .living-weather-period,
+.living-week [data-today="true"] .living-weather small{
+  color:rgba(255,255,255,.64);
 }
 
 
@@ -812,10 +894,14 @@ main{
 
   .living-week > *{
     flex:0 0 230px;
-    min-height:190px;
+    min-height:250px;
     border:1px solid var(--line);
     border-radius:var(--radius-md);
     scroll-snap-align:start;
+  }
+
+  .living-weather-wind{
+    display:none;
   }
 
   .month-grid{

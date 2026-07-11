@@ -31,7 +31,10 @@ async function renderHome() {
     `;
   }
 
-  const context = await getContextForDate(today);
+  const livingContexts = await loadLivingWeatherWindow();
+  renderLivingWeekWeather(livingContexts);
+
+  const context = livingContexts[today] || await getContextForDate(today);
   renderWeatherCard(context);
 }
 
@@ -41,8 +44,10 @@ function bindHome() {
   $("#activityFile")?.addEventListener("change", handleActivityFile);
   $("#activityForm")?.addEventListener("submit", saveActivity);
 
-  $("#centerToday")?.addEventListener("click", () => {
+  $("#centerToday")?.addEventListener("click", async () => {
     renderLivingWeek(new Date());
+    const contexts = await loadLivingWeatherWindow();
+    renderLivingWeekWeather(contexts);
   });
 
   $("#prevMonth")?.addEventListener("click", async () => {

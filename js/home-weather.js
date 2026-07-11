@@ -79,6 +79,128 @@ async function getWeather(latitude, longitude, date) {
   };
 }
 
+async function getLivingWeatherWindow(latitude, longitude) {
+  const params = new URLSearchParams({
+    latitude: String(latitude),
+    longitude: String(longitude),
+    past_days: "3",
+    forecast_days: "4",
+    daily:
+      "weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum,wind_speed_10m_max",
+    timezone: "auto"
+  });
+
+  const response = await fetch(
+    `https://api.open-meteo.com/v1/forecast?${params}`
+  );
+
+  if (!response.ok) {
+    throw new Error(`Fenêtre météo indisponible (${response.status})`);
+  }
+
+  const data = await response.json();
+  const daily = data.daily || {};
+
+  return (daily.time || []).reduce((weatherByDate, date, index) => {
+    weatherByDate[date] = {
+      code: daily.weather_code?.[index],
+      tMax: daily.temperature_2m_max?.[index],
+      tMin: daily.temperature_2m_min?.[index],
+      rain: daily.precipitation_sum?.[index],
+      wind: daily.wind_speed_10m_max?.[index],
+      sunrise: daily.sunrise?.[index],
+      sunset: daily.sunset?.[index]
+    };
+
+    return weatherByDate;
+  }, {});
+}
+
+async function loadLivingWeatherWindow() {
+  const location = getDefaultUserLocation();
+
+  if (!location) return {};
+
+  try {
+    const weatherByDate = await getLivingWeatherWindow(
+      location.latitude,
+      location.longitude
+    );
+
+    state.context = state.context || {};
+
+    Object.entries(weatherByDate).forEach(([date, weather]) => {
+      state.context[date] = {
+        ...location,
+        weather,
+        fetchedAt: new Date().toISOString()
+      };
+    });
+
+    saveState();
+
+    return Object.fromEntries(
+      Object.keys(weatherByDate).map((date) => [
+        date,
+        state.context[date]
+      ])
+    );
+  } catch (error) {
+    console.error("HOME : fenêtre météo indisponible.", error);
+    return {};
+  }
+}
+
+function renderLivingWeekWeather(contexts = {}) {
+  const today = iso(new Date());
+
+  document
+    .querySelectorAll("[data-living-weather]")
+    .forEach((element) => {
+      const date = element.dataset.livingWeather;
+      const weather = contexts[date]?.weather;
+
+      element.classList.remove("is-loading");
+
+      if (!weather) {
+        element.innerHTML = `<span class="living-weather-missing">Indisponible</span>`;
+        return;
+      }
+
+      const minimum = Number(weather.tMin);
+      const maximum = Number(weather.tMax);
+      const rain = Number(weather.rain);
+      const wind = Number(weather.wind);
+      const periodLabel = date < today ? "Observé" : "Prévu";
+
+      element.innerHTML = `
+        <div class="living-weather-main">
+          ${window.MomentumIcons?.render(
+            weatherIconKey(weather.code),
+            {
+              collection: "weather",
+              size: 34,
+              className: "living-weather-icon",
+              decorative: true,
+              loading: "eager"
+            }
+          ) || ""}
+          <strong>
+            ${Number.isFinite(minimum) ? Math.round(minimum) : "—"}° /
+            ${Number.isFinite(maximum) ? Math.round(maximum) : "—"}°
+          </strong>
+        </div>
+        <span class="living-weather-period">${periodLabel}</span>
+        <small>
+          <span>Pluie ${Number.isFinite(rain) ? formatNumber(rain) : "—"} mm</span>
+          <span class="living-weather-wind">
+            · Vent ${Number.isFinite(wind) ? Math.round(wind) : "—"} km/h
+          </span>
+        </small>
+      `;
+    });
+}
+
 async function getContextForDate(date) {
   state.context = state.context || {};
 
@@ -99,7 +221,11 @@ async function getContextForDate(date) {
     Number(cached.latitude) === location.latitude &&
     Number(cached.longitude) === location.longitude;
 
-  if (cached.weather && sameLocation) {
+  const fetchedAt = new Date(cached.fetchedAt || 0).getTime();
+  const cacheAge = Date.now() - fetchedAt;
+  const cacheIsFresh = date < iso(new Date()) || cacheAge < 30 * 60 * 1000;
+
+  if (cached.weather && sameLocation && cacheIsFresh) {
     return cached;
   }
 

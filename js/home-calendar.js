@@ -41,8 +41,16 @@ function renderLivingWeek(centerDate = new Date()) {
         data-today="${isToday ? "true" : "false"}"
       >
         <span class="card-label">${escapeHtml(fmtShortDate(dateIso))}</span>
-        <strong>${sessions.length || "—"}</strong>
-        <p>${escapeHtml(summary)}</p>
+        <div
+          class="living-weather is-loading"
+          data-living-weather="${dateIso}"
+        >
+          <span>Météo…</span>
+        </div>
+        <div class="living-moments">
+          <strong>${sessions.length || "—"}</strong>
+          <p>${escapeHtml(summary)}</p>
+        </div>
       </button>
     `;
   }).join("");
