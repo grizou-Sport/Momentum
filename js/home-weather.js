@@ -313,7 +313,7 @@ function renderWeatherCard(context) {
           }
         ) || ""}
       </div>
-      <h2>${escapeHtml(context.locationName)}</h2>
+      <h2 class="weather-location">${escapeHtml(context.locationName)}</h2>
       <p class="big-value">
         ${Math.round(weather.tMin)}° – ${Math.round(weather.tMax)}°
       </p>
@@ -337,7 +337,13 @@ function renderWeatherCard(context) {
     },
     {
       zoom: 10,
-      zoomControl: false
+      zoomControl: false,
+      anchor: {
+        x: .5,
+        y: .26,
+        element: ".weather-icon",
+        between: [".weather-location", ".weather-icon"]
+      }
     }
   );
 

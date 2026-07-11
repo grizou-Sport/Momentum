@@ -90,6 +90,52 @@
       fillOpacity: 1
     }).addTo(map);
 
+    if (options.anchor) {
+      const positionMarker = () => {
+        map.invalidateSize();
+
+        const size = map.getSize();
+        const mapBounds = map.getContainer().getBoundingClientRect();
+        const currentPoint = map.latLngToContainerPoint(coordinates);
+        let targetX = size.x * Number(options.anchor.x ?? .5);
+        let targetY = size.y * Number(options.anchor.y ?? .5);
+
+        const verticalAnchor = options.anchor.element
+          ? document.querySelector(options.anchor.element)
+          : null;
+
+        if (verticalAnchor) {
+          const bounds = verticalAnchor.getBoundingClientRect();
+          targetY = bounds.top - mapBounds.top + bounds.height / 2;
+        }
+
+        const leftAnchor = options.anchor.between?.[0]
+          ? document.querySelector(options.anchor.between[0])
+          : null;
+        const rightAnchor = options.anchor.between?.[1]
+          ? document.querySelector(options.anchor.between[1])
+          : null;
+
+        if (leftAnchor && rightAnchor) {
+          const leftBounds = leftAnchor.getBoundingClientRect();
+          const rightBounds = rightAnchor.getBoundingClientRect();
+          targetX = (
+            (leftBounds.right + rightBounds.left) / 2
+          ) - mapBounds.left;
+        }
+
+        const targetPoint = window.L.point(targetX, targetY);
+
+        map.panBy(
+          currentPoint.subtract(targetPoint),
+          { animate: false }
+        );
+      };
+
+      window.setTimeout(positionMarker, 0);
+      document.fonts?.ready.then(positionMarker);
+    }
+
     return true;
   }
 

@@ -408,6 +408,11 @@ main{
   font-size:clamp(30px,3.5vw,48px);
 }
 
+.weather-location{
+  display:inline-block;
+  align-self:flex-start;
+}
+
 .weather-card .big-value{
   margin:auto 0 14px;
   color:var(--ink);
