@@ -794,3 +794,127 @@ main{
     width:calc(100% - 24px);
   }
 }
+/* =========================================================
+   Ajouter une activité
+   ========================================================= */
+
+.activity-dialog{
+  position:relative;
+  width:min(860px,calc(100% - 32px));
+  max-height:calc(100svh - 40px);
+  overflow:auto;
+  border:0;
+  border-radius:var(--radius-xl);
+  padding:0;
+  background:var(--surface);
+  color:var(--ink);
+  box-shadow:var(--shadow-lg);
+}
+
+.activity-dialog::backdrop{
+  background:rgba(0,0,0,.46);
+  backdrop-filter:blur(8px);
+}
+
+.activity-dialog-content{
+  padding:46px;
+}
+
+.activity-dialog-content h2{
+  margin-bottom:14px;
+}
+
+.activity-dialog-content .lead{
+  margin-bottom:34px;
+}
+
+.activity-form{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:16px;
+}
+
+.activity-form label{
+  display:grid;
+  gap:8px;
+}
+
+.activity-file-zone{
+  position:relative;
+  min-height:150px;
+  place-content:center;
+  padding:26px;
+  border:1px dashed var(--line-strong);
+  border-radius:var(--radius-lg);
+  background:var(--surface-soft);
+  text-align:center;
+  cursor:pointer;
+}
+
+.activity-file-zone:hover{
+  border-color:var(--ink);
+}
+
+.activity-file-zone span,
+.activity-file-zone strong,
+.activity-file-zone small{
+  display:block;
+}
+
+.activity-file-zone strong{
+  margin:4px 0 8px;
+  color:var(--ink);
+  font-size:26px;
+}
+
+.activity-file-zone small{
+  color:var(--muted);
+  font-weight:600;
+}
+
+.activity-file-zone input{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  cursor:pointer;
+}
+
+.activity-message{
+  min-height:22px;
+  margin:0;
+  color:var(--muted);
+  font-size:14px;
+}
+
+.activity-message.is-error{
+  color:var(--danger);
+}
+
+.activity-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  padding-top:8px;
+}
+
+@media(max-width:760px){
+  .activity-dialog{
+    width:100%;
+    height:100svh;
+    max-height:100svh;
+    margin:0;
+    border-radius:0;
+  }
+
+  .activity-dialog-content{
+    padding:72px 20px 28px;
+  }
+
+  .activity-form{
+    grid-template-columns:1fr;
+  }
+
+  .activity-actions{
+    flex-direction:column-reverse;
+  }
+}
