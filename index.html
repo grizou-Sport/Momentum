@@ -209,108 +209,440 @@
     class="close-btn"
     type="button"
     aria-label="Fermer"
-  >×</button>
+  >
+    ×
+  </button>
 
   <div class="activity-dialog-content">
     <p class="section-kicker">HOME</p>
-    <h2>Ajouter une activité</h2>
+
+    <h2>Ajouter un moment</h2>
 
     <p class="lead">
-      Saisis l'activité manuellement ou importe un fichier FIT ou GPX.
+      Une séance, une respiration ou une aventure.
     </p>
 
-    <form id="activityForm" class="activity-form">
+    <form
+      id="activityForm"
+      class="activity-form"
+    >
+      <fieldset class="activity-category full">
+        <legend>Quel moment veux-tu ajouter ?</legend>
 
-      <label class="activity-file-zone full">
+        <label>
+          <input
+            type="radio"
+            name="activity_category"
+            value="sport"
+            checked
+          />
+          <span>Sport</span>
+        </label>
+
+        <label>
+          <input
+            type="radio"
+            name="activity_category"
+            value="wellbeing"
+          />
+          <span>Bien-être</span>
+        </label>
+
+        <label>
+          <input
+            type="radio"
+            name="activity_category"
+            value="adventure"
+          />
+          <span>Aventure</span>
+        </label>
+      </fieldset>
+
+      <label
+        id="activityFileZone"
+        class="activity-file-zone full"
+        data-activity-category="sport"
+      >
         <span>Importer un fichier</span>
         <strong>FIT ou GPX</strong>
+
         <small>
-          Les données reconnues rempliront automatiquement le formulaire.
+          Les données reconnues rempliront
+          automatiquement le formulaire.
         </small>
 
         <input
           id="activityFile"
           name="activity_file"
           type="file"
-          accept=".fit,.gpx,application/gpx+xml"
+          accept=".fit,.gpx,application/gpx+xml,application/octet-stream"
         />
       </label>
 
       <label>
         Date
-        <input name="activity_date" type="date" required />
+        <input
+          name="activity_date"
+          type="date"
+          required
+        />
       </label>
 
       <label>
         Statut
         <select name="status">
-          <option value="done">Réalisé</option>
-          <option value="planned">Prévu</option>
+          <option value="done">
+            Réalisé
+          </option>
+
+          <option value="planned">
+            Prévu
+          </option>
         </select>
       </label>
 
-      <label>
+      <!-- SPORT -->
+
+      <label data-activity-category="sport">
         Sport
-        <input name="sport" placeholder="Course à pied" required />
+
+        <select name="sport">
+          <option value="">
+            Choisir
+          </option>
+
+          <option value="Course à pied">
+            Course à pied
+          </option>
+
+          <option value="Trail">
+            Trail
+          </option>
+
+          <option value="Marche">
+            Marche
+          </option>
+
+          <option value="Randonnée">
+            Randonnée
+          </option>
+
+          <option value="Vélo">
+            Vélo
+          </option>
+
+          <option value="Gravel">
+            Gravel
+          </option>
+
+          <option value="VTT">
+            VTT
+          </option>
+
+          <option value="Natation">
+            Natation
+          </option>
+
+          <option value="Fitness">
+            Fitness
+          </option>
+
+          <option value="Hyrox">
+            Hyrox
+          </option>
+
+          <option value="Crossfit">
+            Crossfit
+          </option>
+
+          <option value="Padel">
+            Padel
+          </option>
+
+          <option value="Golf">
+            Golf
+          </option>
+
+          <option value="Surf">
+            Surf
+          </option>
+
+          <option value="Kitesurf">
+            Kitesurf
+          </option>
+
+          <option value="Stand Up Paddle">
+            Stand Up Paddle
+          </option>
+
+          <option value="Ski">
+            Ski
+          </option>
+
+          <option value="Hockey">
+            Hockey
+          </option>
+
+          <option value="Autre">
+            Autre
+          </option>
+        </select>
       </label>
 
-      <label>
-        Type d'activité
-        <input name="activity_type" placeholder="Endurance" required />
+      <label data-activity-category="sport">
+        Type d’activité
+
+        <select name="sport_activity_type">
+          <option value="">
+            Choisir
+          </option>
+
+          <option value="Endurance">
+            Endurance
+          </option>
+
+          <option value="Récupération">
+            Récupération
+          </option>
+
+          <option value="Tempo">
+            Tempo
+          </option>
+
+          <option value="Intervalles">
+            Intervalles
+          </option>
+
+          <option value="Sortie longue">
+            Sortie longue
+          </option>
+
+          <option value="Compétition">
+            Compétition
+          </option>
+
+          <option value="Technique">
+            Technique
+          </option>
+
+          <option value="Renforcement">
+            Renforcement
+          </option>
+
+          <option value="Libre">
+            Libre
+          </option>
+        </select>
       </label>
 
-      <label>
+      <label data-activity-category="sport">
         Distance km
-        <input name="distance_km" type="number" min="0" step="0.01" />
+
+        <input
+          name="distance_km"
+          type="number"
+          min="0"
+          step="0.01"
+        />
       </label>
 
       <label>
         Durée min
-        <input name="duration_min" type="number" min="0" step="1" />
+
+        <input
+          name="duration_min"
+          type="number"
+          min="0"
+          step="1"
+        />
       </label>
 
-      <label>
+      <label data-activity-category="sport">
         Dénivelé m
-        <input name="elevation_m" type="number" min="0" step="1" />
+
+        <input
+          name="elevation_m"
+          type="number"
+          min="0"
+          step="1"
+        />
       </label>
 
-      <label>
+      <label data-activity-category="sport">
         FC moyenne
-        <input name="avg_hr" type="number" min="0" step="1" />
+
+        <input
+          name="avg_hr"
+          type="number"
+          min="0"
+          step="1"
+        />
       </label>
 
       <label>
-        RPE /10
-        <input name="rpe" type="number" min="1" max="10" step="1" />
+        Effort ressenti /10
+
+        <input
+          name="rpe"
+          type="number"
+          min="1"
+          max="10"
+          step="1"
+        />
       </label>
 
-      <label>
+      <label data-activity-category="sport">
         Matériel
-        <input name="gear" />
+
+        <input
+          name="gear"
+          type="text"
+        />
+      </label>
+
+      <!-- BIEN-ÊTRE -->
+
+      <label
+        class="full"
+        data-activity-category="wellbeing"
+        hidden
+      >
+        Moment de bien-être
+
+        <select name="wellbeing_activity_type">
+          <option value="">
+            Choisir
+          </option>
+
+          <option value="Méditation">
+            Méditation
+          </option>
+
+          <option value="Respiration">
+            Respiration
+          </option>
+
+          <option value="Mobilité">
+            Mobilité
+          </option>
+
+          <option value="Étirements">
+            Étirements
+          </option>
+
+          <option value="Massage">
+            Massage
+          </option>
+
+          <option value="Sauna">
+            Sauna
+          </option>
+
+          <option value="Bain froid">
+            Bain froid
+          </option>
+
+          <option value="Repos">
+            Repos
+          </option>
+
+          <option value="Sommeil">
+            Sommeil
+          </option>
+
+          <option value="Autre">
+            Autre
+          </option>
+        </select>
+      </label>
+
+      <!-- AVENTURE -->
+
+      <label
+        class="full"
+        data-activity-category="adventure"
+        hidden
+      >
+        Type d’aventure
+
+        <select name="adventure_activity_type">
+          <option value="">
+            Choisir
+          </option>
+
+          <option value="Exploration">
+            Exploration
+          </option>
+
+          <option value="Voyage">
+            Voyage
+          </option>
+
+          <option value="Micro-aventure">
+            Micro-aventure
+          </option>
+
+          <option value="Road trip">
+            Road trip
+          </option>
+
+          <option value="Week-end">
+            Week-end
+          </option>
+
+          <option value="Expédition">
+            Expédition
+          </option>
+
+          <option value="Découverte">
+            Découverte
+          </option>
+
+          <option value="Autre">
+            Autre
+          </option>
+        </select>
       </label>
 
       <label class="full">
         Lieu
-        <input name="location_name" />
+
+        <input
+          name="location_name"
+          type="text"
+        />
       </label>
 
       <label class="full">
         Notes
-        <textarea name="notes" rows="4"></textarea>
+
+        <textarea
+          name="notes"
+          rows="4"
+        ></textarea>
       </label>
 
-      <p id="activityMessage" class="activity-message full"></p>
+      <p
+        id="activityMessage"
+        class="activity-message full"
+      ></p>
 
       <div class="activity-actions full">
-        <button id="cancelActivity" class="secondary" type="button">
+        <button
+          id="cancelActivity"
+          class="secondary"
+          type="button"
+        >
           Annuler
         </button>
 
-        <button class="primary" type="submit">
+        <button
+          class="primary"
+          type="submit"
+        >
           Enregistrer
         </button>
       </div>
-
     </form>
   </div>
 </dialog>
