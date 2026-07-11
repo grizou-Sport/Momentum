@@ -19,8 +19,6 @@ async function renderHome() {
   renderToday(today, sessions);
   renderLivingWeek(todayDate);
   renderMonth();
-  renderMissionCard();
-  renderCalendarCard(today, sessions);
   renderActivityList(today, sessions);
 
   const weatherCard = $("#weatherCard");
@@ -75,19 +73,9 @@ function bindHome() {
     if (day?.dataset.date) openDay(day.dataset.date);
   });
 
-  [$("#todayCard"), $("#plannedCard")]
-    .filter(Boolean)
-    .forEach((card) => {
-      const openToday = () => openDay(iso(new Date()));
-
-      card.addEventListener("click", openToday);
-      card.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          openToday();
-        }
-      });
-    });
+  $("#openToday")?.addEventListener("click", () => {
+    openDay(iso(new Date()));
+  });
 
   $("#closeDay")?.addEventListener("click", () => {
     $("#dayDialog")?.close();

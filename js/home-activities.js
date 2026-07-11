@@ -69,14 +69,13 @@ function renderActivityList(date, sessions) {
 
   if (!sessions.length) {
     element.innerHTML = `
-      <article class="home-card">
-        <span class="card-label">Moments</span>
-        <h2>Aucun moment</h2>
+      <div class="day-feed-empty">
+        <h4>Aucun moment</h4>
         <p>
           Ajoute un sport, un moment de bien-être
           ou une aventure.
         </p>
-      </article>
+      </div>
     `;
 
     return;
@@ -84,7 +83,7 @@ function renderActivityList(date, sessions) {
 
   element.innerHTML = sessions
     .map((session) => `
-      <article class="home-card activity-card">
+      <article class="day-feed-item">
         <span class="card-label">
           ${
             session.status === "done"
@@ -94,14 +93,15 @@ function renderActivityList(date, sessions) {
           ·
           ${escapeHtml(
             activityCategoryLabel(
+              session.category ||
               session.activity_category
             )
           )}
         </span>
 
-        <h2>
+        <h4>
           ${escapeHtml(sessionLabel(session))}
-        </h2>
+        </h4>
 
         <p>
           ${escapeHtml(sessionMeta(session))}

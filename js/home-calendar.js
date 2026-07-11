@@ -7,8 +7,6 @@
 function renderToday(date, sessions) {
   const title = $("#todayTitle");
   const narrative = $("#todayNarrative");
-  const todayCard = $("#todayCard");
-  const plannedCard = $("#plannedCard");
 
   if (title) title.textContent = fmtDate(date);
 
@@ -16,52 +14,6 @@ function renderToday(date, sessions) {
     narrative.textContent = sessions.length
       ? `${sessions.length} moment${sessions.length > 1 ? "s" : ""} inscrit${sessions.length > 1 ? "s" : ""} aujourd'hui.`
       : "La journée est libre ou encore à écrire.";
-  }
-
-  if (todayCard) {
-    const completed = sessions.filter((session) => session.status === "done");
-
-    if (!completed.length) {
-      todayCard.innerHTML = `
-        <span class="card-label">Aujourd'hui</span>
-        <h3>La page est encore blanche.</h3>
-        <p>Un moment ajouté depuis cette journée apparaîtra ici.</p>
-      `;
-    } else {
-      const main = completed[0];
-
-      todayCard.innerHTML = `
-        <span class="card-label">Réalisé</span>
-        <h3>${escapeHtml(sessionLabel(main))}</h3>
-        <p>${escapeHtml(sessionMeta(main) || "Moment enregistré.")}</p>
-        <p>${escapeHtml(main.comment || "Une ligne de plus dans le chemin.")}</p>
-      `;
-    }
-  }
-
-  if (plannedCard) {
-    const planned = sessions.filter((session) => session.status === "planned");
-
-    if (!planned.length) {
-      plannedCard.innerHTML = `
-        <div>
-          <span class="card-label">À venir</span>
-          <h3>Aucun moment prévu</h3>
-        </div>
-        <p class="muted">La journée reste ouverte.</p>
-      `;
-    } else {
-      const next = planned[0];
-
-      plannedCard.innerHTML = `
-        <div>
-          <span class="card-label">Prévu</span>
-          <h3>${escapeHtml(sessionLabel(next))}</h3>
-        </div>
-        <p class="big-value">${escapeHtml(sessionMeta(next) || "Moment planifié")}</p>
-        <p class="muted">${escapeHtml(next.comment || "À écrire.")}</p>
-      `;
-    }
   }
 }
 
@@ -133,30 +85,6 @@ function renderMonth() {
       </button>
     `;
   }).join("");
-}
-
-function renderCalendarCard(date, sessions) {
-  const element = $("#calendarCard");
-  if (!element) return;
-
-  const main = sessions[0];
-
-  element.innerHTML = `
-    <span class="card-label">Calendrier</span>
-    <h2>${escapeHtml(fmtDate(date))}</h2>
-    ${
-      main
-        ? `
-          <p class="big-value">${escapeHtml(sessionLabel(main))}</p>
-          <p>${escapeHtml(sessionMeta(main) || "Moment enregistré.")}</p>
-          <p class="muted">${escapeHtml(main.comment || "")}</p>
-        `
-        : `
-          <p class="big-value">Aucun moment</p>
-          <p class="muted">La journée est libre ou encore à écrire.</p>
-        `
-    }
-  `;
 }
 
 function dayCategoryLabel(category) {

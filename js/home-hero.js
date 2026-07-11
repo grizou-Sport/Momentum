@@ -37,28 +37,6 @@ function formatHeroDate(dateValue) {
   });
 }
 
-function daysUntil(dateValue) {
-  if (!dateValue) return null;
-
-  const today = dateFromIso(iso(new Date()));
-  const target = dateFromIso(dateValue);
-  return Math.ceil((target - today) / 86400000);
-}
-
-function horizonProgress(horizon) {
-  if (!horizon?.created_at || !horizon?.target_date) return null;
-
-  const start = new Date(horizon.created_at);
-  const end = dateFromIso(horizon.target_date);
-  const now = new Date();
-  const total = end - start;
-
-  if (total <= 0) return null;
-
-  const elapsed = now - start;
-  return Math.max(0, Math.min(100, Math.round((elapsed / total) * 100)));
-}
-
 function formatDuration(seconds) {
   const value = Number(seconds);
   if (!Number.isFinite(value) || value <= 0) return null;
@@ -70,62 +48,97 @@ function formatDuration(seconds) {
   return `${minutes} min`;
 }
 
-function formatPace(seconds) {
-  const value = Number(seconds);
-  if (!Number.isFinite(value) || value <= 0) return null;
+function heroIntentionLabel(value) {
+  const labels = {
+    discovery: "Découverte",
+    challenge: "Challenge",
+    progression: "Progression",
+    performance: "Performance",
+    transformation: "Transformation",
+    sharing: "Partage",
+    wellbeing: "Bien-être",
+    escape: "Évasion"
+  };
 
-  const minutes = Math.floor(value / 60);
-  const remaining = Math.round(value % 60);
-  return `${minutes}'${String(remaining).padStart(2, "0")}/km`;
+  return labels[value] || value || "À définir";
 }
 
-function getHorizonGoal(horizon) {
-  if (!horizon) return "À définir";
+function heroSportLabel(value) {
+  if (!value) return "À définir";
+  return window.MomentumSports?.resolve(value)?.label || value;
+}
 
-  if (horizon.category === "competition") {
-    return (
-      formatDuration(horizon.target_time_seconds) ||
-      (horizon.distance_km ? `${formatNumber(horizon.distance_km)} km` : null) ||
-      "Compétition"
+function createHeroDetail(label, value) {
+  return { label, value: value || "À définir" };
+}
+
+function getHeroDetails(horizon) {
+  const details = [
+    createHeroDetail("Intention", heroIntentionLabel(horizon.subcategory)),
+    createHeroDetail("Date cible", formatHeroDate(horizon.target_date))
+  ];
+
+  if (horizon.category === "adventure") {
+    const duration = Number(horizon.duration_days);
+
+    details.push(
+      createHeroDetail(
+        "Durée",
+        Number.isFinite(duration) && duration > 0
+          ? `${duration} jour${duration > 1 ? "s" : ""}`
+          : "À définir"
+      ),
+      createHeroDetail("Sport / activité", heroSportLabel(horizon.sport))
     );
   }
 
-  if (horizon.category === "adventure") {
-    return horizon.duration_days
-      ? `${horizon.duration_days} jour${Number(horizon.duration_days) > 1 ? "s" : ""}`
-      : "Aventure";
+  if (horizon.category === "competition") {
+    const distance = Number(horizon.distance_km);
+
+    details.push(
+      createHeroDetail(
+        "Distance",
+        Number.isFinite(distance) && distance > 0
+          ? `${formatNumber(distance)} km`
+          : "À définir"
+      ),
+      createHeroDetail(
+        "Temps prévu",
+        formatDuration(horizon.target_time_seconds) || "À définir"
+      ),
+      createHeroDetail("Sport / activité", heroSportLabel(horizon.sport))
+    );
   }
 
-  if (horizon.category === "health") return "Santé";
-  if (horizon.category === "pleasure") return "Plaisir";
+  if (horizon.category === "pleasure") {
+    details.push(
+      createHeroDetail("Sport / activité", heroSportLabel(horizon.sport))
+    );
+  }
 
-  return "À définir";
+  return details;
 }
 
-function getHorizonPace(horizon) {
-  if (!horizon || horizon.category !== "competition") return "—";
+function renderHeroDetails(details) {
+  const element = $("#heroDetails");
+  if (!element) return;
 
-  const storedPace = formatPace(horizon.target_pace_seconds_per_km);
-  if (storedPace) return storedPace;
-
-  const time = Number(horizon.target_time_seconds);
-  const distance = Number(horizon.distance_km);
-
-  if (Number.isFinite(time) && time > 0 && Number.isFinite(distance) && distance > 0) {
-    return formatPace(time / distance);
-  }
-
-  return "—";
+  element.dataset.items = String(details.length);
+  element.innerHTML = details.map((detail) => `
+    <div>
+      <span>${escapeHtml(detail.value)}</span>
+      <small>${escapeHtml(detail.label)}</small>
+    </div>
+  `).join("");
 }
 
 function renderHeroEmpty() {
   setText("#heroTitle", "Mon Horizon");
   setText("#heroQuote", "Chaque journée écrit une ligne du chemin.");
-  setText("#daysLeft", "—");
-  setText("#targetDateLabel", "Aucun horizon actif");
-  setText("#missionProgress", "—");
-  setText("#goalLabel", "À définir");
-  setText("#paceLabel", "—");
+  renderHeroDetails([
+    createHeroDetail("Intention", "À définir"),
+    createHeroDetail("Date cible", "À définir")
+  ]);
 }
 
 async function renderHero() {
@@ -136,45 +149,17 @@ async function renderHero() {
     return;
   }
 
-  const remainingDays = daysUntil(horizon.target_date);
-  const progress = horizonProgress(horizon);
-
   setText("#heroTitle", horizon.title || "Mon Horizon");
   setText(
     "#heroQuote",
     horizon.description || "Chaque journée écrit une ligne du chemin."
   );
 
-  setText(
-    "#daysLeft",
-    remainingDays === null
-      ? "—"
-      : remainingDays >= 0
-        ? `J-${remainingDays}`
-        : `J+${Math.abs(remainingDays)}`
-  );
-
-  setText("#targetDateLabel", formatHeroDate(horizon.target_date));
-  setText("#missionProgress", progress === null ? "—" : `${progress}%`);
-  setText("#goalLabel", getHorizonGoal(horizon));
-  setText("#paceLabel", getHorizonPace(horizon));
+  renderHeroDetails(getHeroDetails(horizon));
 
   state.profile = {
     ...(state.profile || {}),
     project: horizon.title || "",
     tagline: horizon.description || ""
   };
-}
-
-function renderMissionCard() {
-  const element = $("#missionCard");
-  if (!element) return;
-
-  const profile = state.profile || {};
-
-  element.innerHTML = `
-    <span class="card-label">Horizon</span>
-    <h2>${escapeHtml(profile.project || "Aucun Horizon actif")}</h2>
-    <p>${escapeHtml(profile.tagline || "Ton Horizon apparaîtra ici une fois relié à YOU.")}</p>
-  `;
 }
