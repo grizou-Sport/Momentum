@@ -23,28 +23,54 @@
     <div class="top-actions"></div>
   </header>
 
-  <main>
-    <section id="hero" class="hero">
-      <div class="hero-overlay"></div>
-      <div class="hero-content">
-        <h1 id="heroTitle">Marathon Amsterdam 2026</h1>
-        <p class="hero-quote" id="heroQuote">Discipline aujourd'hui, liberté demain.</p>
+<main>
 
-        <div class="mission-pills">
-          <div><span id="daysLeft">J-0</span><small id="targetDateLabel">18 octobre 2026</small></div>
-          <div><span id="missionProgress">0%</span><small>du chemin</small></div>
-          <div><span id="goalLabel">Sub 3h00</span><small>objectif</small></div>
-          <div><span id="paceLabel">4'15/km</span><small>allure cible</small></div>
+  <section id="hero" class="hero">
+
+    <div class="hero-overlay"></div>
+
+    <div class="hero-content">
+
+      <h1 id="heroTitle"></h1>
+
+      <p id="heroQuote" class="hero-quote"></p>
+
+      <div class="mission-pills">
+
+        <div>
+          <span id="daysLeft"></span>
+          <small id="targetDateLabel"></small>
         </div>
+
+        <div>
+          <span id="missionProgress"></span>
+          <small>du chemin</small>
+        </div>
+
+        <div>
+          <span id="goalLabel"></span>
+          <small>objectif</small>
+        </div>
+
+        <div>
+          <span id="paceLabel"></span>
+          <small>allure cible</small>
+        </div>
+
       </div>
 
-      <a class="scroll-cue" href="#today">Commencer la journée ↓</a>
-    </section>
+    </div>
+
+    <a class="scroll-cue" href="#today">
+      Commencer la journée ↓
+    </a>
+
+  </section>
 
     <section id="today" class="story-section today-story">
       <div class="section-kicker">Aujourd'hui</div>
-      <h2 id="todayTitle">La page du jour</h2>
-      <p class="lead" id="todayNarrative">Chaque journée écrit une ligne de la préparation.</p>
+      <h2 id="todayTitle"></h2>
+      <p class="lead" id="todayNarrative"></p>
 
       <div class="today-grid">
         <article class="story-card main-day-card" id="todayCard"></article>
@@ -177,29 +203,7 @@
     </form>
   </template>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/supabase.js"></script>
-  <script src="js/guard.js"></script>
-  <script src="js/home.js"></script>
-
-  Bibliothèque
-/
-MOMENTUM
-/
-home-activity-dialog.html.txt
-
-
-<!-- Remplace l'ancien bloc .home-import par ce bouton -->
-<div class="home-import">
-  <button id="openActivityDialog" class="primary" type="button">
-    Ajouter une activité
-  </button>
-</div>
-
-<!-- Ajoute ce dialogue juste avant </body> -->
-<dialog id="activityDialog" class="activity-dialog">
+ <dialog id="activityDialog" class="activity-dialog">
   <button
     id="closeActivityDialog"
     class="close-btn"
@@ -210,15 +214,20 @@ home-activity-dialog.html.txt
   <div class="activity-dialog-content">
     <p class="section-kicker">HOME</p>
     <h2>Ajouter une activité</h2>
+
     <p class="lead">
       Saisis l'activité manuellement ou importe un fichier FIT ou GPX.
     </p>
 
     <form id="activityForm" class="activity-form">
+
       <label class="activity-file-zone full">
         <span>Importer un fichier</span>
         <strong>FIT ou GPX</strong>
-        <small>Les données reconnues rempliront automatiquement le formulaire.</small>
+        <small>
+          Les données reconnues rempliront automatiquement le formulaire.
+        </small>
+
         <input
           id="activityFile"
           name="activity_file"
@@ -227,54 +236,66 @@ home-activity-dialog.html.txt
         />
       </label>
 
-      <label>Date
+      <label>
+        Date
         <input name="activity_date" type="date" required />
       </label>
 
-      <label>Statut
+      <label>
+        Statut
         <select name="status">
           <option value="done">Réalisé</option>
           <option value="planned">Prévu</option>
         </select>
       </label>
 
-      <label>Sport
+      <label>
+        Sport
         <input name="sport" placeholder="Course à pied" required />
       </label>
 
-      <label>Type d'activité
+      <label>
+        Type d'activité
         <input name="activity_type" placeholder="Endurance" required />
       </label>
 
-      <label>Distance km
+      <label>
+        Distance km
         <input name="distance_km" type="number" min="0" step="0.01" />
       </label>
 
-      <label>Durée min
+      <label>
+        Durée min
         <input name="duration_min" type="number" min="0" step="1" />
       </label>
 
-      <label>Dénivelé m
+      <label>
+        Dénivelé m
         <input name="elevation_m" type="number" min="0" step="1" />
       </label>
 
-      <label>FC moyenne
+      <label>
+        FC moyenne
         <input name="avg_hr" type="number" min="0" step="1" />
       </label>
 
-      <label>RPE /10
+      <label>
+        RPE /10
         <input name="rpe" type="number" min="1" max="10" step="1" />
       </label>
 
-      <label>Matériel
+      <label>
+        Matériel
         <input name="gear" />
       </label>
 
-      <label class="full">Lieu
+      <label class="full">
+        Lieu
         <input name="location_name" />
       </label>
 
-      <label class="full">Notes
+      <label class="full">
+        Notes
         <textarea name="notes" rows="4"></textarea>
       </label>
 
@@ -284,13 +305,36 @@ home-activity-dialog.html.txt
         <button id="cancelActivity" class="secondary" type="button">
           Annuler
         </button>
+
         <button class="primary" type="submit">
           Enregistrer
         </button>
       </div>
+
     </form>
   </div>
 </dialog>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="js/supabase.js"></script>
+<script src="js/guard.js"></script>
+
+<script src="js/momentum-sports.js"></script>
+<script src="js/momentum-wellbeing.js"></script>
+<script src="js/momentum-adventures.js"></script>
+
+<script src="js/home-core.js"></script>
+<script src="js/home-data.js"></script>
+<script src="js/home-weather.js"></script>
+<script src="js/home-hero.js"></script>
+<script src="js/home-calendar.js"></script>
+<script src="js/home-import.js"></script>
+<script src="js/home-activities.js"></script>
+<script src="js/home.js"></script>
 
 </body>
 </html>
