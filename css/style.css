@@ -617,7 +617,16 @@ label{
   }
 
   .topbar nav{
-    display:none;
+    min-width:0;
+    display:flex;
+    gap:2px;
+    margin-left:auto;
+  }
+
+  .topbar nav a{
+    min-height:38px;
+    padding:0 11px;
+    font-size:12px;
   }
 
   .page-shell{
