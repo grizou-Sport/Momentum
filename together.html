@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Momentum — TOGETHER</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/together.css" />
+</head>
+<body class="together-body">
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <span class="mark">△</span><strong>Momentum</strong><em>v0.09</em>
+    </a>
+    <nav>
+      <a href="index.html">HOME</a>
+      <a href="you.html">YOU</a>
+      <a class="active-nav" href="together.html">TOGETHER</a>
+    </nav>
+    <div class="top-actions">
+      <button id="logoutBtn" class="together-logout" type="button">Déconnexion</button>
+    </div>
+  </header>
+
+  <main class="together-page">
+    <section class="together-hero">
+      <div>
+        <p class="section-kicker">Les aventures que l’on partage</p>
+        <h1>TOGETHER</h1>
+        <p class="together-lead">Organiser le futur. Vivre le présent. Garder quelques traces du passé.</p>
+      </div>
+      <button class="together-primary" id="openCreateMoment" type="button">Créer un Moment</button>
+    </section>
+
+    <div class="together-tabs" role="tablist" aria-label="Sections Together">
+      <button class="active" data-view="moments" role="tab" aria-selected="true" type="button">MOMENTS</button>
+      <button data-view="circle" role="tab" aria-selected="false" type="button">CERCLE</button>
+    </div>
+
+    <section id="togetherStatus" class="together-status" aria-live="polite"></section>
+    <section id="momentsView" class="together-view"></section>
+    <section id="circleView" class="together-view" hidden></section>
+  </main>
+
+  <dialog id="momentDialog" class="together-dialog">
+    <form id="momentForm" method="dialog">
+      <div class="dialog-head">
+        <div><span class="card-label">Nouveau</span><h2>Créer un Moment</h2></div>
+        <button class="dialog-close" value="cancel" formnovalidate aria-label="Fermer">×</button>
+      </div>
+      <div class="together-form-grid">
+        <label class="wide">Titre<input name="title" required maxlength="120" placeholder="Soirée Padel" /></label>
+        <label>Type<select name="moment_type"><option>SPORT</option><option>ADVENTURE</option><option>TRAVEL</option><option>SOCIAL</option><option>OTHER</option></select></label>
+        <label>Club<select name="club_id" id="momentClub"><option value="">Moment personnel</option></select></label>
+        <label>Date et heure<input name="start_at" type="datetime-local" /></label>
+        <label>Lieu<input name="location_name" placeholder="Bienne" /></label>
+        <label>Capacité<input name="capacity" type="number" min="1" placeholder="8" /></label>
+        <label>Visibilité<select name="visibility"><option value="PARTICIPANTS">Participants</option><option value="CIRCLE">Cercle</option><option value="PRIVATE">Privé</option></select></label>
+        <label class="wide">Description<textarea name="description" rows="4" placeholder="Quelques mots pour donner le ton…"></textarea></label>
+        <div class="wide date-options-field">
+          <div><span>Autres créneaux proposés</span><button id="addDateOption" class="text-button" type="button">+ Ajouter un créneau</button></div>
+          <div id="dateOptions"></div>
+        </div>
+      </div>
+      <div class="dialog-actions"><button class="together-secondary" value="cancel" formnovalidate>Annuler</button><button class="together-primary" id="saveMoment" value="default">Créer le Moment</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="clubDialog" class="together-dialog">
+    <form id="clubForm" method="dialog">
+      <input id="clubEditId" name="club_id" type="hidden" />
+      <div class="dialog-head">
+        <div><span class="card-label" id="clubDialogKicker">Nouveau</span><h2 id="clubDialogTitle">Créer un Club</h2></div>
+        <button class="dialog-close" value="cancel" formnovalidate aria-label="Fermer">×</button>
+      </div>
+      <div class="together-form-grid">
+        <label class="wide">Nom<input name="name" required maxlength="80" placeholder="Padel Club Bienne" /></label>
+        <label>Sport<select name="category" id="clubSport" required><option value="">Choisir un sport</option></select></label>
+        <label>Lieu principal<input name="location_name" required placeholder="Bienne" /></label>
+        <label class="wide club-logo-field">Logo du Club
+          <span class="club-logo-picker"><span id="clubLogoPreview" class="club-logo-preview">△</span><span><input id="clubLogo" name="logo" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" /><small>PNG, JPG, WebP ou SVG · 5 Mo maximum</small></span></span>
+        </label>
+        <label class="wide">Visibilité<select name="visibility"><option value="PRIVATE">Privé — sur invitation</option><option value="DISCOVERABLE">Visible — adhésion validée</option></select></label>
+        <label class="wide">Description<textarea name="description" rows="4" placeholder="Ce qui rassemble ce Club…"></textarea></label>
+      </div>
+      <div class="dialog-actions"><button class="together-secondary" value="cancel" formnovalidate>Annuler</button><button class="together-primary" id="saveClub" value="default">Créer le Club</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="clubDetailDialog" class="together-dialog club-detail-dialog">
+    <div id="clubDetail"></div>
+  </dialog>
+
+  <dialog id="momentDetailDialog" class="together-dialog">
+    <div id="momentDetail"></div>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/guard.js"></script>
+  <script src="js/momentum-sports.js"></script>
+  <script src="js/together.js"></script>
+</body>
+</html>
