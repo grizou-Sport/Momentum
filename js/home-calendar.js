@@ -84,12 +84,11 @@ function renderMonth() {
         data-date="${dateIso}"
         data-today="${isToday ? "true" : "false"}"
       >
-        <span>${date.getDate()}</span>
-        ${
-          sessions.length
-            ? `<small>${sessions.length} moment${sessions.length > 1 ? "s" : ""}</small>`
-            : ""
-        }
+        <span class="card-label month-day-label">${escapeHtml(fmtShortDate(dateIso))}</span>
+        <div class="month-day-moments">
+          <strong>${sessions.length || "—"}</strong>
+          <p>${sessions.length ? `${sessions.length} moment${sessions.length > 1 ? "s" : ""}` : "Aucun moment"}</p>
+        </div>
       </button>
     `;
   }).join("");

@@ -11,7 +11,8 @@ async function renderHome() {
   await Promise.all([
     renderHero(),
     loadPassportLocation(),
-    loadActivitiesForHome(todayDate, visibleMonth)
+    loadActivitiesForHome(todayDate, visibleMonth),
+    loadDailyWellbeing(today)
   ]);
 
   const sessions = sessionsOn(today);
@@ -20,6 +21,7 @@ async function renderHome() {
   renderLivingWeek(todayDate);
   renderMonth();
   renderActivityList(today, sessions);
+  renderWellbeingCard(today);
 
   const weatherCard = $("#weatherCard");
 
@@ -121,5 +123,6 @@ function bindHome() {
 
 document.addEventListener("DOMContentLoaded", () => {
   bindHome();
+  bindWellbeingCard();
   renderHome();
 });

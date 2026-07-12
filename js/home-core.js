@@ -54,6 +54,7 @@ function defaultState() {
       longitude: null
     },
     sessions: [],
+    wellbeing: {},
     context: {}
   };
 }
