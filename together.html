@@ -18,7 +18,7 @@
       <a class="active-nav" href="together.html">TOGETHER</a>
     </nav>
     <div class="top-actions">
-      <button id="logoutBtn" class="together-logout" type="button">Déconnexion</button>
+      <button id="logoutBtn" class="topbar-logout together-logout" type="button">Déconnexion</button>
     </div>
   </header>
 
@@ -50,7 +50,7 @@
       </div>
       <div class="together-form-grid">
         <label class="wide">Titre<input name="title" required maxlength="120" placeholder="Soirée Padel" /></label>
-        <label>Type<select name="moment_type"><option>SPORT</option><option>ADVENTURE</option><option>TRAVEL</option><option>SOCIAL</option><option>OTHER</option></select></label>
+        <label>Type<select name="moment_type"><option value="SPORT">Sport</option><option value="ADVENTURE">Aventure</option><option value="TRAVEL">Voyage</option><option value="SOCIAL">Rencontre</option><option value="OTHER">Autre</option></select></label>
         <label>Club<select name="club_id" id="momentClub"><option value="">Moment personnel</option></select></label>
         <label>Date et heure<input name="start_at" type="datetime-local" /></label>
         <label>Lieu<input name="location_name" placeholder="Bienne" /></label>

@@ -71,6 +71,18 @@ function activityCategoryLabel(category) {
   return labels[category] || "Moment";
 }
 
+function setDurationFormValues(form, durationMinutes) {
+  const total = Number(durationMinutes);
+  setFormValue(form, "duration_hours", Number.isFinite(total) ? Math.floor(total / 60) : "");
+  setFormValue(form, "duration_minutes", Number.isFinite(total) ? Math.round(total % 60) : "");
+}
+
+function durationMinutesFromForm(values) {
+  const hours = Number(values.get("duration_hours") || 0);
+  const minutes = Number(values.get("duration_minutes") || 0);
+  return hours || minutes ? hours * 60 + minutes : null;
+}
+
 function renderActivityList(date, sessions) {
   const element = $("#activityList");
 
@@ -93,6 +105,8 @@ function renderActivityList(date, sessions) {
   element.innerHTML = sessions
     .map((session) => `
       <article class="day-feed-item">
+        <div class="day-feed-icon">${sessionIconHtml(session, "day-feed-sport-icon")}</div>
+        <div class="day-feed-content">
         <span class="card-label">
           ${
             session.status === "done"
@@ -124,6 +138,7 @@ function renderActivityList(date, sessions) {
             "Lieu à définir"
           )}
         </p>
+        </div>
       </article>
     `)
     .join("");
@@ -408,7 +423,7 @@ function openEditActivityDialog(activityId) {
   setFormValue(form, "status", session.status);
   setSelectValue(form, "sport", session.sport);
   setFormValue(form, "distance_km", session.distance);
-  setFormValue(form, "duration_min", session.duration);
+  setDurationFormValues(form, session.duration);
   setFormValue(form, "elevation_m", session.elevation);
   setFormValue(form, "avg_hr", session.hr);
   setFormValue(form, "rpe", session.rpe);
@@ -507,11 +522,7 @@ function fillActivityForm(data) {
     data.distance
   );
 
-  setFormValue(
-    form,
-    "duration_min",
-    data.duration
-  );
+  setDurationFormValues(form, data.duration);
 
   setFormValue(
     form,
@@ -723,11 +734,7 @@ async function saveActivity(event) {
             )
           : null,
 
-      duration_min:
-        numberOrNull(
-          values,
-          "duration_min"
-        ),
+      duration_min: durationMinutesFromForm(values),
 
       elevation_m:
         hasActivityMetrics

@@ -14,6 +14,13 @@ function formatSleepDuration(hours) {
   return `${wholeHours} h ${String(minutes).padStart(2, "0")}`;
 }
 
+function splitSleepDuration(hours) {
+  const value = Number(hours);
+  if (!Number.isFinite(value)) return { hours:"", minutes:"" };
+  const totalMinutes = Math.round(value * 60);
+  return { hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60 };
+}
+
 function wellbeingMetric(label, value, unit = "") {
   const hasValue = value !== null && value !== undefined && value !== "";
 
@@ -114,6 +121,7 @@ function renderWellbeingCard(date = iso(new Date())) {
   const source = wellbeing.source || "Aucune source connectée";
   const sleepQuality = wellbeing.sleepQuality ?? wellbeing.sleep_quality;
   const sleepQualityUnit = wellbeing.sleepQualityUnit || wellbeing.sleep_quality_unit || "%";
+  const sleepDuration = splitSleepDuration(wellbeing.sleep);
 
   element.innerHTML = `
     <div class="wellbeing-heading">
@@ -144,7 +152,8 @@ function renderWellbeingCard(date = iso(new Date())) {
     <p class="wellbeing-save-message" data-wellbeing-message aria-live="polite"></p>
 
     <form class="wellbeing-manual-form" data-wellbeing-form hidden>
-      <label>Sommeil (heures)<input name="sleep" type="number" min="0" max="24" step="0.1" value="${escapeHtml(wellbeing.sleep ?? "")}"></label>
+      <label>Sommeil — heures<input name="sleepHours" type="number" min="0" max="24" step="1" value="${escapeHtml(sleepDuration.hours)}"></label>
+      <label>Sommeil — minutes<input name="sleepMinutes" type="number" min="0" max="59" step="1" value="${escapeHtml(sleepDuration.minutes)}"></label>
       <label>Motivation (/10)<input name="motivation" type="number" min="1" max="10" step="1" value="${escapeHtml(wellbeing.motivation ?? wellbeing.mood ?? "")}"></label>
       <label>FC au repos (bpm)<input name="restHr" type="number" min="20" max="220" step="1" value="${escapeHtml(wellbeing.restHr ?? wellbeing.rest_hr ?? "")}"></label>
       <label>VFC (ms)<input name="hrv" type="number" min="0" step="1" value="${escapeHtml(wellbeing.hrv ?? "")}"></label>
@@ -194,7 +203,7 @@ function bindWellbeingCard() {
     const wellbeing = {
       source: "Ajout manuel",
       sourceKey: "manual",
-      sleep: value("sleep"),
+      sleep: entries.sleepHours === "" && entries.sleepMinutes === "" ? null : (value("sleepHours") || 0) + (value("sleepMinutes") || 0) / 60,
       motivation: value("motivation"),
       restHr: value("restHr"),
       hrv: value("hrv"),

@@ -41,6 +41,10 @@ async function renderHome() {
 }
 
 function bindHome() {
+  document.getElementById("homeLogoutBtn")?.addEventListener("click", async () => {
+    await window.momentumDB.auth.signOut();
+    window.location.href = "login.html";
+  });
   $("#closeActivityDialog")?.addEventListener("click", closeActivityDialog);
   $("#cancelActivity")?.addEventListener("click", closeActivityDialog);
   $("#activityFile")?.addEventListener("change", handleActivityFile);

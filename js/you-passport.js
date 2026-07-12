@@ -46,8 +46,12 @@ function renderAbout() {
         <input name="country" value="${YOU.passport?.country || ""}" />
       </label>
 
-      <label>Année de naissance
-        <input name="birth_year" type="number" value="${YOU.passport?.birth_year || ""}" />
+      <label>Date de naissance
+        <input name="birth_date" type="date" value="${YOU.passport?.birth_date || ""}" />
+      </label>
+
+      <label>Sexe
+        <select name="sex"><option value="">Ne pas préciser</option><option value="FEMALE" ${YOU.passport?.sex === "FEMALE" ? "selected" : ""}>Femme</option><option value="MALE" ${YOU.passport?.sex === "MALE" ? "selected" : ""}>Homme</option><option value="OTHER" ${YOU.passport?.sex === "OTHER" ? "selected" : ""}>Autre</option><option value="UNDISCLOSED" ${YOU.passport?.sex === "UNDISCLOSED" ? "selected" : ""}>Préfère ne pas répondre</option></select>
       </label>
 
       <label>Taille cm
@@ -57,6 +61,18 @@ function renderAbout() {
       <label>Poids kg
         <input name="weight_kg" type="number" step="0.1" value="${YOU.passport?.weight_kg || ""}" />
       </label>
+
+      <div class="full you-form-divider"><span class="section-kicker">Profil sportif</span></div>
+      <label>Niveau déclaré
+        <select name="sport_level"><option value="">Choisir</option><option value="BEGINNER" ${YOU.passport?.sport_level === "BEGINNER" ? "selected" : ""}>Débutant</option><option value="RETURNING" ${YOU.passport?.sport_level === "RETURNING" ? "selected" : ""}>Reprise</option><option value="REGULAR" ${YOU.passport?.sport_level === "REGULAR" ? "selected" : ""}>Régulier</option><option value="COMPETITOR" ${YOU.passport?.sport_level === "COMPETITOR" ? "selected" : ""}>Compétiteur</option><option value="EXPERT" ${YOU.passport?.sport_level === "EXPERT" ? "selected" : ""}>Expert</option></select>
+      </label>
+      <label>Séances moyennes par semaine<input name="weekly_sessions" type="number" min="0" max="30" value="${YOU.passport?.habits?.weekly_sessions ?? ""}" /></label>
+      <label>Heures moyennes par semaine<input name="weekly_hours" type="number" min="0" max="100" step="0.5" value="${YOU.passport?.habits?.weekly_hours ?? ""}" /></label>
+      <label>Jours favoris<input name="favorite_days" value="${(YOU.passport?.habits?.favorite_days || []).join(", ")}" placeholder="Mardi, jeudi, dimanche" /></label>
+
+      <div class="full you-form-divider"><span class="section-kicker">Objectifs & sources</span></div>
+      <label>Objectif principal<select name="primary_objective"><option value="">Choisir</option>${["Santé","Performance","Compétition","Aventure","Plaisir"].map((item) => `<option ${YOU.passport?.objectives?.primary === item ? "selected" : ""}>${item}</option>`).join("")}</select></label>
+      <label>Sources connectées<input name="connected_sources" value="${Object.keys(YOU.passport?.connected_sources || {}).filter((key) => YOU.passport.connected_sources[key]).join(", ")}" placeholder="COROS, Garmin, Strava…" /></label>
 
       <label class="full">Phrase
         <textarea name="quote" rows="3">${YOU.passport?.quote || ""}</textarea>
@@ -119,7 +135,17 @@ async function savePassport(event) {
       city: form.get("city")?.trim(),
       country: form.get("country")?.trim(),
       quote: form.get("quote")?.trim(),
-      birth_year: form.get("birth_year") ? Number(form.get("birth_year")) : null,
+      birth_date: form.get("birth_date") || null,
+      birth_year: form.get("birth_date") ? Number(String(form.get("birth_date")).slice(0, 4)) : null,
+      sex: form.get("sex") || null,
+      sport_level: form.get("sport_level") || null,
+      habits: {
+        weekly_sessions: form.get("weekly_sessions") ? Number(form.get("weekly_sessions")) : null,
+        weekly_hours: form.get("weekly_hours") ? Number(form.get("weekly_hours")) : null,
+        favorite_days: String(form.get("favorite_days") || "").split(",").map((item) => item.trim()).filter(Boolean),
+      },
+      objectives: { ...(YOU.passport?.objectives || {}), primary: form.get("primary_objective") || null },
+      connected_sources: Object.fromEntries(String(form.get("connected_sources") || "").split(",").map((item) => item.trim()).filter(Boolean).map((item) => [item, true])),
       height_cm: form.get("height_cm") ? Number(form.get("height_cm")) : null,
       weight_kg: form.get("weight_kg") ? Number(form.get("weight_kg")) : null,
       updated_at: new Date().toISOString(),

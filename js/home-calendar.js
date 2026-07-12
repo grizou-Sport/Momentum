@@ -48,6 +48,7 @@ function renderLivingWeek(centerDate = new Date()) {
           <span>Météo…</span>
         </div>
         <div class="living-moments">
+          <div class="calendar-session-icons">${sessionIconsHtml(sessions, "calendar-session-icon")}</div>
           <strong>${sessions.length || "—"}</strong>
           <p>${escapeHtml(summary)}</p>
         </div>
@@ -86,6 +87,7 @@ function renderMonth() {
       >
         <span class="card-label month-day-label">${escapeHtml(fmtShortDate(dateIso))}</span>
         <div class="month-day-moments">
+          <div class="calendar-session-icons">${sessionIconsHtml(sessions, "calendar-session-icon")}</div>
           <strong>${sessions.length || "—"}</strong>
           <p>${sessions.length ? `${sessions.length} moment${sessions.length > 1 ? "s" : ""}` : "Aucun moment"}</p>
         </div>

@@ -11,7 +11,7 @@
   color:var(--together-ink);
 }
 
-.together-body .topbar{top:24px;background:rgba(246,243,237,.82)}
+.together-body .topbar{background:rgba(246,243,237,.82)}
 .together-body .mark{background:var(--together-forest)}
 .together-logout{
   border:0;border-radius:999px;padding:11px 15px;background:transparent;
@@ -105,7 +105,7 @@
 
 @media(max-width:900px){.moment-grid,.circle-grid,.club-grid{grid-template-columns:1fr 1fr}.together-hero{align-items:flex-start;flex-direction:column}}
 @media(max-width:760px){
-  .together-body .topbar{top:10px;gap:4px;padding:8px}.together-body .brand{padding:0 4px}.together-body .brand strong,.together-body .brand em,.together-body .top-actions{display:none}
+  .together-body .topbar{top:10px;gap:4px;padding:8px}.together-body .brand{padding:0 4px}.together-body .brand strong,.together-body .brand em{display:none}
   .together-body .topbar nav{gap:2px;margin-left:auto}.together-body .topbar nav a{min-height:36px;padding:0 9px;font-size:11px}
   .together-page{width:calc(100% - 24px);padding-top:130px}.together-hero{margin-bottom:42px}.together-tabs{margin-bottom:34px}
   .moment-grid,.circle-grid,.club-grid{grid-template-columns:1fr}.together-section-head{align-items:flex-start;flex-direction:column}.together-form-grid{grid-template-columns:1fr}.together-form-grid .wide{grid-column:auto}

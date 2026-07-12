@@ -73,6 +73,21 @@ function saveState() {
   localStorage.setItem(STORE_KEY, JSON.stringify(state));
 }
 
+function sessionIconHtml(session, className = "session-icon") {
+  const category = session?.category || session?.activity_category || "sport";
+  if (category === "wellbeing") {
+    return window.MomentumIcons?.render("mobility", { collection:"sports", size:22, className }) || "";
+  }
+  if (category === "adventure") {
+    return window.MomentumIcons?.render("mountain", { collection:"sports", size:22, className }) || "";
+  }
+  return window.MomentumIcons?.renderSport(session?.sport || session?.activity_type || "activity", { size:22, className }) || "";
+}
+
+function sessionIconsHtml(sessions, className = "session-icon") {
+  return sessions.slice(0, 3).map((session) => sessionIconHtml(session, className)).join("");
+}
+
 
 /* =========================================================
    Dates

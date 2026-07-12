@@ -20,7 +20,9 @@
       <a href="you.html">YOU</a>
       <a href="together.html">TOGETHER</a>
     </nav>
-    <div class="top-actions"></div>
+    <div class="top-actions">
+      <button id="homeLogoutBtn" class="topbar-logout" type="button">Déconnexion</button>
+    </div>
   </header>
 
 <main>
@@ -114,10 +116,27 @@
       <div class="kpi-strip" id="kpiStrip"></div>
 
       <div class="charts-grid">
-        <article class="chart-card"><h3>Volume hebdomadaire</h3><canvas id="volumeChart"></canvas></article>
-        <article class="chart-card"><h3>Charge & forme</h3><canvas id="fitnessChart"></canvas></article>
-        <article class="chart-card"><h3>Répartition sportive</h3><canvas id="sportChart"></canvas></article>
-        <article class="chart-card"><h3>Bien-être</h3><canvas id="wellnessChart"></canvas></article>
+        <article class="chart-card progression-chart-card progression-reveal" id="volumeChartCard">
+          <div class="chart-heading"><div><span class="card-label">Qu'est-ce que j'ai construit ?</span><h3>Volume hebdomadaire</h3><p>Le temps consacré à chaque discipline, semaine après semaine.</p></div><div class="chart-mode"><button class="active" data-volume-mode="time">Temps</button><button data-volume-mode="distance">Distance</button></div></div>
+          <div class="chart-canvas-wrap"><canvas id="volumeChart"></canvas></div>
+          <p class="chart-insight" id="volumeInsight"></p>
+        </article>
+        <article class="chart-card progression-chart-card progression-reveal" id="loadChartCard">
+          <div class="chart-heading"><div><span class="card-label">Comment mon corps réagit ?</span><h3>Charge & forme</h3><p>Charge aiguë, charge chronique et équilibre actuel.</p></div><span class="model-phase" id="loadModelPhase">Estimation</span></div>
+          <div class="chart-canvas-wrap"><canvas id="fitnessChart"></canvas></div>
+          <div class="load-status" id="loadStatus"></div>
+          <p class="chart-insight" id="loadInsight"></p>
+        </article>
+        <article class="chart-card progression-chart-card progression-reveal" id="sportChartCard">
+          <div class="chart-heading"><div><span class="card-label">Comment est-ce que je m'entraîne ?</span><h3>Répartition sportive</h3><p>Le temps réellement consacré à chaque discipline.</p></div><span class="model-phase">12 semaines</span></div>
+          <div class="sport-chart-wrap"><canvas id="sportChart"></canvas></div>
+          <p class="chart-insight" id="sportInsight"></p>
+        </article>
+        <article class="chart-card progression-chart-card progression-reveal" id="wellnessChartCard">
+          <div class="chart-heading"><div><span class="card-label">Comment est-ce que je me sens ?</span><h3>Bien-être</h3><p>Sommeil, énergie, humeur et récupération au fil des jours.</p></div><div class="wellness-mode"><button class="active" data-wellness-mode="summary">Synthèse</button><button data-wellness-mode="sleep">Sommeil</button><button data-wellness-mode="energy">Énergie</button><button data-wellness-mode="mood">Humeur</button><button data-wellness-mode="recovery">Récupération</button></div></div>
+          <div class="chart-canvas-wrap"><canvas id="wellnessChart"></canvas></div>
+          <p class="chart-insight" id="wellnessInsight"></p>
+        </article>
       </div>
     </section>
   </main>
@@ -216,7 +235,7 @@
             value="sport"
             checked
           />
-          <span>Sport</span>
+          <span><img src="Assets/icons/sports/activity.svg" alt="" aria-hidden="true" />Sport</span>
         </label>
 
         <label>
@@ -225,7 +244,7 @@
             name="activity_category"
             value="wellbeing"
           />
-          <span>Bien-être</span>
+          <span><img src="Assets/icons/sports/mobility.svg" alt="" aria-hidden="true" />Bien-être</span>
         </label>
 
         <label>
@@ -234,7 +253,7 @@
             name="activity_category"
             value="adventure"
           />
-          <span>Aventure</span>
+          <span><img src="Assets/icons/sports/mountain.svg" alt="" aria-hidden="true" />Aventure</span>
         </label>
       </fieldset>
 
@@ -352,14 +371,13 @@
       </label>
 
       <label>
-        Durée min
+        Durée — heures
+        <input name="duration_hours" type="number" min="0" step="1" />
+      </label>
 
-        <input
-          name="duration_min"
-          type="number"
-          min="0"
-          step="1"
-        />
+      <label>
+        Durée — minutes
+        <input name="duration_minutes" type="number" min="0" max="59" step="1" />
       </label>
 
       <label data-activity-category="sport">
@@ -553,6 +571,11 @@
   </div>
 </dialog>
 
+<dialog id="progressionDialog" class="progression-dialog">
+  <button class="close-btn" id="closeProgressionDialog" type="button" aria-label="Fermer">×</button>
+  <div id="progressionDialogContent"></div>
+</dialog>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -561,6 +584,7 @@
 <script src="js/guard.js"></script>
 
 <script src="js/momentum-sports.js"></script>
+<script src="js/momentum-sport-visuals.js"></script>
 <script src="js/momentum-wellbeing.js"></script>
 <script src="js/momentum-adventures.js"></script>
 <script src="js/momentum-icons.js"></script>
@@ -570,6 +594,7 @@
 <script src="js/home-data.js"></script>
 <script src="js/home-weather.js"></script>
 <script src="js/home-wellbeing.js"></script>
+<script src="js/home-progression.js"></script>
 <script src="js/home-hero.js"></script>
 <script src="js/home-calendar.js"></script>
 <script src="js/home-import.js"></script>

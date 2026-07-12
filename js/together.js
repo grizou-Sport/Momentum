@@ -68,6 +68,22 @@ function sportLabel(value) {
   return window.MomentumSports?.getLabel(value, value) || value;
 }
 
+function momentStatusLabel(value) {
+  return ({ DRAFT:"Brouillon", PLANNING:"À organiser", CONFIRMED:"Confirmé", ONGOING:"En cours", COMPLETED:"Terminé", CANCELLED:"Annulé" })[value] || value;
+}
+
+function visibilityLabel(value) {
+  return ({ PRIVATE:"Privé", PARTICIPANTS:"Participants", CIRCLE:"Cercle", SELECTED_USERS:"Personnes choisies", DISCOVERABLE:"Visible sur recherche" })[value] || value;
+}
+
+function memberRoleLabel(value) {
+  return ({ OWNER:"Propriétaire", ADMIN:"Administrateur", ORGANIZER:"Organisateur", MEMBER:"Membre" })[value] || value;
+}
+
+function membershipStatusLabel(value) {
+  return ({ PENDING:"En attente", ACCEPTED:"Accepté", DECLINED:"Refusé", REMOVED:"Retiré", BLOCKED:"Bloqué" })[value] || value;
+}
+
 function openClubForm(club = null) {
   elements.clubForm.reset();
   elements.clubLogoPreview.textContent = "△";
@@ -103,7 +119,7 @@ function momentCard(moment) {
   return `
     <article class="moment-card" style="--moment-color:${colors[moment.moment_type] || colors.OTHER}">
       <div>
-        <span class="moment-status">${escapeHTML(moment.status)}</span>
+        <span class="moment-status">${escapeHTML(momentStatusLabel(moment.status))}</span>
         <h3>${escapeHTML(moment.title)}</h3>
         <p>${escapeHTML(moment.description || (club ? `Un Moment de ${club.name}` : "Un Moment à écrire ensemble."))}</p>
       </div>
@@ -186,10 +202,10 @@ async function openClubDetail(clubId) {
     <button class="dialog-close detail-close" type="button" aria-label="Fermer">×</button>
     <span class="card-label">${escapeHTML(sportLabel(club.category))}</span><h2>${escapeHTML(club.name)}</h2>
     <p class="detail-lead">${escapeHTML(club.description || "Un Club pour vivre des Moments ensemble.")}</p>
-    <div class="detail-facts"><span>${escapeHTML(club.location_name)}</span><span>${members?.filter((member) => member.membership_status === "ACCEPTED").length || 0} membres</span><span>${escapeHTML(club.visibility)}</span></div>
+    <div class="detail-facts"><span>${escapeHTML(club.location_name)}</span><span>${members?.filter((member) => member.membership_status === "ACCEPTED").length || 0} membres</span><span>${escapeHTML(visibilityLabel(club.visibility))}</span></div>
     ${canManage ? '<button class="together-secondary" id="editClub" type="button">Modifier le Club</button>' : ""}
     <section class="detail-section"><div class="detail-title"><h3>Membres</h3>${canManage && acceptedFriends.length ? `<select id="clubInviteUser"><option value="">Inviter un proche…</option>${acceptedFriends.map((id) => `<option value="${id}">${escapeHTML(TOGETHER.passports.get(id)?.display_name || "Membre du Cercle")}</option>`).join("")}</select>` : ""}</div>
-      <div class="member-list">${(members || []).map((member) => { const profile = profiles.get(member.user_id) || {}; const roleControl = canManage && member.role !== "OWNER" && member.membership_status === "ACCEPTED" ? `<select class="member-role-select" data-member-role="${member.id}">${[["MEMBER","Membre"],["ORGANIZER","Organisateur"],["ADMIN","Administrateur"]].map(([value,label]) => `<option value="${value}" ${member.role === value ? "selected" : ""}>${label}</option>`).join("")}</select>` : `<small>${escapeHTML(member.role)} · ${escapeHTML(member.membership_status)}</small>`; return `<div class="member-row"><span class="mini-avatar">${profile.avatar_url ? `<img src="${escapeHTML(profile.avatar_url)}" alt="" />` : initials(profile.display_name || "?")}</span><span><strong>${escapeHTML(profile.display_name || (member.user_id === TOGETHER.user.id ? "Toi" : "Membre"))}</strong>${roleControl}</span></div>`; }).join("")}</div>
+      <div class="member-list">${(members || []).map((member) => { const profile = profiles.get(member.user_id) || {}; const roleControl = canManage && member.role !== "OWNER" && member.membership_status === "ACCEPTED" ? `<select class="member-role-select" data-member-role="${member.id}">${[["MEMBER","Membre"],["ORGANIZER","Organisateur"],["ADMIN","Administrateur"]].map(([value,label]) => `<option value="${value}" ${member.role === value ? "selected" : ""}>${label}</option>`).join("")}</select>` : `<small>${escapeHTML(memberRoleLabel(member.role))} · ${escapeHTML(membershipStatusLabel(member.membership_status))}</small>`; return `<div class="member-row"><span class="mini-avatar">${profile.avatar_url ? `<img src="${escapeHTML(profile.avatar_url)}" alt="" />` : initials(profile.display_name || "?")}</span><span><strong>${escapeHTML(profile.display_name || (member.user_id === TOGETHER.user.id ? "Toi" : "Membre"))}</strong>${roleControl}</span></div>`; }).join("")}</div>
     </section>
     <section class="detail-section"><div class="detail-title"><h3>Moments du Club</h3><button class="together-secondary" id="clubCreateMoment" type="button">Créer un Moment</button></div><div class="detail-moments">${TOGETHER.moments.filter((moment) => moment.club_id === club.id).slice(0, 5).map((moment) => `<button data-detail-moment="${moment.id}"><strong>${escapeHTML(moment.title)}</strong><span>${escapeHTML(formatDate(moment.start_at))}</span></button>`).join("") || "Aucun Moment pour l’instant."}</div></section>
   </div>`;
@@ -255,6 +271,8 @@ async function openMomentDetail(momentId) {
     <section class="detail-section"><div class="detail-title"><h3>Encourager</h3></div><div class="reaction-picker">${emojis.map(([value,label]) => `<button class="${myReaction?.reaction_type === value ? "active" : ""}" data-reaction="${value}" type="button">${label}</button>`).join("")}</div><div class="preset-picker">${(presetsResult.data || []).map((preset) => `<button class="${myReaction?.preset_message_id === preset.id ? "active" : ""}" data-preset="${preset.id}" type="button">${escapeHTML(preset.label)}</button>`).join("")}</div>${myReaction ? '<button class="remove-reaction" id="removeReaction" type="button">Retirer ma réaction</button>' : ""}</section>
   </div>`;
   elements.momentDetail.querySelector(".detail-close")?.addEventListener("click", () => elements.momentDetailDialog.close());
+  const statusLabel = elements.momentDetail.querySelector(".card-label");
+  if (statusLabel) statusLabel.textContent = momentStatusLabel(moment.status);
   elements.momentDetail.querySelectorAll("[data-availability]").forEach((button) => button.addEventListener("click", () => saveAvailability(button.dataset.availability, button.dataset.value, moment.id)));
   elements.momentDetail.querySelectorAll("[data-confirm-option]").forEach((button) => button.addEventListener("click", () => confirmDateOption(moment, button.dataset.confirmOption)));
   document.getElementById("completeMoment")?.addEventListener("click", () => completeMoment(moment.id));

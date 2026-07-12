@@ -45,7 +45,7 @@ main{
    ========================================================= */
 
 .home-body .topbar{
-  top:36px;
+  top:16px;
   border:1px solid rgba(255,255,255,.20);
 
   background:rgba(255,255,255,.12);
@@ -57,6 +57,18 @@ main{
     0 1px 1px rgba(255,255,255,.10) inset,
     0 10px 40px rgba(0,0,0,.08);
 }
+
+.home-body .topbar-logout{
+  border:0;
+  border-radius:var(--radius-pill);
+  padding:11px 15px;
+  background:transparent;
+  color:rgba(255,255,255,.72);
+  font-size:13px;
+  font-weight:800;
+}
+
+.home-body .topbar-logout:hover{background:rgba(255,255,255,.14);color:#fff}
 
 .home-body .brand,
 .home-body .topbar nav a{
@@ -456,9 +468,16 @@ main{
 }
 
 .day-feed-item{
+  display:grid;
+  grid-template-columns:42px minmax(0,1fr);
+  gap:14px;
   padding:22px 0;
   border-bottom:1px solid var(--line);
 }
+
+.day-feed-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:14px;background:var(--surface-soft)}
+.day-feed-sport-icon{width:24px;height:24px}
+.day-feed-content{min-width:0}
 
 .day-feed-item:last-child{
   border-bottom:0;
@@ -729,6 +748,11 @@ main{
   margin-top:auto;
 }
 
+.calendar-session-icons{min-height:24px;display:flex;align-items:center;gap:5px;margin-bottom:8px}
+.calendar-session-icon{width:20px;height:20px;object-fit:contain}
+.living-week [data-today="true"] .calendar-session-icon,
+.month-grid [data-today="true"] .calendar-session-icon{filter:brightness(0) invert(1)}
+
 .living-moments > strong{
   display:block;
   margin-bottom:9px;
@@ -904,6 +928,23 @@ main{
   grid-template-columns:repeat(2,minmax(0,1fr));
   gap:18px;
 }
+
+.progression-chart-card{grid-column:1/-1;min-height:540px}
+.chart-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:24px}.chart-heading h3{margin:6px 0 8px;font-size:clamp(28px,4vw,44px)}.chart-heading p{margin:0;color:var(--muted)}
+.chart-mode{display:flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:999px}.chart-mode button{border:0;border-radius:999px;padding:9px 14px;background:transparent;color:var(--muted);font-size:12px;font-weight:850}.chart-mode button.active{background:var(--ink);color:#fff}
+.chart-canvas-wrap{height:330px}.progression-chart-card canvas{height:100%!important}.chart-insight{margin:22px 0 0;padding-top:18px;border-top:1px solid var(--line);color:var(--ink);font-size:18px;font-style:italic}
+.progression-reveal .chart-heading,.progression-reveal .chart-canvas-wrap,.progression-reveal .load-status,.progression-reveal .chart-insight{opacity:0;transform:translateY(8px)}.progression-reveal.is-visible .chart-heading{animation:progression-in .25s ease forwards}.progression-reveal.is-visible .chart-canvas-wrap{animation:progression-in .3s .2s ease forwards}.progression-reveal.is-visible .load-status,.progression-reveal.is-visible .chart-insight{animation:progression-in .25s .65s ease forwards}@keyframes progression-in{to{opacity:1;transform:none}}
+.chart-placeholder{display:flex;flex-direction:column;justify-content:flex-end}.chart-placeholder p{color:var(--muted)}
+.model-phase{padding:9px 12px;border-radius:999px;background:#edf0eb;color:#496152;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.load-status{display:grid;grid-template-columns:repeat(3,1fr);margin-top:20px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.load-status div{padding:17px 12px;border-right:1px solid var(--line)}.load-status div:last-child{border-right:0}.load-status strong,.load-status span{display:block}.load-status strong{font-size:26px}.load-status span{margin-top:3px;color:var(--muted);font-size:10px;font-weight:850;text-transform:uppercase;letter-spacing:.08em}
+.load-day-activities{display:grid;gap:8px;margin-top:24px}.load-day-activities article{display:flex;justify-content:space-between;gap:20px;padding:15px;border-radius:15px;background:var(--surface-soft)}.load-day-activities span{color:var(--muted);font-size:12px}
+.sport-chart-wrap{height:max(300px,calc(var(--sport-count,4) * 46px))}.sport-chart-wrap canvas{height:100%!important}.sport-detail-section{margin-top:28px}.sport-detail-section h3{font-size:24px}.sport-breakdown{display:grid;gap:8px}.sport-breakdown > div{display:flex;justify-content:space-between;gap:18px;padding:14px;border-radius:14px;background:var(--surface-soft)}.sport-breakdown strong{font-size:12px}.intensity-toggle{width:auto;margin-top:24px}
+.intensity-breakdown{display:grid;gap:12px}.intensity-breakdown > div{display:grid;grid-template-columns:100px 1fr 55px;align-items:center;gap:12px;font-size:12px}.intensity-breakdown i{height:8px;overflow:hidden;border-radius:999px;background:var(--surface-muted)}.intensity-breakdown b{display:block;height:100%;border-radius:inherit;background:var(--ink)}.intensity-breakdown strong{text-align:right}
+.wellness-mode{max-width:430px;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px;padding:4px;border:1px solid var(--line);border-radius:18px}.wellness-mode button{border:0;border-radius:999px;padding:8px 10px;background:transparent;color:var(--muted);font-size:11px;font-weight:850}.wellness-mode button.active{background:var(--ink);color:#fff}
+.wellness-detail-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:26px 0}.wellness-detail-grid > div{min-height:120px;padding:18px;border-radius:18px;background:var(--surface-soft)}.wellness-detail-grid span,.wellness-detail-grid strong,.wellness-detail-grid small{display:block}.wellness-detail-grid span{color:var(--muted);font-size:11px;font-weight:850;text-transform:uppercase}.wellness-detail-grid strong{margin-top:14px;font-size:22px}.wellness-detail-grid small{margin-top:4px;color:var(--muted)}.wellness-note-detail{margin-top:24px;padding:20px;border-left:4px solid var(--ink);background:var(--surface-soft)}.wellness-note-detail p{margin-bottom:6px}.wellness-note-detail small{color:var(--muted)}
+.progression-dialog{width:min(760px,calc(100% - 32px));max-height:calc(100svh - 40px);overflow:auto;border:0;border-radius:var(--radius-xl);padding:46px;background:var(--surface);box-shadow:var(--shadow-lg)}.progression-dialog::backdrop{background:rgba(0,0,0,.46);backdrop-filter:blur(8px)}.progression-dialog h2{font-size:clamp(38px,7vw,70px)}
+.progression-detail-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:28px 0}.progression-detail-kpis div{padding:18px;border-radius:18px;background:var(--surface-soft)}.progression-detail-kpis strong,.progression-detail-kpis span{display:block}.progression-detail-kpis strong{font-size:22px}.progression-detail-kpis span{margin-top:5px;color:var(--muted);font-size:11px;text-transform:uppercase}
+.progression-sport-list{display:grid;gap:8px}.progression-sport-list > button{display:flex;justify-content:space-between;padding:15px 16px;border:0;border-left:5px solid var(--sport-color);border-radius:14px;background:var(--surface-soft);font-weight:850}.progression-subdisciplines{padding:4px 16px 10px}.progression-subdisciplines p{display:flex;justify-content:space-between;gap:16px;margin:8px 0;color:var(--muted);font-size:13px}.progression-subdisciplines p strong{color:var(--ink)}
 
 .chart-card{
   min-height:390px;
@@ -1265,6 +1306,34 @@ main{
   gap:8px;
 }
 
+.activity-category{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+  margin:0;
+  padding:0;
+  border:0;
+}
+
+.activity-category legend{margin-bottom:14px;font-weight:800}
+.activity-category label{position:relative;cursor:pointer}
+.activity-category input{position:absolute;opacity:0;pointer-events:none}
+.activity-category span{
+  min-height:116px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  background:var(--surface-soft);
+  font-weight:850;
+}
+.activity-category span img{width:34px;height:34px}
+.activity-category input:checked + span{border-color:var(--ink);background:var(--ink);color:#fff}
+.activity-category input:checked + span img{filter:brightness(0) invert(1)}
+
 .activity-file-zone{
   position:relative;
   min-height:150px;
@@ -1340,9 +1409,18 @@ main{
     grid-template-columns:1fr;
   }
 
+  .activity-category{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .activity-category span{min-height:92px;padding:10px 5px;font-size:12px}
+  .activity-category span img{width:28px;height:28px}
+
   .activity-actions{
     flex-direction:column-reverse;
   }
+
+  .chart-heading{flex-direction:column}.chart-canvas-wrap{height:290px}.progression-dialog{width:100%;height:100svh;max-height:100svh;margin:0;border-radius:0;padding:70px 20px 28px}.progression-detail-kpis{grid-template-columns:1fr}.progression-subdisciplines p{flex-direction:column;gap:3px}
+  .load-day-activities article{flex-direction:column;gap:5px}
+  .sport-breakdown > div{flex-direction:column;gap:5px}.intensity-breakdown > div{grid-template-columns:85px 1fr 46px}
+  .wellness-mode{max-width:100%;justify-content:flex-start}.wellness-detail-grid{grid-template-columns:1fr}
 }
 .activity-form [hidden] {
   display: none !important;
