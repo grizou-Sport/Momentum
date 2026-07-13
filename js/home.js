@@ -89,7 +89,7 @@ function bindHome() {
   });
 
   $("#closeDay")?.addEventListener("click", () => {
-    $("#dayDialog")?.close();
+    closeHomeDialog($("#dayDialog"));
   });
 
   $("#dayDialogContent")?.addEventListener("click", async (event) => {
@@ -101,15 +101,26 @@ function bindHome() {
       actionButton.dataset.date || $("#dayDialog")?.dataset.date;
 
     if (action === "add-moment" && date) {
-      $("#dayDialog")?.close();
+      closeHomeDialog($("#dayDialog"));
       openActivityDialog(date, true);
+      return;
+    }
+
+    if (["add-wellbeing", "edit-wellbeing"].includes(action) && date) {
+      closeHomeDialog($("#dayDialog"));
+      await openWellbeingDialog(date, true);
+      return;
+    }
+
+    if (action === "delete-wellbeing" && date) {
+      await deleteWellbeing(date, date);
       return;
     }
 
     if (action === "edit-moment") {
       const activityId = actionButton.dataset.activityId;
       if (activityId) {
-        $("#dayDialog")?.close();
+        closeHomeDialog($("#dayDialog"));
         openEditActivityDialog(activityId);
       }
       return;
@@ -128,5 +139,6 @@ function bindHome() {
 document.addEventListener("DOMContentLoaded", () => {
   bindHome();
   bindWellbeingCard();
+  bindWellbeingDialog();
   renderHome();
 });

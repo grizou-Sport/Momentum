@@ -895,6 +895,34 @@ main{
   margin-bottom:54px;
 }
 
+.period-selector{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:12px;
+  margin:-28px 0 34px;
+  padding:18px 20px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  background:var(--surface);
+}
+
+.period-selector > label{
+  color:var(--muted);
+  font-size:11px;
+  font-weight:850;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.period-selector select{width:auto;min-width:190px}
+.period-selector > p{flex-basis:100%;margin:0;color:var(--danger);font-size:12px}
+.period-custom{display:flex;align-items:flex-end;flex-wrap:wrap;gap:10px}
+.period-custom[hidden]{display:none}
+.period-custom label{display:grid;gap:6px;color:var(--muted);font-size:11px;font-weight:800}
+.period-custom input{width:auto}
+.period-custom button{width:auto}
+
 .kpi-strip{
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
@@ -947,6 +975,7 @@ main{
 .progression-dialog{width:min(760px,calc(100% - 32px));max-height:calc(100svh - 40px);overflow:auto;border:0;border-radius:var(--radius-xl);padding:46px;background:var(--surface);box-shadow:var(--shadow-lg)}.progression-dialog::backdrop{background:rgba(0,0,0,.46);backdrop-filter:blur(8px)}.progression-dialog h2{font-size:clamp(38px,7vw,70px)}
 .progression-detail-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:28px 0}.progression-detail-kpis div{padding:18px;border-radius:18px;background:var(--surface-soft)}.progression-detail-kpis strong,.progression-detail-kpis span{display:block}.progression-detail-kpis strong{font-size:22px}.progression-detail-kpis span{margin-top:5px;color:var(--muted);font-size:11px;text-transform:uppercase}
 .progression-sport-list{display:grid;gap:8px}.progression-sport-list > button{display:flex;justify-content:space-between;padding:15px 16px;border:0;border-left:5px solid var(--sport-color);border-radius:14px;background:var(--surface-soft);font-weight:850}.progression-subdisciplines{padding:4px 16px 10px}.progression-subdisciplines p{display:flex;justify-content:space-between;gap:16px;margin:8px 0;color:var(--muted);font-size:13px}.progression-subdisciplines p strong{color:var(--ink)}
+.planned-detail,.progression-subdisciplines .is-planned{opacity:.48}
 
 .chart-card{
   min-height:390px;
@@ -1477,12 +1506,13 @@ main{
   margin-bottom:20px;
 }
 .day-wellbeing-heading h3{margin:7px 0 0;font-size:clamp(22px,3vw,30px)}
-.day-wellbeing-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.day-wellbeing-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .day-wellbeing-grid > div{padding:16px;border-radius:14px;background:var(--surface)}
 .day-wellbeing-grid span{display:block;color:var(--muted);font-size:10px;font-weight:850;letter-spacing:.06em;text-transform:uppercase}
 .day-wellbeing-grid strong{display:block;margin-top:9px;font-size:19px;white-space:nowrap}
 .day-wellbeing-physiology,.day-wellbeing-note,.day-wellbeing-empty{margin:16px 0 0;color:var(--muted)}
 .day-wellbeing-note{padding-top:16px;border-top:1px solid var(--line);color:var(--ink)}
+.day-wellbeing-actions{display:flex;justify-content:flex-end;gap:16px;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
 .day-moment-list{display:grid;gap:14px}
 
 .day-moment-card{
@@ -1572,6 +1602,29 @@ main{
 .day-empty p{margin-bottom:20px;color:var(--muted)}
 .day-dialog.is-busy{pointer-events:none;opacity:.62}
 
+.wellbeing-dialog{
+  width:min(760px,calc(100% - 32px));
+  max-height:calc(100svh - 40px);
+  overflow:auto;
+  border:0;
+  border-radius:var(--radius-xl);
+  padding:0;
+  background:var(--surface);
+  color:var(--ink);
+  box-shadow:var(--shadow-lg);
+}
+
+.wellbeing-dialog::backdrop{background:rgba(0,0,0,.46);backdrop-filter:blur(8px)}
+.wellbeing-dialog-content{padding:46px}
+.wellbeing-dialog-content h2{margin:8px 0 28px;font-size:clamp(34px,6vw,58px)}
+.wellbeing-dialog-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.wellbeing-dialog-form label{display:grid;gap:8px;color:var(--muted);font-size:11px;font-weight:800}
+.wellbeing-dialog-form input,.wellbeing-dialog-form select{width:100%}
+.wellbeing-dialog-form .full{grid-column:1/-1}
+.wellbeing-dialog-actions{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:10px;margin-top:8px}
+.wellbeing-dialog-actions button{width:auto}
+.danger-link{padding:10px 0;border:0;background:transparent;color:var(--danger);font-weight:800;cursor:pointer}
+
 @media(max-width:760px){
   .day-dialog{
     width:100%;
@@ -1589,4 +1642,6 @@ main{
   .day-moment-actions{align-self:flex-end}
   .activity-route-map{height:230px}
   .day-dialog #dayDialogContent{padding:72px 20px 28px}
+  .period-selector{align-items:stretch;margin-top:-24px}.period-selector select{width:100%}.period-custom{display:grid;grid-template-columns:1fr 1fr}.period-custom button{grid-column:1/-1;width:100%}
+  .wellbeing-dialog{width:100%;max-width:none;height:100svh;max-height:100svh;margin:0;border-radius:0}.wellbeing-dialog-content{padding:72px 20px 28px}.wellbeing-dialog-form{grid-template-columns:1fr}.wellbeing-dialog-form .full{grid-column:auto}.wellbeing-dialog-actions{grid-template-columns:1fr 1fr}.wellbeing-dialog-actions span{display:none}.wellbeing-dialog-actions .danger-link{grid-column:1/-1;justify-self:start}
 }

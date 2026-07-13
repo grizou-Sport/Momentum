@@ -33,6 +33,48 @@ function wellbeingMetric(label, value, unit = "") {
   `;
 }
 
+const SLEEP_QUALITY_LEVELS = [
+  { value:1, label:"Mauvais" },
+  { value:2, label:"Moins bien" },
+  { value:3, label:"Bien" },
+  { value:4, label:"Très bien" },
+  { value:5, label:"Excellent" }
+];
+
+function sleepQualityLevel(value, unit = "%") {
+  if (value === null || value === undefined || value === "") return null;
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) return null;
+
+  const normalizedUnit = String(unit || "").toLowerCase();
+  const level = normalizedUnit === "qualitative-v1" || numericValue <= 5
+    ? Math.round(numericValue)
+    : Math.ceil(Math.max(0, Math.min(100, numericValue)) / 20);
+
+  return Math.max(1, Math.min(5, level));
+}
+
+function sleepQualityLabel(value, unit = "%") {
+  const level = sleepQualityLevel(value, unit);
+  return SLEEP_QUALITY_LEVELS.find((item) => item.value === level)?.label || "—";
+}
+
+function sleepQualityScore(value, unit = "%") {
+  const level = sleepQualityLevel(value, unit);
+  return level == null ? null : level * 20;
+}
+
+function sleepQualityOptions(selectedLevel = null) {
+  return [
+    `<option value="">Non renseignée</option>`,
+    ...SLEEP_QUALITY_LEVELS.map((item) => `
+      <option value="${item.value}"${item.value === selectedLevel ? " selected" : ""}>
+        ${escapeHtml(item.label)}
+      </option>
+    `)
+  ].join("");
+}
+
 function mapDailyWellbeingRow(row, dayRow = null) {
   if (!row && !dayRow) return null;
 
@@ -41,7 +83,7 @@ function mapDailyWellbeingRow(row, dayRow = null) {
     source: row?.source_label || row?.source || (dayRow ? "Journal Momentum" : "Source inconnue"),
     sourceKey: row?.source || "manual",
     sleep: row?.sleep_hours ?? dayRow?.sleep_hours ?? null,
-    motivation: row?.motivation ?? null,
+    motivation: row?.motivation ?? dayRow?.energy ?? null,
     mood: dayRow?.mood ?? null,
     energy: dayRow?.energy ?? row?.motivation ?? null,
     restHr: row?.resting_hr ?? dayRow?.rest_hr ?? null,
@@ -54,7 +96,7 @@ function mapDailyWellbeingRow(row, dayRow = null) {
 
 function wellbeingHasData(wellbeing) {
   if (!wellbeing) return false;
-  return ["sleep", "motivation", "mood", "energy", "restHr", "hrv", "sleepQuality"]
+  return ["sleep", "motivation", "restHr", "hrv", "sleepQuality"]
     .some((key) => wellbeing[key] !== null && wellbeing[key] !== undefined && wellbeing[key] !== "");
 }
 
@@ -63,13 +105,11 @@ function wellbeingSummaryHtml(wellbeing) {
     return `<p class="day-wellbeing-empty">Aucune donnée de bien-être pour cette journée.</p>`;
   }
 
-  const recovery = wellbeing.sleepQuality;
   return `
     <div class="day-wellbeing-grid">
       <div><span>Sommeil</span><strong>${wellbeing.sleep == null ? "—" : escapeHtml(formatSleepDuration(wellbeing.sleep))}</strong></div>
-      <div><span>Énergie</span><strong>${wellbeing.energy == null ? "—" : `${escapeHtml(wellbeing.energy)} / 10`}</strong></div>
-      <div><span>Humeur</span><strong>${wellbeing.mood == null ? "—" : `${escapeHtml(wellbeing.mood)} / 10`}</strong></div>
-      <div><span>Récupération</span><strong>${recovery == null ? "—" : `${escapeHtml(recovery)} ${escapeHtml(wellbeing.sleepQualityUnit || "%")}`}</strong></div>
+      <div><span>Motivation au réveil</span><strong>${wellbeing.motivation == null ? "—" : `${escapeHtml(wellbeing.motivation)} / 10`}</strong></div>
+      <div><span>Qualité du sommeil</span><strong>${escapeHtml(sleepQualityLabel(wellbeing.sleepQuality, wellbeing.sleepQualityUnit))}</strong></div>
     </div>
     ${(wellbeing.restHr != null || wellbeing.hrv != null) ? `
       <p class="day-wellbeing-physiology">
@@ -169,7 +209,6 @@ async function saveDayWellbeing(userId, date, wellbeing) {
     user_id: userId,
     day_date: date,
     sleep_hours: wellbeing.sleep,
-    mood: wellbeing.mood,
     energy: wellbeing.energy,
     rest_hr: wellbeing.restHr,
     hrv: wellbeing.hrv
@@ -198,8 +237,6 @@ function renderWellbeingCard(date = iso(new Date())) {
   const wellbeing = state.wellbeing?.[date] || {};
   const source = wellbeing.source || "Aucune source connectée";
   const sleepQuality = wellbeing.sleepQuality ?? wellbeing.sleep_quality;
-  const sleepQualityUnit = wellbeing.sleepQualityUnit || wellbeing.sleep_quality_unit || "%";
-  const sleepDuration = splitSleepDuration(wellbeing.sleep);
   const hasData = wellbeingHasData(wellbeing);
 
   element.innerHTML = `
@@ -210,11 +247,8 @@ function renderWellbeingCard(date = iso(new Date())) {
       </div>
       <div class="wellbeing-actions">
         <span class="wellbeing-source">${escapeHtml(source)}</span>
-        <button class="round-btn wellbeing-manual-toggle" type="button" data-wellbeing-manual="add">
+        <button class="round-btn wellbeing-manual-toggle" type="button" data-wellbeing-open data-date="${escapeHtml(date)}">
           Ajouter des données
-        </button>
-        <button class="round-btn wellbeing-manual-toggle" type="button" data-wellbeing-manual="edit">
-          Modifier aujourd'hui
         </button>
       </div>
     </div>
@@ -222,95 +256,98 @@ function renderWellbeingCard(date = iso(new Date())) {
     <div class="wellbeing-metrics">
       ${wellbeingMetric("Sommeil", wellbeing.sleep != null ? formatSleepDuration(wellbeing.sleep) : null)}
       ${wellbeingMetric("Motivation au réveil", wellbeing.motivation, wellbeing.motivation != null ? "/ 10" : "")}
-      ${wellbeingMetric("Énergie", wellbeing.energy, wellbeing.energy != null ? "/ 10" : "")}
-      ${wellbeingMetric("Humeur", wellbeing.mood, wellbeing.mood != null ? "/ 10" : "")}
       ${wellbeingMetric("FC au repos", wellbeing.restHr ?? wellbeing.rest_hr, "bpm")}
       ${wellbeingMetric("Variabilité de la FC", wellbeing.hrv, "ms")}
-      ${wellbeingMetric("Qualité du sommeil", sleepQuality, sleepQuality != null ? sleepQualityUnit : "")}
+      ${wellbeingMetric("Qualité du sommeil", sleepQuality == null ? null : sleepQualityLabel(sleepQuality, wellbeing.sleepQualityUnit || wellbeing.sleep_quality_unit))}
     </div>
-
-    <p class="wellbeing-note">
-      La qualité reste affichée selon sa source. Une future note Momentum pourra la normaliser séparément, sans mélanger les échelles Whoop et Coros.
-    </p>
-
-    <p class="wellbeing-save-message" data-wellbeing-message aria-live="polite"></p>
-
-    <form class="wellbeing-manual-form" data-wellbeing-form data-has-data="${hasData}" hidden>
-      <label>Sommeil — heures<input name="sleepHours" type="number" min="0" max="24" step="1" value="${escapeHtml(sleepDuration.hours)}"></label>
-      <label>Sommeil — minutes<input name="sleepMinutes" type="number" min="0" max="59" step="1" value="${escapeHtml(sleepDuration.minutes)}"></label>
-      <label>Motivation (/10)<input name="motivation" type="number" min="1" max="10" step="1" value="${escapeHtml(wellbeing.motivation ?? "")}"></label>
-      <label>Énergie (/10)<input name="energy" type="number" min="1" max="10" step="1" value="${escapeHtml(wellbeing.energy ?? "")}"></label>
-      <label>Humeur (/10)<input name="mood" type="number" min="1" max="10" step="1" value="${escapeHtml(wellbeing.mood ?? "")}"></label>
-      <label>FC au repos (bpm)<input name="restHr" type="number" min="20" max="220" step="1" value="${escapeHtml(wellbeing.restHr ?? wellbeing.rest_hr ?? "")}"></label>
-      <label>VFC (ms)<input name="hrv" type="number" min="0" step="1" value="${escapeHtml(wellbeing.hrv ?? "")}"></label>
-      <label>Qualité du sommeil (%)<input name="sleepQuality" type="number" min="0" max="100" step="1" value="${escapeHtml(sleepQuality ?? "")}"></label>
-      <div class="wellbeing-form-actions">
-        <button class="secondary" type="button" data-wellbeing-cancel>Annuler</button>
-        <button class="primary" type="submit">Enregistrer</button>
-      </div>
-    </form>
   `;
+
+  element.querySelector("[data-wellbeing-open]").textContent = hasData
+    ? "Modifier les données"
+    : "Ajouter des données";
 }
 
 function bindWellbeingCard() {
   const card = $("#wellbeingCard");
   if (!card) return;
 
-  card.addEventListener("click", (event) => {
-    const form = card.querySelector("[data-wellbeing-form]");
-    if (!form) return;
-
-    const toggle = event.target.closest("[data-wellbeing-manual]");
-    if (toggle) {
-      form.dataset.mode = toggle.dataset.wellbeingManual;
-      if (toggle.dataset.wellbeingManual === "add") {
-        form.querySelectorAll("input").forEach((input) => { input.value = ""; });
-      } else {
-        form.reset();
-      }
-      form.hidden = false;
-      form.querySelector("input")?.focus();
-    }
-
-    if (event.target.closest("[data-wellbeing-cancel]")) {
-      form.hidden = true;
-    }
+  card.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-wellbeing-open]");
+    if (!button) return;
+    await openWellbeingDialog(button.dataset.date || iso(new Date()));
   });
+}
 
-  card.addEventListener("submit", async (event) => {
-    if (!event.target.matches("[data-wellbeing-form]")) return;
+async function openWellbeingDialog(date, returnToDay = false) {
+  const dialog = $("#wellbeingDialog");
+  const form = $("#wellbeingDialogForm");
+  const title = $("#wellbeingDialogTitle");
+  const deleteButton = $("#deleteWellbeing");
+  if (!dialog || !form) return;
+
+  const wellbeing = await loadDailyWellbeing(date) || {};
+  const sleepDuration = splitSleepDuration(wellbeing.sleep);
+  const qualityLevel = sleepQualityLevel(
+    wellbeing.sleepQuality ?? wellbeing.sleep_quality,
+    wellbeing.sleepQualityUnit || wellbeing.sleep_quality_unit
+  );
+
+  form.reset();
+  form.elements.recordedDate.value = date;
+  form.elements.sleepHours.value = sleepDuration.hours;
+  form.elements.sleepMinutes.value = sleepDuration.minutes;
+  form.elements.motivation.value = wellbeing.motivation ?? "";
+  form.elements.restHr.value = wellbeing.restHr ?? wellbeing.rest_hr ?? "";
+  form.elements.hrv.value = wellbeing.hrv ?? "";
+  form.elements.sleepQuality.innerHTML = sleepQualityOptions(qualityLevel);
+  form.dataset.returnToDay = returnToDay ? date : "";
+
+  const hasData = wellbeingHasData(wellbeing);
+  if (title) title.textContent = hasData ? "Modifier le bien-être" : "Ajouter le bien-être";
+  if (deleteButton) deleteButton.hidden = !hasData;
+  const submitButton = form.querySelector('[type="submit"]');
+  if (submitButton) submitButton.disabled = false;
+  setWellbeingDialogMessage("");
+  openHomeDialog(dialog);
+}
+
+function setWellbeingDialogMessage(message, isError = false) {
+  const element = $("#wellbeingDialogMessage");
+  if (!element) return;
+  element.textContent = message;
+  element.classList.toggle("is-error", isError);
+}
+
+async function saveWellbeing(event) {
     event.preventDefault();
 
-    const date = iso(new Date());
-    const entries = Object.fromEntries(new FormData(event.target));
+    const form = event.currentTarget;
+    const date = form.elements.recordedDate.value;
+    const entries = Object.fromEntries(new FormData(form));
     const value = (name) => entries[name] === "" ? null : Number(entries[name]);
-    const isAdding = event.target.dataset.mode === "add";
-    const existingWellbeing = state.wellbeing?.[date] || {};
-    const valueOrExisting = (name, key = name) => value(name) ?? (isAdding ? existingWellbeing[key] ?? null : null);
-    const submitButton = event.target.querySelector('[type="submit"]');
-    const message = card.querySelector("[data-wellbeing-message]");
+    const submitButton = form.querySelector('[type="submit"]');
     const user = await getCurrentUser();
 
     if (!user) {
-      if (message) message.textContent = "Session introuvable. Reconnecte-toi puis réessaie.";
+      setWellbeingDialogMessage("Session introuvable. Reconnecte-toi puis réessaie.", true);
       return;
     }
 
     const wellbeing = {
       source: "Ajout manuel",
       sourceKey: "manual",
-      sleep: entries.sleepHours === "" && entries.sleepMinutes === "" ? (isAdding ? existingWellbeing.sleep ?? null : null) : (value("sleepHours") || 0) + (value("sleepMinutes") || 0) / 60,
-      motivation: valueOrExisting("motivation"),
-      energy: valueOrExisting("energy"),
-      mood: valueOrExisting("mood"),
-      restHr: valueOrExisting("restHr"),
-      hrv: valueOrExisting("hrv"),
-      sleepQuality: valueOrExisting("sleepQuality"),
-      sleepQualityUnit: "%"
+      sleep: entries.sleepHours === "" && entries.sleepMinutes === "" ? null : (value("sleepHours") || 0) + (value("sleepMinutes") || 0) / 60,
+      motivation: value("motivation"),
+      energy: value("motivation"),
+      mood: null,
+      restHr: value("restHr"),
+      hrv: value("hrv"),
+      sleepQuality: value("sleepQuality"),
+      sleepQualityUnit: "qualitative-v1"
     };
 
     if (submitButton) submitButton.disabled = true;
-    if (message) message.textContent = "Enregistrement…";
+    setWellbeingDialogMessage("Enregistrement…");
 
     const [dailyResult, dayResult] = await Promise.all([
       window.momentumDB
@@ -327,14 +364,70 @@ function bindWellbeingCard() {
     if (error) {
       console.error("HOME : impossible d'enregistrer le bien-être.", error);
       if (submitButton) submitButton.disabled = false;
-      if (message) message.textContent = `Enregistrement impossible : ${error.message}`;
+      setWellbeingDialogMessage(`Enregistrement impossible : ${error.message}`, true);
       return;
     }
 
     state.wellbeing = state.wellbeing || {};
     state.wellbeing[date] = mapDailyWellbeingRow(dailyResult.data, dayResult.data);
     saveState();
-    renderWellbeingCard(date);
+    const returnToDay = form.dataset.returnToDay;
+    closeHomeDialog($("#wellbeingDialog"));
+    await renderHome();
     await loadProgressionData();
+
+    if (returnToDay) await openDay(returnToDay);
+}
+
+async function deleteWellbeing(date, returnToDay = null) {
+  const user = await getCurrentUser();
+  if (!user || !window.confirm("Supprimer les données de bien-être de cette journée ?")) return;
+
+  const editorDialog = $("#wellbeingDialog");
+  const dayDialog = $("#dayDialog");
+  dayDialog?.classList.add("is-busy");
+  setWellbeingDialogMessage("Suppression…");
+  const [dailyResult, dayResult] = await Promise.all([
+    window.momentumDB
+      .from("daily_wellbeing")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("recorded_date", date),
+    window.momentumDB
+      .from("days")
+      .update({ sleep_hours:null, mood:null, energy:null, rest_hr:null, hrv:null })
+      .eq("user_id", user.id)
+      .eq("day_date", date)
+  ]);
+
+  const error = dailyResult.error || dayResult.error;
+  if (error) {
+    console.error("HOME : impossible de supprimer le bien-être.", error);
+    if (editorDialog?.open) {
+      setWellbeingDialogMessage(`Suppression impossible : ${error.message}`, true);
+    } else {
+      window.alert(error.message || "Impossible de supprimer les données de bien-être.");
+    }
+    dayDialog?.classList.remove("is-busy");
+    return;
+  }
+
+  const returnDate = returnToDay ?? $("#wellbeingDialogForm")?.dataset.returnToDay;
+  if (state.wellbeing) delete state.wellbeing[date];
+  saveState();
+  closeHomeDialog($("#wellbeingDialog"));
+  await renderHome();
+  await loadProgressionData();
+  if (returnDate) await openDay(returnDate);
+  dayDialog?.classList.remove("is-busy");
+}
+
+function bindWellbeingDialog() {
+  $("#wellbeingDialogForm")?.addEventListener("submit", saveWellbeing);
+  $("#closeWellbeingDialog")?.addEventListener("click", () => closeHomeDialog($("#wellbeingDialog")));
+  $("#cancelWellbeing")?.addEventListener("click", () => closeHomeDialog($("#wellbeingDialog")));
+  $("#deleteWellbeing")?.addEventListener("click", () => {
+    const date = $("#wellbeingDialogForm")?.elements.recordedDate.value;
+    if (date) deleteWellbeing(date);
   });
 }

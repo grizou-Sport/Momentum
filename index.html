@@ -113,6 +113,24 @@
       <div class="section-kicker">Progression</div>
       <h2>Les chiffres ne sont pas l'histoire. Ils en sont la preuve — la donnée devient une histoire.</h2>
 
+      <div class="period-selector" data-period-selector data-compatible-mode="horizon">
+        <label for="chartPeriod">Période</label>
+        <select id="chartPeriod" data-period-preset>
+          <option value="4-weeks" selected>4 semaines</option>
+          <option value="1-month">1 mois</option>
+          <option value="3-months">3 mois</option>
+          <option value="6-months">6 mois</option>
+          <option value="1-year">1 année</option>
+          <option value="custom">Période personnalisée</option>
+        </select>
+        <div class="period-custom" data-period-custom hidden>
+          <label>Du <input type="date" data-period-start></label>
+          <label>Au <input type="date" data-period-end></label>
+          <button class="secondary" type="button" data-period-apply>Appliquer</button>
+        </div>
+        <p data-period-message aria-live="polite"></p>
+      </div>
+
       <div class="kpi-strip" id="kpiStrip"></div>
 
       <div class="charts-grid">
@@ -128,12 +146,12 @@
           <p class="chart-insight" id="loadInsight"></p>
         </article>
         <article class="chart-card progression-chart-card progression-reveal" id="sportChartCard">
-          <div class="chart-heading"><div><span class="card-label">Comment est-ce que je m'entraîne ?</span><h3>Répartition sportive</h3><p>Le temps réellement consacré à chaque discipline.</p></div><span class="model-phase">12 semaines</span></div>
+          <div class="chart-heading"><div><span class="card-label">Comment est-ce que je m'entraîne ?</span><h3>Répartition sportive</h3><p>Le temps réellement consacré à chaque discipline.</p></div><span class="model-phase" id="sportPeriodLabel">4 semaines</span></div>
           <div class="sport-chart-wrap"><canvas id="sportChart"></canvas></div>
           <p class="chart-insight" id="sportInsight"></p>
         </article>
         <article class="chart-card progression-chart-card progression-reveal" id="wellnessChartCard">
-          <div class="chart-heading"><div><span class="card-label">Comment est-ce que je me sens ?</span><h3>Bien-être</h3><p>Sommeil, énergie, humeur et récupération au fil des jours.</p></div><div class="wellness-mode"><button class="active" data-wellness-mode="summary">Synthèse</button><button data-wellness-mode="sleep">Sommeil</button><button data-wellness-mode="energy">Énergie</button><button data-wellness-mode="mood">Humeur</button><button data-wellness-mode="recovery">Récupération</button></div></div>
+          <div class="chart-heading"><div><span class="card-label">Comment est-ce que je me sens ?</span><h3>Bien-être</h3><p>Sommeil, motivation et récupération au fil des jours.</p></div><div class="wellness-mode"><button class="active" data-wellness-mode="summary">Synthèse</button><button data-wellness-mode="sleep">Sommeil</button><button data-wellness-mode="motivation">Motivation</button><button data-wellness-mode="recovery">Qualité du sommeil</button></div></div>
           <div class="chart-canvas-wrap"><canvas id="wellnessChart"></canvas></div>
           <p class="chart-insight" id="wellnessInsight"></p>
         </article>
@@ -189,12 +207,11 @@
 
   <template id="wellnessFormTemplate">
     <form class="mini-form wellness-form">
-      <label>Humeur /10<input type="number" min="1" max="10" name="mood" /></label>
       <label>Sommeil h<input type="number" min="0" max="14" step="0.1" name="sleep" /></label>
       <label>FC repos<input type="number" min="0" name="restHr" /></label>
       <label>VFC ms<input type="number" min="0" name="hrv" /></label>
       <label>Poids kg<input type="number" min="0" step="0.1" name="weight" /></label>
-      <label>Énergie /10<input type="number" min="1" max="10" name="energy" /></label>
+      <label>Motivation au réveil /10<input type="number" min="1" max="10" name="motivation" /></label>
       <label>Courbatures<select name="soreness"><option></option><option>Aucune</option><option>Légères</option><option>Moyennes</option><option>Fortes</option></select></label>
       <label>Stress /10<input type="number" min="1" max="10" name="stress" /></label>
       <label class="full">Commentaire<textarea name="note" rows="2"></textarea></label>
@@ -566,6 +583,30 @@
         >
           Enregistrer
         </button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<dialog id="wellbeingDialog" class="wellbeing-dialog">
+  <button id="closeWellbeingDialog" class="close-btn" type="button" aria-label="Fermer">×</button>
+  <div class="wellbeing-dialog-content">
+    <p class="section-kicker">Bien-être</p>
+    <h2 id="wellbeingDialogTitle">Ajouter le bien-être</h2>
+    <form id="wellbeingDialogForm" class="wellbeing-dialog-form">
+      <input name="recordedDate" type="hidden" />
+      <label>Sommeil — heures<input name="sleepHours" type="number" min="0" max="24" step="1"></label>
+      <label>Sommeil — minutes<input name="sleepMinutes" type="number" min="0" max="59" step="1"></label>
+      <label>Motivation au réveil (/10)<input name="motivation" type="number" min="1" max="10" step="1"></label>
+      <label>FC au repos (bpm)<input name="restHr" type="number" min="20" max="220" step="1"></label>
+      <label>VFC (ms)<input name="hrv" type="number" min="0" step="1"></label>
+      <label>Qualité du sommeil<select name="sleepQuality"></select></label>
+      <p id="wellbeingDialogMessage" class="activity-message full" aria-live="polite"></p>
+      <div class="wellbeing-dialog-actions full">
+        <button id="deleteWellbeing" class="danger-link" type="button" hidden>Supprimer</button>
+        <span></span>
+        <button id="cancelWellbeing" class="secondary" type="button">Annuler</button>
+        <button class="primary" type="submit">Enregistrer</button>
       </div>
     </form>
   </div>

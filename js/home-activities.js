@@ -381,11 +381,7 @@ function openActivityDialog(date = null, returnToDay = false) {
   updateActivityFormCategory();
   setActivityMessage("");
 
-  if (
-    typeof dialog.showModal === "function"
-  ) {
-    dialog.showModal();
-  }
+  openHomeDialog(dialog);
 }
 
 function openEditActivityDialog(activityId) {
@@ -458,7 +454,7 @@ function closeActivityDialog() {
   const dialog = $("#activityDialog");
 
   if (dialog?.open) {
-    dialog.close();
+    closeHomeDialog(dialog);
   }
 }
 

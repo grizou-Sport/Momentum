@@ -151,6 +151,22 @@ async function openDay(date) {
           ${wellbeing?.source ? `<span class="wellbeing-source">${escapeHtml(wellbeing.source)}</span>` : ""}
         </div>
         ${wellbeingSummaryHtml(wellbeing)}
+        <div class="day-wellbeing-actions">
+          <button
+            type="button"
+            class="day-edit-moment"
+            data-action="${wellbeingHasData(wellbeing) ? "edit-wellbeing" : "add-wellbeing"}"
+            data-date="${date}"
+          >${wellbeingHasData(wellbeing) ? "Modifier" : "Ajouter des données"}</button>
+          ${wellbeingHasData(wellbeing) ? `
+            <button
+              type="button"
+              class="day-delete-moment"
+              data-action="delete-wellbeing"
+              data-date="${date}"
+            >Supprimer</button>
+          ` : ""}
+        </div>
       </section>
     ` : ""}
 
@@ -221,9 +237,7 @@ async function openDay(date) {
     </div>
   `;
 
-  if (typeof dialog.showModal === "function" && !dialog.open) {
-    dialog.showModal();
-  }
+  openHomeDialog(dialog);
 
   content.querySelectorAll("[data-route-map]")
     .forEach((mapElement) => {

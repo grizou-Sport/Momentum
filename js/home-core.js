@@ -37,6 +37,8 @@ const MONTHS = [
 
 let state = loadState();
 let visibleMonth = startOfMonth(new Date());
+let homeDialogScrollY = null;
+let homeDialogScrollToken = 0;
 
 
 /* =========================================================
@@ -159,4 +161,54 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function openHomeDialog(dialog) {
+  if (!dialog || dialog.open || typeof dialog.showModal !== "function") return;
+
+  if (homeDialogScrollY === null) {
+    homeDialogScrollToken += 1;
+    homeDialogScrollY = window.scrollY;
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${homeDialogScrollY}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.width = "100%";
+  }
+
+  dialog.addEventListener("close", restoreHomeDialogScroll, { once:true });
+  dialog.showModal();
+}
+
+function closeHomeDialog(dialog) {
+  if (!dialog?.open) return;
+
+  dialog.close();
+
+  restoreHomeDialogScroll();
+}
+
+function restoreHomeDialogScroll() {
+  if (document.querySelector("dialog[open]") || homeDialogScrollY === null) return;
+
+  const scrollY = homeDialogScrollY ?? 0;
+  const restoreToken = ++homeDialogScrollToken;
+  document.body.style.position = "";
+  document.body.style.top = "";
+  document.body.style.left = "";
+  document.body.style.right = "";
+  document.body.style.width = "";
+  homeDialogScrollY = null;
+  window.scrollTo(0, scrollY);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (
+        restoreToken === homeDialogScrollToken &&
+        homeDialogScrollY === null &&
+        !document.querySelector("dialog[open]")
+      ) {
+        window.scrollTo(0, scrollY);
+      }
+    });
+  });
 }
