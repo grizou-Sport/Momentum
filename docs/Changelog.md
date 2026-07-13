@@ -21,3 +21,6 @@ Les changements notables du projet sont consignés dans ce fichier.
 - Simplification de la carte Bien-être autour de la motivation au réveil et d’une qualité de sommeil qualitative.
 - Différenciation visuelle des activités prévues dans les graphiques.
 - Conservation de la position de défilement lors de l’ouverture et de la fermeture des fenêtres HOME.
+- Refonte de la hiérarchie de TOGETHER : navigation et Hero plus compacts, rythme vertical resserré et compteurs secondaires.
+- Séparation des vues MOMENTS et CERCLE, avec une action principale adaptée à chaque univers.
+- Densification des cartes Moment, des états vides et des invitations ; transformation des Clubs en cartes de résumé.

@@ -15,3 +15,10 @@ Les décisions structurantes sont ajoutées ici avec leur contexte, leurs consé
 - **Décision :** centraliser la période des graphiques dans un modèle de préréglages extensible et enregistrer les saisies manuelles de qualité du sommeil sur cinq niveaux, avec l’unité `qualitative-v1` dans les colonnes existantes.
 - **Conséquence :** aucun schéma ni contrat API n’est modifié ; les sources numériques existantes sont converties en libellés qualitatifs uniquement pour l’affichage.
 - **Motif :** garantir une expérience cohérente aujourd’hui tout en laissant une extension future vers le mode Horizon et les montres connectées.
+
+## 2026-07-13 — Séparation des univers TOGETHER
+
+- **Statut :** accepté.
+- **Décision :** réserver MOMENTS aux aventures organisées par période et CERCLE aux proches, invitations et Clubs, avec une action principale propre à chaque vue.
+- **Conséquence :** la séparation reste entièrement côté interface ; les modèles de données, les API et les traitements Supabase ne changent pas.
+- **Motif :** rendre la navigation mobile plus claire et préserver une expérience calme, organisée et intentionnelle.

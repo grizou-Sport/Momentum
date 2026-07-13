@@ -14,6 +14,7 @@ const elements = {
   momentsView: document.getElementById("momentsView"),
   circleView: document.getElementById("circleView"),
   status: document.getElementById("togetherStatus"),
+  primaryAction: document.getElementById("primaryTogetherAction"),
   momentDialog: document.getElementById("momentDialog"),
   clubDialog: document.getElementById("clubDialog"),
   momentForm: document.getElementById("momentForm"),
@@ -113,26 +114,27 @@ function momentBucket(moment) {
 }
 
 function momentCard(moment) {
-  const club = TOGETHER.clubs.find((item) => item.id === moment.club_id);
   const participantCount = moment.moment_participants?.[0]?.count || 0;
   const colors = { SPORT: "#71806d", ADVENTURE: "#b68650", TRAVEL: "#668394", SOCIAL: "#9a756b", OTHER: "#77766f" };
   return `
     <article class="moment-card" style="--moment-color:${colors[moment.moment_type] || colors.OTHER}">
-      <div>
+      <div class="moment-card-copy">
         <span class="moment-status">${escapeHTML(momentStatusLabel(moment.status))}</span>
         <h3>${escapeHTML(moment.title)}</h3>
-        <p>${escapeHTML(moment.description || (club ? `Un Moment de ${club.name}` : "Un Moment à écrire ensemble."))}</p>
+        <p>${escapeHTML(moment.description || "Un Moment à écrire ensemble.")}</p>
       </div>
-      <div>
+      <div class="moment-card-details">
         <div class="moment-meta"><span>${escapeHTML(formatDate(moment.start_at))}</span><span>·</span><span>${escapeHTML(moment.location_name || "Lieu à définir")}</span></div>
-        <div class="moment-participants"><span>${club ? escapeHTML(club.name) : "Moment personnel"}</span><strong>${participantCount} participant${participantCount > 1 ? "s" : ""}</strong></div>
-        <button class="card-action" data-open-moment="${moment.id}" type="button">Ouvrir le Moment</button>
+        <div class="moment-card-footer">
+          <span>${participantCount} participant${participantCount > 1 ? "s" : ""}</span>
+          <button class="card-action" data-open-moment="${moment.id}" type="button">Ouvrir</button>
+        </div>
       </div>
     </article>`;
 }
 
 function emptyCard(title, text) {
-  return `<div class="together-empty"><strong>${escapeHTML(title)}</strong>${escapeHTML(text)}</div>`;
+  return `<div class="together-empty"><strong>${escapeHTML(title)}</strong><span>${escapeHTML(text)}</span></div>`;
 }
 
 function renderMoments() {
@@ -144,7 +146,7 @@ function renderMoments() {
   ];
   elements.momentsView.innerHTML = sections.map(([bucket, title, subtitle]) => {
     const moments = TOGETHER.moments.filter((moment) => momentBucket(moment) === bucket);
-    return `<section class="together-section"><div class="together-section-head"><div><span class="card-label">${moments.length} Moment${moments.length > 1 ? "s" : ""}</span><h2>${title}</h2></div><p>${subtitle}</p></div><div class="moment-grid">${moments.length ? moments.map(momentCard).join("") : emptyCard("Rien pour le moment", bucket === "planning" ? "Crée un Moment pour lancer la prochaine aventure." : "Cet espace se remplira naturellement.")}</div></section>`;
+    return `<section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>${title}</h2><span class="section-count" aria-label="${moments.length} Moment${moments.length > 1 ? "s" : ""}">${moments.length}</span></div><p>${subtitle}</p></div></div><div class="moment-grid">${moments.length ? moments.map(momentCard).join("") : emptyCard("Rien pour le moment", bucket === "planning" ? "Crée un Moment pour lancer la prochaine aventure." : "Cet espace se remplira naturellement.")}</div></section>`;
   }).join("");
   elements.momentsView.querySelectorAll("[data-open-moment]").forEach((button) => button.addEventListener("click", () => openMomentDetail(button.dataset.openMoment)));
 }
@@ -153,7 +155,7 @@ function clubCard(club) {
   const count = club.club_members?.[0]?.count || 0;
   const next = TOGETHER.moments.filter((moment) => moment.club_id === club.id && ["PLANNING", "CONFIRMED"].includes(moment.status)).sort((a, b) => new Date(a.start_at || 8640000000000000) - new Date(b.start_at || 8640000000000000))[0];
   const logo = TOGETHER.logoUrls.get(club.id);
-  return `<article class="club-card"><div class="club-symbol">${logo ? `<img src="${escapeHTML(logo)}" alt="Logo ${escapeHTML(club.name)}" />` : "△"}</div><h3>${escapeHTML(club.name)}</h3><div class="club-meta"><span>${escapeHTML(sportLabel(club.category))}</span><span>·</span><span>${escapeHTML(club.location_name)}</span><span>·</span><span>${count} membre${count > 1 ? "s" : ""}</span></div><p>${escapeHTML(club.description || "Un Club Momentum")}</p><div class="club-next">${next ? `<strong>Prochain Moment</strong><br>${escapeHTML(next.title)} — ${escapeHTML(formatDate(next.start_at))}` : "Aucun Moment prévu"}</div><button class="club-open" data-open-club="${club.id}" type="button">Ouvrir le Club</button></article>`;
+  return `<article class="club-card"><div class="club-card-head"><div class="club-symbol">${logo ? `<img src="${escapeHTML(logo)}" alt="Logo ${escapeHTML(club.name)}" />` : "△"}</div><div><h3>${escapeHTML(club.name)}</h3><div class="club-meta"><span>${escapeHTML(sportLabel(club.category))}</span><span>·</span><span>${escapeHTML(club.location_name)}</span><span>·</span><span>${count} membre${count > 1 ? "s" : ""}</span></div></div></div><div class="club-next">${next ? `<strong>Prochain Moment</strong><span>${escapeHTML(next.title)} · ${escapeHTML(formatDate(next.start_at))}</span>` : `<strong>Prochain Moment</strong><span>Aucun Moment prévu</span>`}</div><button class="club-open" data-open-club="${club.id}" type="button">Ouvrir le Club</button></article>`;
 }
 
 function personCard(relationship) {
@@ -169,11 +171,15 @@ function renderCircle() {
   const accepted = TOGETHER.relationships.filter((item) => item.status === "ACCEPTED");
   const pending = TOGETHER.relationships.filter((item) => item.status === "PENDING" && item.recipient_id === TOGETHER.user.id);
   const pendingClubs = TOGETHER.clubMemberships.filter((item) => item.membership_status === "PENDING").map((membership) => ({ membership, club: TOGETHER.clubs.find((club) => club.id === membership.club_id) })).filter((item) => item.club);
+  const invitationCount = pending.length + pendingClubs.length;
+  const invitations = [
+    ...pending.map((item) => `<article class="circle-card invitation-card"><div><span class="card-label">Cercle</span><h3>Invitation reçue</h3><p>Une personne souhaite rejoindre ton Cercle.</p></div><button class="together-primary" data-accept-relationship="${item.id}">Accepter</button></article>`),
+    ...pendingClubs.map(({ membership, club }) => `<article class="club-card invitation-card"><div><span class="card-label">Club</span><h3>${escapeHTML(club.name)}</h3><p>${escapeHTML(sportLabel(club.category))} · ${escapeHTML(club.location_name)}</p></div><div class="inline-actions"><button class="light-button" data-club-invite="${membership.id}" data-answer="ACCEPTED">Rejoindre</button><button class="ghost-light-button" data-club-invite="${membership.id}" data-answer="DECLINED">Refuser</button></div></article>`)
+  ];
   elements.circleView.innerHTML = `
-    ${pending.length ? `<section class="together-section"><div class="together-section-head"><div><span class="card-label">Action attendue</span><h2>Invitations</h2></div></div><div class="circle-grid">${pending.map((item) => `<article class="circle-card"><h3>Invitation reçue</h3><p>Une personne souhaite rejoindre ton Cercle.</p><button class="together-primary" data-accept-relationship="${item.id}">Accepter</button></article>`).join("")}</div></section>` : ""}
-    ${pendingClubs.length ? `<section class="together-section"><div class="together-section-head"><div><span class="card-label">Action attendue</span><h2>Invitations Clubs</h2></div></div><div class="club-grid">${pendingClubs.map(({ membership, club }) => `<article class="club-card"><h3>${escapeHTML(club.name)}</h3><p>${escapeHTML(sportLabel(club.category))} · ${escapeHTML(club.location_name)}</p><div class="inline-actions"><button class="light-button" data-club-invite="${membership.id}" data-answer="ACCEPTED">Rejoindre</button><button class="ghost-light-button" data-club-invite="${membership.id}" data-answer="DECLINED">Refuser</button></div></article>`).join("")}</div></section>` : ""}
-    <section class="together-section"><div class="together-section-head"><div><span class="card-label">Relations réciproques</span><h2>Mes proches</h2></div><p>Les personnes avec lesquelles tu choisis de partager.</p></div><div class="circle-grid">${accepted.length ? accepted.map(personCard).join("") : emptyCard("Ton Cercle est encore calme", "Les invitations apparaîtront ici après acceptation.")}</div></section>
-    <section class="together-section"><div class="together-section-head"><div><span class="card-label">Espaces collectifs</span><h2>Mes Clubs</h2></div><button class="together-secondary" id="openCreateClub" type="button">Créer un Club</button></div><div class="club-grid">${TOGETHER.clubs.length ? TOGETHER.clubs.map(clubCard).join("") : emptyCard("Créer le premier Club", "Réunis un petit groupe autour d’une pratique ou d’une envie commune.")}</div></section>`;
+    <section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>Invitations</h2><span class="section-count">${invitationCount}</span></div><p>Les demandes qui attendent une réponse.</p></div></div><div class="circle-grid">${invitations.length ? invitations.join("") : emptyCard("Aucune invitation en attente", "Ton Cercle est à jour.")}</div></section>
+    <section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>Mes proches</h2><span class="section-count">${accepted.length}</span></div><p>Les personnes avec lesquelles tu choisis de partager.</p></div></div><div class="circle-grid">${accepted.length ? accepted.map(personCard).join("") : emptyCard("Ton Cercle est encore calme", "Les invitations apparaîtront ici après acceptation.")}</div></section>
+    <section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>Mes Clubs</h2><span class="section-count">${TOGETHER.clubs.length}</span></div><p>Les communautés auxquelles tu appartiens.</p></div><button class="together-secondary" id="openCreateClub" type="button">Créer un Club</button></div><div class="club-grid">${TOGETHER.clubs.length ? TOGETHER.clubs.map(clubCard).join("") : emptyCard("Créer le premier Club", "Réunis un petit groupe autour d’une pratique ou d’une envie commune.")}</div></section>`;
   document.getElementById("openCreateClub")?.addEventListener("click", () => openClubForm());
   elements.circleView.querySelectorAll("[data-open-club]").forEach((button) => button.addEventListener("click", () => openClubDetail(button.dataset.openClub)));
   elements.circleView.querySelectorAll("[data-accept-relationship]").forEach((button) => button.addEventListener("click", () => acceptRelationship(button.dataset.acceptRelationship)));
@@ -461,13 +467,18 @@ async function acceptRelationship(id) {
   await loadTogether();
 }
 
+function setTogetherView(view) {
+  TOGETHER.view = view;
+  elements.tabs.forEach((item) => { const active = item.dataset.view === view; item.classList.toggle("active", active); item.setAttribute("aria-selected", String(active)); });
+  elements.momentsView.hidden = view !== "moments";
+  elements.circleView.hidden = view !== "circle";
+  if (elements.primaryAction) elements.primaryAction.textContent = view === "moments" ? "Créer un Moment" : "Créer un Club";
+}
+
 elements.tabs.forEach((tab) => tab.addEventListener("click", () => {
-  TOGETHER.view = tab.dataset.view;
-  elements.tabs.forEach((item) => { const active = item === tab; item.classList.toggle("active", active); item.setAttribute("aria-selected", String(active)); });
-  elements.momentsView.hidden = TOGETHER.view !== "moments";
-  elements.circleView.hidden = TOGETHER.view !== "circle";
+  setTogetherView(tab.dataset.view);
 }));
-document.getElementById("openCreateMoment")?.addEventListener("click", () => elements.momentDialog.showModal());
+elements.primaryAction?.addEventListener("click", () => TOGETHER.view === "moments" ? elements.momentDialog.showModal() : openClubForm());
 document.getElementById("addDateOption")?.addEventListener("click", () => {
   const row = document.createElement("div");
   row.className = "date-option-input";
