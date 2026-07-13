@@ -1,14 +1,11 @@
 function renderSports() {
-  const activeSports = YOU.userSports
-    .filter((item) => item.active !== false)
-    .map((item) => item.sports)
-    .filter(Boolean);
+  const activeSports = YOU.sportProfile || [];
 
   YOU.detail.innerHTML = `
     <p class="section-kicker">Je vis pour</p>
     <h2>Tes terrains d’expression</h2>
     <p class="you-detail-lead">
-      Les sports apparaîtront ici naturellement, au fil des activités enregistrées.
+      Ton questionnaire pose le point de départ. Tes activités racontent ensuite la place réelle de chaque sport dans ta vie.
     </p>
 
     ${
@@ -17,10 +14,10 @@ function renderSports() {
           <div class="you-card-grid">
             ${activeSports
               .map((sport) => `
-                <div class="you-small-card active">
-                  <span>${sport.emoji || "•"}</span>
-                  <strong>${sport.name}</strong>
-                  <em>Pratiqué</em>
+                <div class="you-small-card sport-practice-card${sport.level === "regular" ? " active" : ""}" data-practice-level="${sport.level}">
+                  <span>${window.MomentumIcons?.renderSport(sport.id, { size: 28 }) || "•"}</span>
+                  <strong>${sport.label}</strong>
+                  <em>${sport.levelLabel} · ${sport.sessionCount ? `${sport.sessionCount} séance${sport.sessionCount > 1 ? "s" : ""} sur 12 mois` : sport.questionnaireRole === "Principal" ? "terrain principal du questionnaire" : "choisi lors du questionnaire"}</em>
                 </div>
               `)
               .join("")}
@@ -29,7 +26,7 @@ function renderSports() {
         : `
           <div class="you-note-box">
             <span>Momentum observe</span>
-            <p>Aucun sport n’est encore lié à tes activités. Ils apparaîtront automatiquement après tes premiers imports.</p>
+            <p>Choisis tes premiers terrains dans le questionnaire. Ils évolueront ensuite naturellement avec tes activités.</p>
           </div>
         `
     }

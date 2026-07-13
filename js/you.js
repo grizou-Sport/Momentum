@@ -8,6 +8,8 @@ const YOU = {
   currentUser: null,
   passport: null,
   userSports: [],
+  activities: [],
+  sportProfile: [],
   equipmentCategories: [],
   userEquipment: [],
   wellbeingProfile: null,
@@ -47,10 +49,8 @@ function renderSection(section) {
 }
 
 function renderMenuPreviews() {
-  const activeSports = YOU.userSports
-    .filter((item) => item.active !== false)
-    .map((item) => item.sports?.name)
-    .filter(Boolean)
+  const activeSports = YOU.sportProfile
+    .map((item) => item.label)
     .slice(0, 3)
     .join(" · ");
 
@@ -89,6 +89,7 @@ async function loadYou() {
   const [
     passportResult,
     userSportsResult,
+    activitiesResult,
     equipmentCategoriesResult,
     userEquipmentResult,
     wellbeingResult,
@@ -103,6 +104,13 @@ async function loadYou() {
       .from("user_sports")
       .select("*, sports(*)")
       .eq("user_id", YOU.currentUser.id),
+
+    window.momentumDB
+      .from("activities")
+      .select("sport,activity_type,activity_date,status")
+      .eq("user_id", YOU.currentUser.id)
+      .gte("activity_date", new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10))
+      .order("activity_date", { ascending: false }),
 
     window.momentumDB
       .from("equipment_categories")
@@ -131,6 +139,10 @@ async function loadYou() {
     console.error("Erreur sports:", userSportsResult.error);
   }
 
+  if (activitiesResult.error) {
+    console.error("Erreur activités pour le profil sportif:", activitiesResult.error);
+  }
+
   if (equipmentCategoriesResult.error) {
     console.error("Erreur catégories matériel:", equipmentCategoriesResult.error);
   }
@@ -145,6 +157,8 @@ async function loadYou() {
 
   YOU.passport = passportResult.data;
   YOU.userSports = userSportsResult.data || [];
+  YOU.activities = activitiesResult.data || [];
+  YOU.sportProfile = window.MomentumSportProfile?.build(YOU.userSports, YOU.activities) || [];
   YOU.equipmentCategories = equipmentCategoriesResult.data || [];
   YOU.userEquipment = userEquipmentResult.data || [];
   YOU.wellbeingProfile = wellbeingResult.data || null;

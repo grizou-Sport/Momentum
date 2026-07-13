@@ -384,6 +384,17 @@ button.you-small-card{
   opacity:.62;
 }
 
+.sport-practice-card{
+  border-top:4px solid #d9d7cf;
+  cursor:default;
+}
+
+.sport-practice-card[data-practice-level="seasonal"]{border-top-color:#71806d}
+.sport-practice-card[data-practice-level="occasional"]{border-top-color:#b68650}
+.sport-practice-card[data-practice-level="declared"]{border-top-style:dashed}
+.sport-practice-card:hover{transform:none}
+.sport-practice-card span img{display:block;width:28px;height:28px}
+
 /* Forms */
 .you-form{
   display:grid;

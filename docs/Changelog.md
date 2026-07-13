@@ -24,3 +24,6 @@ Les changements notables du projet sont consignés dans ce fichier.
 - Refonte de la hiérarchie de TOGETHER : navigation et Hero plus compacts, rythme vertical resserré et compteurs secondaires.
 - Séparation des vues MOMENTS et CERCLE, avec une action principale adaptée à chaque univers.
 - Densification des cartes Moment, des états vides et des invitations ; transformation des Clubs en cartes de résumé.
+- Redirection vers HOME après connexion et après finalisation du questionnaire d’inscription.
+- Réorganisation de la navigation globale dans l’ordre HOME, TOGETHER, YOU.
+- Évolution de « Je vis pour » à partir des sports déclarés et des activités réalisées sur douze mois.

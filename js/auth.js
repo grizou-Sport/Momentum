@@ -45,7 +45,7 @@ async function destinationForUser(user) {
     .select("personalization")
     .eq("user_id", user.id)
     .maybeSingle();
-  return data?.personalization?.onboarding_completed ? "you.html" : "welcome.html";
+  return data?.personalization?.onboarding_completed ? "index.html" : "welcome.html";
 }
 
 async function redirectIfLoggedIn() {

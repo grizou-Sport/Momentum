@@ -304,7 +304,7 @@ async function completeOnboarding() {
     momentumDB.from("onboarding_progress").update({ completed_at: new Date().toISOString(), current_step: 5, updated_at: new Date().toISOString() }).eq("user_id", onboarding.user.id),
   ]);
   if (passportResult.error || progressResult.error) throw passportResult.error || progressResult.error;
-  window.location.replace("you.html");
+  window.location.replace("index.html");
 }
 
 function showStep(step) {
@@ -368,7 +368,7 @@ async function initializeOnboarding() {
     return;
   }
   onboarding.passport = passportResult.data || { personalization: {} };
-  if (onboarding.passport.personalization?.onboarding_completed) return window.location.replace("you.html");
+  if (onboarding.passport.personalization?.onboarding_completed) return window.location.replace("index.html");
   onboarding.progress = progressResult.data || { answers: {}, current_step: 1 };
   onboarding.sports = sportsResult.data || [];
   const savedSportIds = userSportsResult.data?.map((item) => item.sport_id) || onboarding.progress.answers?.sport_ids || [];

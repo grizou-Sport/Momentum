@@ -22,3 +22,10 @@ Les décisions structurantes sont ajoutées ici avec leur contexte, leurs consé
 - **Décision :** réserver MOMENTS aux aventures organisées par période et CERCLE aux proches, invitations et Clubs, avec une action principale propre à chaque vue.
 - **Conséquence :** la séparation reste entièrement côté interface ; les modèles de données, les API et les traitements Supabase ne changent pas.
 - **Motif :** rendre la navigation mobile plus claire et préserver une expérience calme, organisée et intentionnelle.
+
+## 2026-07-13 — Identité sportive dérivée dans YOU
+
+- **Statut :** accepté.
+- **Décision :** construire « Je vis pour » à l’affichage en fusionnant les sports déclarés pendant l’inscription avec les activités réalisées sur les douze derniers mois.
+- **Conséquence :** les pratiques sont qualifiées comme déclarées, occasionnelles, saisonnières ou régulières par un module autonome ; aucune table ni donnée sportive existante n’est modifiée.
+- **Motif :** laisser l’identité sportive évoluer avec la vie réelle de l’utilisateur tout en conservant le questionnaire comme point de départ.
