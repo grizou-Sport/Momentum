@@ -74,18 +74,18 @@ function bindHome() {
     renderMonth();
   });
 
-  $("#livingWeek")?.addEventListener("click", (event) => {
+  $("#livingWeek")?.addEventListener("click", async (event) => {
     const day = event.target.closest("[data-date]");
-    if (day?.dataset.date) openDay(day.dataset.date);
+    if (day?.dataset.date) await openDay(day.dataset.date);
   });
 
-  $("#monthGrid")?.addEventListener("click", (event) => {
+  $("#monthGrid")?.addEventListener("click", async (event) => {
     const day = event.target.closest("[data-date]");
-    if (day?.dataset.date) openDay(day.dataset.date);
+    if (day?.dataset.date) await openDay(day.dataset.date);
   });
 
-  $("#openToday")?.addEventListener("click", () => {
-    openDay(iso(new Date()));
+  $("#openToday")?.addEventListener("click", async () => {
+    await openDay(iso(new Date()));
   });
 
   $("#closeDay")?.addEventListener("click", () => {

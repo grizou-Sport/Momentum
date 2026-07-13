@@ -226,7 +226,7 @@ function openSportDetail(index) {
 function normalizeSubjective(value) {
   const number=Number(value);
   if(!Number.isFinite(number))return null;
-  return Math.max(0,Math.min(100,number<=5?number*20:number*10));
+  return Math.max(0,Math.min(100,number<=10?number*10:number));
 }
 
 function mergeWellbeingDays(dailyRows, legacyRows, start) {
@@ -272,7 +272,7 @@ function openWellnessDay(index) {
   const load=progressionState.loadSeries.find((item)=>item.date===day.date);
   const content=document.getElementById("progressionDialogContent");const dialog=document.getElementById("progressionDialog");
   if(!day||!content||!dialog)return;
-  content.innerHTML=`<span class="section-kicker">${escapeHtml(fmtDate(day.date))}</span><h2>${wellnessValue(day.summary)}</h2><div class="wellness-detail-grid"><div><span>Sommeil</span><strong>${day.sleepHours==null?"Non renseigné":`${Math.floor(day.sleepHours)} h ${String(Math.round((day.sleepHours%1)*60)).padStart(2,"0")}`}</strong><small>${wellnessValue(day.sleep)}</small></div><div><span>Énergie</span><strong>${wellnessValue(day.energy)}</strong></div><div><span>Humeur</span><strong>${wellnessValue(day.mood)}</strong></div><div><span>Récupération</span><strong>${wellnessValue(day.recovery)}</strong></div></div><div class="progression-detail-kpis"><div><strong>${Math.round(load?.actualLoad||0)}</strong><span>Charge sportive</span></div><div><strong>${day.restingHr??"—"}</strong><span>FC repos</span></div><div><strong>${day.hrv??"—"}</strong><span>VFC</span></div></div><section class="wellness-note-detail"><span class="card-label">Note utilisateur</span><p>${escapeHtml(day.note||"Aucune note pour cette journée.")}</p>${day.source?`<small>Source : ${escapeHtml(day.source)}</small>`:""}</section>`;
+  content.innerHTML=`<span class="section-kicker">${escapeHtml(fmtDate(day.date))}</span><h2>${wellnessValue(day.summary)}</h2><div class="wellness-detail-grid"><div><span>Sommeil</span><strong>${day.sleepHours==null?"Non renseigné":escapeHtml(formatSleepDuration(day.sleepHours))}</strong><small>${wellnessValue(day.sleep)}</small></div><div><span>Énergie</span><strong>${wellnessValue(day.energy)}</strong></div><div><span>Humeur</span><strong>${wellnessValue(day.mood)}</strong></div><div><span>Récupération</span><strong>${wellnessValue(day.recovery)}</strong></div></div><div class="progression-detail-kpis"><div><strong>${Math.round(load?.actualLoad||0)}</strong><span>Charge sportive</span></div><div><strong>${day.restingHr??"—"}</strong><span>FC repos</span></div><div><strong>${day.hrv??"—"}</strong><span>VFC</span></div></div><section class="wellness-note-detail"><span class="card-label">Note utilisateur</span><p>${escapeHtml(day.note||"Aucune note pour cette journée.")}</p>${day.source?`<small>Source : ${escapeHtml(day.source)}</small>`:""}</section>`;
   if(!dialog.open)dialog.showModal();
 }
 

@@ -106,13 +106,14 @@ function dayCategoryLabel(category) {
   return labels[category] || "Moment";
 }
 
-function openDay(date) {
+async function openDay(date) {
   const dialog = $("#dayDialog");
   const content = $("#dayDialogContent");
 
   if (!dialog || !content) return;
 
   const sessions = sessionsOn(date);
+  const wellbeing = date <= iso(new Date()) ? await loadDailyWellbeing(date) : null;
   dialog.dataset.date = date;
 
   content.querySelectorAll("[data-route-map]")
@@ -139,6 +140,19 @@ function openDay(date) {
         data-date="${date}"
       >Ajouter un moment</button>
     </div>
+
+    ${date <= iso(new Date()) ? `
+      <section class="day-wellbeing-summary" aria-labelledby="dayWellbeingTitle">
+        <div class="day-wellbeing-heading">
+          <div>
+            <span class="card-label">Le corps ce jour-là</span>
+            <h3 id="dayWellbeingTitle">Résumé de mon bien-être</h3>
+          </div>
+          ${wellbeing?.source ? `<span class="wellbeing-source">${escapeHtml(wellbeing.source)}</span>` : ""}
+        </div>
+        ${wellbeingSummaryHtml(wellbeing)}
+      </section>
+    ` : ""}
 
     <div class="day-moment-list">
       ${sessions.length

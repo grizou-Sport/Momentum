@@ -9,9 +9,10 @@ function formatSleepDuration(hours) {
   const value = Number(hours);
   if (!Number.isFinite(value)) return "—";
 
-  const wholeHours = Math.floor(value);
-  const minutes = Math.round((value - wholeHours) * 60);
-  return `${wholeHours} h ${String(minutes).padStart(2, "0")}`;
+  const totalMinutes = Math.round(value * 60);
+  const wholeHours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${wholeHours}h ${String(minutes).padStart(2, "0")}min`;
 }
 
 function splitSleepDuration(hours) {
@@ -32,20 +33,53 @@ function wellbeingMetric(label, value, unit = "") {
   `;
 }
 
-function mapDailyWellbeingRow(row) {
-  if (!row) return null;
+function mapDailyWellbeingRow(row, dayRow = null) {
+  if (!row && !dayRow) return null;
 
   return {
-    id: row.id,
-    source: row.source_label || row.source || "Source inconnue",
-    sourceKey: row.source || "manual",
-    sleep: row.sleep_hours,
-    motivation: row.motivation,
-    restHr: row.resting_hr,
-    hrv: row.hrv_ms,
-    sleepQuality: row.sleep_quality_value,
-    sleepQualityUnit: row.sleep_quality_unit || "%"
+    id: row?.id,
+    source: row?.source_label || row?.source || (dayRow ? "Journal Momentum" : "Source inconnue"),
+    sourceKey: row?.source || "manual",
+    sleep: row?.sleep_hours ?? dayRow?.sleep_hours ?? null,
+    motivation: row?.motivation ?? null,
+    mood: dayRow?.mood ?? null,
+    energy: dayRow?.energy ?? row?.motivation ?? null,
+    restHr: row?.resting_hr ?? dayRow?.rest_hr ?? null,
+    hrv: row?.hrv_ms ?? dayRow?.hrv ?? null,
+    sleepQuality: row?.sleep_quality_value ?? null,
+    sleepQualityUnit: row?.sleep_quality_unit || "%",
+    note: dayRow?.note || ""
   };
+}
+
+function wellbeingHasData(wellbeing) {
+  if (!wellbeing) return false;
+  return ["sleep", "motivation", "mood", "energy", "restHr", "hrv", "sleepQuality"]
+    .some((key) => wellbeing[key] !== null && wellbeing[key] !== undefined && wellbeing[key] !== "");
+}
+
+function wellbeingSummaryHtml(wellbeing) {
+  if (!wellbeingHasData(wellbeing)) {
+    return `<p class="day-wellbeing-empty">Aucune donnée de bien-être pour cette journée.</p>`;
+  }
+
+  const recovery = wellbeing.sleepQuality;
+  return `
+    <div class="day-wellbeing-grid">
+      <div><span>Sommeil</span><strong>${wellbeing.sleep == null ? "—" : escapeHtml(formatSleepDuration(wellbeing.sleep))}</strong></div>
+      <div><span>Énergie</span><strong>${wellbeing.energy == null ? "—" : `${escapeHtml(wellbeing.energy)} / 10`}</strong></div>
+      <div><span>Humeur</span><strong>${wellbeing.mood == null ? "—" : `${escapeHtml(wellbeing.mood)} / 10`}</strong></div>
+      <div><span>Récupération</span><strong>${recovery == null ? "—" : `${escapeHtml(recovery)} ${escapeHtml(wellbeing.sleepQualityUnit || "%")}`}</strong></div>
+    </div>
+    ${(wellbeing.restHr != null || wellbeing.hrv != null) ? `
+      <p class="day-wellbeing-physiology">
+        ${wellbeing.restHr != null ? `FC repos ${escapeHtml(wellbeing.restHr)} bpm` : ""}
+        ${(wellbeing.restHr != null && wellbeing.hrv != null) ? " · " : ""}
+        ${wellbeing.hrv != null ? `VFC ${escapeHtml(wellbeing.hrv)} ms` : ""}
+      </p>
+    ` : ""}
+    ${wellbeing.note ? `<p class="day-wellbeing-note">${escapeHtml(wellbeing.note)}</p>` : ""}
+  `;
 }
 
 function dailyWellbeingPayload(userId, date, wellbeing) {
@@ -68,21 +102,34 @@ async function loadDailyWellbeing(date = iso(new Date())) {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  const { data, error } = await window.momentumDB
-    .from("daily_wellbeing")
-    .select("id,recorded_date,sleep_hours,motivation,resting_hr,hrv_ms,sleep_quality_value,sleep_quality_unit,source,source_label")
-    .eq("user_id", user.id)
-    .eq("recorded_date", date)
-    .maybeSingle();
+  const [dailyResult, dayResult] = await Promise.all([
+    window.momentumDB
+      .from("daily_wellbeing")
+      .select("id,recorded_date,sleep_hours,motivation,resting_hr,hrv_ms,sleep_quality_value,sleep_quality_unit,source,source_label")
+      .eq("user_id", user.id)
+      .eq("recorded_date", date)
+      .maybeSingle(),
+    window.momentumDB
+      .from("days")
+      .select("day_date,note,mood,energy,sleep_hours,rest_hr,hrv")
+      .eq("user_id", user.id)
+      .eq("day_date", date)
+      .maybeSingle()
+  ]);
 
-  if (error) {
-    console.error("HOME : impossible de charger le bien-être quotidien.", error);
+  if (dailyResult.error) {
+    console.error("HOME : impossible de charger le bien-être quotidien.", dailyResult.error);
+  }
+  if (dayResult.error) {
+    console.error("HOME : impossible de charger le résumé du journal.", dayResult.error);
+  }
+  if (dailyResult.error && dayResult.error) {
     return state.wellbeing?.[date] || null;
   }
 
-  if (data) {
+  if (dailyResult.data || dayResult.data) {
     state.wellbeing = state.wellbeing || {};
-    state.wellbeing[date] = mapDailyWellbeingRow(data);
+    state.wellbeing[date] = mapDailyWellbeingRow(dailyResult.data, dayResult.data);
     return state.wellbeing[date];
   }
 
@@ -95,22 +142,53 @@ async function loadDailyWellbeing(date = iso(new Date())) {
     sourceKey: localWellbeing.sourceKey || "manual"
   };
 
-  const { data: migrated, error: migrationError } = await window.momentumDB
-    .from("daily_wellbeing")
-    .upsert(dailyWellbeingPayload(user.id, date, normalizedLocal), {
-      onConflict: "user_id,recorded_date"
-    })
-    .select()
-    .single();
+  const [migrationResult, dayMigrationResult] = await Promise.all([
+    window.momentumDB
+      .from("daily_wellbeing")
+      .upsert(dailyWellbeingPayload(user.id, date, normalizedLocal), {
+        onConflict: "user_id,recorded_date"
+      })
+      .select()
+      .single(),
+    saveDayWellbeing(user.id, date, normalizedLocal)
+  ]);
 
+  const migrationError = migrationResult.error || dayMigrationResult.error;
   if (migrationError) {
     console.error("HOME : migration de la saisie locale impossible.", migrationError);
     return localWellbeing;
   }
 
-  state.wellbeing[date] = mapDailyWellbeingRow(migrated);
+  state.wellbeing[date] = mapDailyWellbeingRow(migrationResult.data, dayMigrationResult.data);
   saveState();
   return state.wellbeing[date];
+}
+
+async function saveDayWellbeing(userId, date, wellbeing) {
+  const payload = {
+    user_id: userId,
+    day_date: date,
+    sleep_hours: wellbeing.sleep,
+    mood: wellbeing.mood,
+    energy: wellbeing.energy,
+    rest_hr: wellbeing.restHr,
+    hrv: wellbeing.hrv
+  };
+
+  const { data: existing, error: readError } = await window.momentumDB
+    .from("days")
+    .select("user_id,day_date")
+    .eq("user_id", userId)
+    .eq("day_date", date)
+    .maybeSingle();
+
+  if (readError) return { data:null, error:readError };
+
+  const query = existing
+    ? window.momentumDB.from("days").update(payload).eq("user_id", userId).eq("day_date", date)
+    : window.momentumDB.from("days").insert(payload);
+
+  return query.select("day_date,note,mood,energy,sleep_hours,rest_hr,hrv").single();
 }
 
 function renderWellbeingCard(date = iso(new Date())) {
@@ -122,6 +200,7 @@ function renderWellbeingCard(date = iso(new Date())) {
   const sleepQuality = wellbeing.sleepQuality ?? wellbeing.sleep_quality;
   const sleepQualityUnit = wellbeing.sleepQualityUnit || wellbeing.sleep_quality_unit || "%";
   const sleepDuration = splitSleepDuration(wellbeing.sleep);
+  const hasData = wellbeingHasData(wellbeing);
 
   element.innerHTML = `
     <div class="wellbeing-heading">
@@ -131,15 +210,20 @@ function renderWellbeingCard(date = iso(new Date())) {
       </div>
       <div class="wellbeing-actions">
         <span class="wellbeing-source">${escapeHtml(source)}</span>
-        <button class="round-btn wellbeing-manual-toggle" type="button" data-wellbeing-manual>
-          Ajout manuel
+        <button class="round-btn wellbeing-manual-toggle" type="button" data-wellbeing-manual="add">
+          Ajouter des données
+        </button>
+        <button class="round-btn wellbeing-manual-toggle" type="button" data-wellbeing-manual="edit">
+          Modifier aujourd'hui
         </button>
       </div>
     </div>
 
     <div class="wellbeing-metrics">
-      ${wellbeingMetric("Sommeil", wellbeing.sleep !== undefined ? formatSleepDuration(wellbeing.sleep) : null)}
-      ${wellbeingMetric("Motivation au réveil", wellbeing.motivation ?? wellbeing.mood, (wellbeing.motivation ?? wellbeing.mood) != null ? "/ 10" : "")}
+      ${wellbeingMetric("Sommeil", wellbeing.sleep != null ? formatSleepDuration(wellbeing.sleep) : null)}
+      ${wellbeingMetric("Motivation au réveil", wellbeing.motivation, wellbeing.motivation != null ? "/ 10" : "")}
+      ${wellbeingMetric("Énergie", wellbeing.energy, wellbeing.energy != null ? "/ 10" : "")}
+      ${wellbeingMetric("Humeur", wellbeing.mood, wellbeing.mood != null ? "/ 10" : "")}
       ${wellbeingMetric("FC au repos", wellbeing.restHr ?? wellbeing.rest_hr, "bpm")}
       ${wellbeingMetric("Variabilité de la FC", wellbeing.hrv, "ms")}
       ${wellbeingMetric("Qualité du sommeil", sleepQuality, sleepQuality != null ? sleepQualityUnit : "")}
@@ -151,10 +235,12 @@ function renderWellbeingCard(date = iso(new Date())) {
 
     <p class="wellbeing-save-message" data-wellbeing-message aria-live="polite"></p>
 
-    <form class="wellbeing-manual-form" data-wellbeing-form hidden>
+    <form class="wellbeing-manual-form" data-wellbeing-form data-has-data="${hasData}" hidden>
       <label>Sommeil — heures<input name="sleepHours" type="number" min="0" max="24" step="1" value="${escapeHtml(sleepDuration.hours)}"></label>
       <label>Sommeil — minutes<input name="sleepMinutes" type="number" min="0" max="59" step="1" value="${escapeHtml(sleepDuration.minutes)}"></label>
-      <label>Motivation (/10)<input name="motivation" type="number" min="1" max="10" step="1" value="${escapeHtml(wellbeing.motivation ?? wellbeing.mood ?? "")}"></label>
+      <label>Motivation (/10)<input name="motivation" type="number" min="1" max="10" step="1" value="${escapeHtml(wellbeing.motivation ?? "")}"></label>
+      <label>Énergie (/10)<input name="energy" type="number" min="1" max="10" step="1" value="${escapeHtml(wellbeing.energy ?? "")}"></label>
+      <label>Humeur (/10)<input name="mood" type="number" min="1" max="10" step="1" value="${escapeHtml(wellbeing.mood ?? "")}"></label>
       <label>FC au repos (bpm)<input name="restHr" type="number" min="20" max="220" step="1" value="${escapeHtml(wellbeing.restHr ?? wellbeing.rest_hr ?? "")}"></label>
       <label>VFC (ms)<input name="hrv" type="number" min="0" step="1" value="${escapeHtml(wellbeing.hrv ?? "")}"></label>
       <label>Qualité du sommeil (%)<input name="sleepQuality" type="number" min="0" max="100" step="1" value="${escapeHtml(sleepQuality ?? "")}"></label>
@@ -174,7 +260,14 @@ function bindWellbeingCard() {
     const form = card.querySelector("[data-wellbeing-form]");
     if (!form) return;
 
-    if (event.target.closest("[data-wellbeing-manual]")) {
+    const toggle = event.target.closest("[data-wellbeing-manual]");
+    if (toggle) {
+      form.dataset.mode = toggle.dataset.wellbeingManual;
+      if (toggle.dataset.wellbeingManual === "add") {
+        form.querySelectorAll("input").forEach((input) => { input.value = ""; });
+      } else {
+        form.reset();
+      }
       form.hidden = false;
       form.querySelector("input")?.focus();
     }
@@ -191,6 +284,9 @@ function bindWellbeingCard() {
     const date = iso(new Date());
     const entries = Object.fromEntries(new FormData(event.target));
     const value = (name) => entries[name] === "" ? null : Number(entries[name]);
+    const isAdding = event.target.dataset.mode === "add";
+    const existingWellbeing = state.wellbeing?.[date] || {};
+    const valueOrExisting = (name, key = name) => value(name) ?? (isAdding ? existingWellbeing[key] ?? null : null);
     const submitButton = event.target.querySelector('[type="submit"]');
     const message = card.querySelector("[data-wellbeing-message]");
     const user = await getCurrentUser();
@@ -203,25 +299,31 @@ function bindWellbeingCard() {
     const wellbeing = {
       source: "Ajout manuel",
       sourceKey: "manual",
-      sleep: entries.sleepHours === "" && entries.sleepMinutes === "" ? null : (value("sleepHours") || 0) + (value("sleepMinutes") || 0) / 60,
-      motivation: value("motivation"),
-      restHr: value("restHr"),
-      hrv: value("hrv"),
-      sleepQuality: value("sleepQuality"),
+      sleep: entries.sleepHours === "" && entries.sleepMinutes === "" ? (isAdding ? existingWellbeing.sleep ?? null : null) : (value("sleepHours") || 0) + (value("sleepMinutes") || 0) / 60,
+      motivation: valueOrExisting("motivation"),
+      energy: valueOrExisting("energy"),
+      mood: valueOrExisting("mood"),
+      restHr: valueOrExisting("restHr"),
+      hrv: valueOrExisting("hrv"),
+      sleepQuality: valueOrExisting("sleepQuality"),
       sleepQualityUnit: "%"
     };
 
     if (submitButton) submitButton.disabled = true;
     if (message) message.textContent = "Enregistrement…";
 
-    const { data, error } = await window.momentumDB
-      .from("daily_wellbeing")
-      .upsert(dailyWellbeingPayload(user.id, date, wellbeing), {
-        onConflict: "user_id,recorded_date"
-      })
-      .select()
-      .single();
+    const [dailyResult, dayResult] = await Promise.all([
+      window.momentumDB
+        .from("daily_wellbeing")
+        .upsert(dailyWellbeingPayload(user.id, date, wellbeing), {
+          onConflict: "user_id,recorded_date"
+        })
+        .select()
+        .single(),
+      saveDayWellbeing(user.id, date, wellbeing)
+    ]);
 
+    const error = dailyResult.error || dayResult.error;
     if (error) {
       console.error("HOME : impossible d'enregistrer le bien-être.", error);
       if (submitButton) submitButton.disabled = false;
@@ -230,8 +332,9 @@ function bindWellbeingCard() {
     }
 
     state.wellbeing = state.wellbeing || {};
-    state.wellbeing[date] = mapDailyWellbeingRow(data);
+    state.wellbeing[date] = mapDailyWellbeingRow(dailyResult.data, dayResult.data);
     saveState();
     renderWellbeingCard(date);
+    await loadProgressionData();
   });
 }
