@@ -3,44 +3,95 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Momentum — Login</title>
+  <meta name="theme-color" content="#16251d" />
+  <title>Momentum — Ton aventure commence ici</title>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/login.css" />
 </head>
 
 <body class="login-body">
   <main class="login-shell">
-    <section class="login-panel">
-      <div class="login-brand">
-        <span class="mark">△</span>
-        <strong>MOMENTUM</strong>
-      </div>
-
-      <div class="login-content">
-        <p class="section-kicker">Commence ton aventure</p>
-        <h1>Bienvenue</h1>
-        <p>Connecte-toi ou crée ton espace Momentum.</p>
-
-        <form id="authForm" class="login-form">
-          <input name="displayName" type="text" placeholder="Nom complet" />
-          <input name="email" type="email" placeholder="Adresse e-mail" required />
-          <input name="password" type="password" placeholder="Mot de passe" required minlength="6" />
-
-          <button class="login-primary" id="signupBtn" type="button">Créer un compte</button>
-          <button class="login-secondary" id="loginBtn" type="button">Se connecter</button>
-
-          <p id="authMessage" class="login-message"></p>
-        </form>
-      </div>
+    <section class="login-visual" aria-label="Paysage de montagne">
+      <img src="IMG_4510.JPG" alt="Une aventure en montagne" />
+      <div class="login-visual-shade"></div>
+      <a class="login-brand" href="login.html" aria-label="Momentum">
+        <span class="mark">△</span><strong>MOMENTUM</strong>
+      </a>
+      <blockquote>
+        <p>Chaque aventure commence<br />par une première intention.</p>
+        <footer>MOMENTUM · ÉCRIS LA SUITE</footer>
+      </blockquote>
     </section>
 
-    <section class="login-image">
-      <img src="IMG_4510.JPG" alt="Momentum" />
+    <section class="login-panel">
+      <div class="login-mobile-brand"><span class="mark">△</span><strong>MOMENTUM</strong></div>
+
+      <div class="login-content">
+        <div id="authIntro">
+          <p class="section-kicker">Ton espace d'aventure</p>
+          <h1 id="authTitle">Heureux de<br />te revoir.</h1>
+          <p id="authLead" class="login-lead">Retrouve ton histoire, tes horizons et tout ce que tu construis.</p>
+        </div>
+
+        <div class="auth-tabs" id="authTabs" role="tablist" aria-label="Authentification">
+          <button class="active" data-auth-mode="login" type="button" role="tab">Se connecter</button>
+          <button data-auth-mode="signup" type="button" role="tab">Créer un compte</button>
+        </div>
+
+        <form id="authForm" class="login-form" novalidate>
+          <label class="field-label" for="authEmail">Adresse e-mail</label>
+          <input id="authEmail" name="email" type="email" inputmode="email" autocomplete="email" placeholder="toi@exemple.com" required />
+
+          <div class="field-heading">
+            <label class="field-label" for="authPassword">Mot de passe</label>
+            <button class="text-button" id="forgotBtn" type="button">Mot de passe oublié ?</button>
+          </div>
+          <div class="password-field">
+            <input id="authPassword" name="password" type="password" autocomplete="current-password" placeholder="8 caractères minimum" required minlength="8" />
+            <button class="password-toggle" type="button" data-password-toggle="authPassword" aria-label="Afficher le mot de passe">Voir</button>
+          </div>
+
+          <div id="signupFields" class="signup-fields" hidden>
+            <label class="field-label" for="confirmPassword">Confirmer le mot de passe</label>
+            <div class="password-field">
+              <input id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" placeholder="Répète ton mot de passe" minlength="8" />
+              <button class="password-toggle" type="button" data-password-toggle="confirmPassword" aria-label="Afficher la confirmation">Voir</button>
+            </div>
+
+            <label class="consent-line">
+              <input name="terms" type="checkbox" />
+              <span>J'accepte les <a href="#" data-legal="terms">Conditions générales</a> et la <a href="#" data-legal="privacy">Politique de confidentialité</a>.</span>
+            </label>
+          </div>
+
+          <button class="login-primary" id="submitBtn" type="submit">Continuer</button>
+          <p id="authMessage" class="login-message" role="status" aria-live="polite"></p>
+        </form>
+
+        <form id="recoveryForm" class="login-form" hidden novalidate>
+          <label class="field-label" for="recoveryEmail">Adresse e-mail</label>
+          <input id="recoveryEmail" name="email" type="email" inputmode="email" autocomplete="email" placeholder="toi@exemple.com" required />
+          <button class="login-primary" type="submit">Recevoir le lien</button>
+          <button class="login-secondary" data-back-login type="button">Retour à la connexion</button>
+          <p id="recoveryMessage" class="login-message" role="status" aria-live="polite"></p>
+        </form>
+
+        <form id="newPasswordForm" class="login-form" hidden novalidate>
+          <label class="field-label" for="newPassword">Nouveau mot de passe</label>
+          <input id="newPassword" name="password" type="password" autocomplete="new-password" placeholder="8 caractères minimum" minlength="8" required />
+          <label class="field-label" for="newPasswordConfirm">Confirmer le mot de passe</label>
+          <input id="newPasswordConfirm" name="confirmPassword" type="password" autocomplete="new-password" placeholder="Répète ton mot de passe" minlength="8" required />
+          <button class="login-primary" type="submit">Enregistrer le mot de passe</button>
+          <p id="newPasswordMessage" class="login-message" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+
+      <p class="login-trust">Session sécurisée par Supabase · Tes données restent les tiennes.</p>
     </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
-  <script src="js/auth.js"></script>
+  <script src="js/auth.js?v=20260713-2"></script>
 </body>
 </html>

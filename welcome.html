@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#1d3024" />
+  <title>Momentum — Ton Passeport d'aventure</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/onboarding.css" />
+</head>
+<body class="onboarding-body">
+  <header class="onboarding-header">
+    <a class="onboarding-brand" href="welcome.html"><span class="mark">△</span><strong>MOMENTUM</strong></a>
+    <div class="onboarding-progress-copy"><span id="progressLabel">Passeport · 1 sur 5</span><strong id="progressPercent">20 %</strong></div>
+    <div class="onboarding-progress" aria-hidden="true"><i id="progressBar"></i></div>
+    <button id="onboardingLogout" class="onboarding-exit" type="button">Quitter</button>
+  </header>
+
+  <main class="onboarding-shell">
+    <aside class="onboarding-story" aria-hidden="true">
+      <div class="story-orbit story-orbit-one"></div><div class="story-orbit story-orbit-two"></div>
+      <div class="story-symbol">△</div>
+      <div class="story-copy"><span>TON PASSEPORT D'AVENTURE</span><p id="storyLine">Quelques repères pour que Momentum te ressemble dès aujourd'hui.</p></div>
+    </aside>
+
+    <section class="onboarding-stage">
+      <div id="onboardingStatus" class="save-status" aria-live="polite">Sauvegarde automatique</div>
+      <form id="onboardingForm" novalidate>
+        <section class="onboarding-step active" data-step="1">
+          <p class="section-kicker">Chapitre 01 · Identité</p>
+          <h1>Faisons<br />connaissance.</h1>
+          <p class="step-lead">Ton prénom donnera une voix plus personnelle à Momentum. Le reste situe ton aventure.</p>
+
+          <div class="identity-grid">
+            <div class="field-group"><label for="firstName">Prénom</label><input id="firstName" name="firstName" autocomplete="given-name" placeholder="Ton prénom" required /></div>
+            <div class="field-group"><label for="lastName">Nom <em>facultatif</em></label><input id="lastName" name="lastName" autocomplete="family-name" placeholder="Ton nom" /></div>
+            <div class="field-group"><label for="birthDate">Date de naissance</label><input id="birthDate" name="birthDate" type="date" autocomplete="bday" required /></div>
+            <div class="field-group"><label for="sex">Sexe</label><select id="sex" name="sex" required><option value="">Choisir</option><option value="FEMALE">Femme</option><option value="MALE">Homme</option><option value="OTHER">Autre</option><option value="UNDISCLOSED">Je préfère ne pas répondre</option></select></div>
+            <div class="field-group"><label for="city">Ville</label><input id="city" name="city" autocomplete="address-level2" placeholder="Lausanne" required /></div>
+            <div class="field-group"><label for="country">Pays</label><input id="country" name="country" autocomplete="country-name" placeholder="Suisse" required /></div>
+          </div>
+
+          <label class="photo-picker" for="avatarFile">
+            <span id="avatarPreview" class="photo-preview">+</span>
+            <span><strong>Ajoute un visage à ton Passeport</strong><small>Facultatif · JPG, PNG ou WebP</small></span>
+            <input id="avatarFile" name="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" />
+          </label>
+        </section>
+
+        <section class="onboarding-step" data-step="2">
+          <p class="section-kicker">Chapitre 02 · Tes terrains</p>
+          <h1>Qu'est-ce qui<br />te fait bouger ?</h1>
+          <p class="step-lead">Choisis tout ce qui compte. Momentum donnera plus de place à tes disciplines et apprendra leur vraie répartition avec le temps.</p>
+          <div id="sportsGrid" class="choice-grid sports-grid" aria-label="Sports pratiqués"></div>
+          <p class="selection-hint"><strong id="sportCount">0</strong> discipline sélectionnée · Tu pourras modifier cette liste plus tard.</p>
+        </section>
+
+        <section class="onboarding-step" data-step="3">
+          <p class="section-kicker">Chapitre 03 · Ton rythme</p>
+          <h1>Où en est<br />ton aventure ?</h1>
+          <p class="step-lead">Ces repères amorcent une lecture cohérente de ta charge. Tes activités réelles prendront progressivement le relais.</p>
+
+          <fieldset class="question-block"><legend>Depuis combien de temps pratiques-tu régulièrement ?</legend><p>Pour choisir un point de départ adapté à ton expérience.</p><div class="choice-row" data-choice="experience"></div></fieldset>
+          <fieldset class="question-block"><legend>Combien d'heures de sport par semaine ?</legend><p>Pour donner une première échelle à tes graphiques.</p><div class="choice-row" data-choice="weeklyHours"></div></fieldset>
+          <fieldset class="question-block"><legend>Ton objectif principal</legend><p>Pour donner la bonne direction aux futurs conseils.</p><div class="choice-row" data-choice="objective"></div></fieldset>
+          <fieldset class="question-block"><legend>As-tu déjà participé à… <em>plusieurs choix possibles</em></legend><div class="choice-row compact" data-choice="events"></div></fieldset>
+          <fieldset class="question-block"><legend>Quelle montre utilises-tu ?</legend><p>Pour préparer la synchronisation lorsque tu voudras l'activer.</p><div class="choice-row compact" data-choice="watch"></div></fieldset>
+        </section>
+
+        <section class="onboarding-step" data-step="4">
+          <p class="section-kicker">Chapitre 04 · Première lecture</p>
+          <h1>Ton point<br />de départ.</h1>
+          <p class="step-lead">Ce n'est ni un verdict, ni une performance. C'est une esquisse temporaire pour que Momentum soit utile avant même ta première activité.</p>
+          <div class="estimate-hero"><span>Charge chronique estimée</span><strong id="estimatedLoad">—</strong><small>unités de départ · confiance initiale</small></div>
+          <div class="estimate-grid">
+            <article><span>Volume de référence</span><strong id="estimatedHours">—</strong><p>La base visuelle de tes premières semaines.</p></article>
+            <article><span>Niveau d'expérience</span><strong id="estimatedLevel">—</strong><p>Utilisé pour calibrer la montée en charge.</p></article>
+            <article><span>Terrain dominant</span><strong id="estimatedSport">—</strong><p>Une répartition équilibrée jusqu'aux vraies données.</p></article>
+            <article><span>Horizon</span><strong id="estimatedGoal">—</strong><p>La tonalité de tes premiers repères.</p></article>
+          </div>
+          <div class="learning-note"><i></i><p><strong>Momentum apprend en marchant.</strong><br />Pendant 42 jours, chaque activité remplacera une part de cette estimation. Ensuite, tes données raconteront entièrement l'histoire.</p></div>
+        </section>
+
+        <section class="onboarding-step welcome-step" data-step="5">
+          <div class="welcome-mark">△</div>
+          <p class="section-kicker">Passeport prêt</p>
+          <h1>Bienvenue,<br /><span id="welcomeName">aventurier.</span></h1>
+          <p class="welcome-quote">À partir d'aujourd'hui,<br />Momentum écrira ton histoire.</p>
+          <div class="welcome-summary"><span id="welcomeSports">Tes terrains sont prêts</span><i></i><span id="welcomeVolume">Ton rythme est amorcé</span><i></i><span>YOU t'attend</span></div>
+        </section>
+
+        <p id="stepMessage" class="step-message" role="alert"></p>
+        <nav class="onboarding-actions">
+          <button id="previousStep" class="button-back" type="button">← Retour</button>
+          <button id="nextStep" class="button-next" type="submit"><span>Continuer</span><b>→</b></button>
+        </nav>
+      </form>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/onboarding.js?v=20260713-2"></script>
+</body>
+</html>
