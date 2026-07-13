@@ -3,6 +3,7 @@ const TOGETHER = {
   moments: [],
   clubs: [],
   relationships: [],
+  circle: { received: [], sent: [], members: [] },
   clubMemberships: [],
   passports: new Map(),
   logoUrls: new Map(),
@@ -32,6 +33,9 @@ const elements = {
   momentDetailDialog: document.getElementById("momentDetailDialog"),
   momentDetail: document.getElementById("momentDetail"),
   dateOptions: document.getElementById("dateOptions"),
+  circleInviteDialog: document.getElementById("circleInviteDialog"),
+  circleInviteForm: document.getElementById("circleInviteForm"),
+  circleSearchResult: document.getElementById("circleSearchResult"),
 };
 
 function escapeHTML(value = "") {
@@ -158,31 +162,50 @@ function clubCard(club) {
   return `<article class="club-card"><div class="club-card-head"><div class="club-symbol">${logo ? `<img src="${escapeHTML(logo)}" alt="Logo ${escapeHTML(club.name)}" />` : "△"}</div><div><h3>${escapeHTML(club.name)}</h3><div class="club-meta"><span>${escapeHTML(sportLabel(club.category))}</span><span>·</span><span>${escapeHTML(club.location_name)}</span><span>·</span><span>${count} membre${count > 1 ? "s" : ""}</span></div></div></div><div class="club-next">${next ? `<strong>Prochain Moment</strong><span>${escapeHTML(next.title)} · ${escapeHTML(formatDate(next.start_at))}</span>` : `<strong>Prochain Moment</strong><span>Aucun Moment prévu</span>`}</div><button class="club-open" data-open-club="${club.id}" type="button">Ouvrir le Club</button></article>`;
 }
 
-function personCard(relationship) {
-  const memberId = relationship.requester_id === TOGETHER.user.id ? relationship.recipient_id : relationship.requester_id;
-  const passport = TOGETHER.passports.get(memberId) || {};
-  const name = passport.display_name || "Membre du Cercle";
-  const pinned = passport.is_pinned ? " pinned" : "";
-  const avatar = passport.avatar_url ? `<img src="${escapeHTML(passport.avatar_url)}" alt="" />` : initials(name);
-  return `<article class="circle-card${pinned}"><div class="portrait">${avatar}</div><h3>${escapeHTML(name)}</h3><p>${escapeHTML([passport.city, passport.country].filter(Boolean).join(", ") || "Lieu non renseigné")}</p><span class="moment-status">Dans ton Cercle</span></article>`;
+function circleIdentity(person, size = "portrait") {
+  const name = person.display_name || "Membre MOMENTUM";
+  const avatar = person.avatar_url ? `<img src="${escapeHTML(person.avatar_url)}" alt="" />` : initials(name);
+  return `<span class="${size}">${avatar}</span>`;
+}
+
+function personCard(person) {
+  return `<article class="circle-card member-card">
+    ${circleIdentity(person)}
+    <div class="circle-card-copy"><h3>${escapeHTML(person.display_name || "Membre MOMENTUM")}</h3><span class="moment-status">Dans ton Cercle</span></div>
+    <div class="member-actions" aria-label="Actions pour ${escapeHTML(person.display_name || "ce membre")}">
+      <button class="card-action" data-end-circle="${person.user_id}" type="button">Retirer</button>
+      <button class="card-action danger" data-block-circle="${person.user_id}" type="button">Bloquer</button>
+    </div>
+  </article>`;
+}
+
+function circleInvitationCard(invitation, direction) {
+  const received = direction === "received";
+  return `<article class="circle-card invitation-card">
+    <div class="invitation-person">${circleIdentity(invitation, "mini-avatar")}<div><span class="card-label">${received ? "Invitation reçue" : "Invitation envoyée"}</span><h3>${escapeHTML(invitation.display_name || "Membre MOMENTUM")}</h3><p>${escapeHTML(formatDate(invitation.created_at))}</p></div></div>
+    <div class="inline-actions">
+      ${received ? `<button class="together-primary compact" data-circle-answer="${invitation.id}" data-answer="accept" type="button">Accepter</button><button class="together-secondary compact" data-circle-answer="${invitation.id}" data-answer="decline" type="button">Refuser</button>` : `<span class="moment-status">En attente</span><button class="card-action" data-circle-answer="${invitation.id}" data-answer="cancel" type="button">Annuler</button>`}
+    </div>
+  </article>`;
 }
 
 function renderCircle() {
-  const accepted = TOGETHER.relationships.filter((item) => item.status === "ACCEPTED");
-  const pending = TOGETHER.relationships.filter((item) => item.status === "PENDING" && item.recipient_id === TOGETHER.user.id);
+  const { received, sent, members } = TOGETHER.circle;
   const pendingClubs = TOGETHER.clubMemberships.filter((item) => item.membership_status === "PENDING").map((membership) => ({ membership, club: TOGETHER.clubs.find((club) => club.id === membership.club_id) })).filter((item) => item.club);
-  const invitationCount = pending.length + pendingClubs.length;
-  const invitations = [
-    ...pending.map((item) => `<article class="circle-card invitation-card"><div><span class="card-label">Cercle</span><h3>Invitation reçue</h3><p>Une personne souhaite rejoindre ton Cercle.</p></div><button class="together-primary" data-accept-relationship="${item.id}">Accepter</button></article>`),
+  const receivedInvitations = [
+    ...received.map((item) => circleInvitationCard(item, "received")),
     ...pendingClubs.map(({ membership, club }) => `<article class="club-card invitation-card"><div><span class="card-label">Club</span><h3>${escapeHTML(club.name)}</h3><p>${escapeHTML(sportLabel(club.category))} · ${escapeHTML(club.location_name)}</p></div><div class="inline-actions"><button class="light-button" data-club-invite="${membership.id}" data-answer="ACCEPTED">Rejoindre</button><button class="ghost-light-button" data-club-invite="${membership.id}" data-answer="DECLINED">Refuser</button></div></article>`)
   ];
   elements.circleView.innerHTML = `
-    <section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>Invitations</h2><span class="section-count">${invitationCount}</span></div><p>Les demandes qui attendent une réponse.</p></div></div><div class="circle-grid">${invitations.length ? invitations.join("") : emptyCard("Aucune invitation en attente", "Ton Cercle est à jour.")}</div></section>
-    <section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>Mes proches</h2><span class="section-count">${accepted.length}</span></div><p>Les personnes avec lesquelles tu choisis de partager.</p></div></div><div class="circle-grid">${accepted.length ? accepted.map(personCard).join("") : emptyCard("Ton Cercle est encore calme", "Les invitations apparaîtront ici après acceptation.")}</div></section>
+    <section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>Invitations reçues</h2><span class="section-count">${received.length + pendingClubs.length}</span></div><p>Les demandes qui attendent ta réponse.</p></div></div><div class="circle-grid">${receivedInvitations.length ? receivedInvitations.join("") : emptyCard("Aucune invitation reçue", "Ton Cercle est à jour.")}</div></section>
+    <section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>Invitations envoyées</h2><span class="section-count">${sent.length}</span></div><p>Tu peux annuler une demande tant qu’elle n’a pas été acceptée.</p></div></div><div class="circle-grid">${sent.length ? sent.map((item) => circleInvitationCard(item, "sent")).join("") : emptyCard("Aucune invitation envoyée", "Invite une personne avec son adresse e-mail exacte.")}</div></section>
+    <section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>Mon Cercle</h2><span class="section-count">${members.length}</span></div><p>Les personnes avec lesquelles tu choisis de partager.</p></div></div><div class="circle-grid">${members.length ? members.map(personCard).join("") : emptyCard("Ton Cercle est encore calme", "Les personnes apparaîtront ici après acceptation.")}</div></section>
     <section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>Mes Clubs</h2><span class="section-count">${TOGETHER.clubs.length}</span></div><p>Les communautés auxquelles tu appartiens.</p></div><button class="together-secondary" id="openCreateClub" type="button">Créer un Club</button></div><div class="club-grid">${TOGETHER.clubs.length ? TOGETHER.clubs.map(clubCard).join("") : emptyCard("Créer le premier Club", "Réunis un petit groupe autour d’une pratique ou d’une envie commune.")}</div></section>`;
   document.getElementById("openCreateClub")?.addEventListener("click", () => openClubForm());
   elements.circleView.querySelectorAll("[data-open-club]").forEach((button) => button.addEventListener("click", () => openClubDetail(button.dataset.openClub)));
-  elements.circleView.querySelectorAll("[data-accept-relationship]").forEach((button) => button.addEventListener("click", () => acceptRelationship(button.dataset.acceptRelationship)));
+  elements.circleView.querySelectorAll("[data-circle-answer]").forEach((button) => button.addEventListener("click", () => answerCircleInvitation(button.dataset.circleAnswer, button.dataset.answer, button)));
+  elements.circleView.querySelectorAll("[data-end-circle]").forEach((button) => button.addEventListener("click", () => endCircleConnection(button.dataset.endCircle, false, button)));
+  elements.circleView.querySelectorAll("[data-block-circle]").forEach((button) => button.addEventListener("click", () => endCircleConnection(button.dataset.blockCircle, true, button)));
   elements.circleView.querySelectorAll("[data-club-invite]").forEach((button) => button.addEventListener("click", () => answerClubInvitation(button.dataset.clubInvite, button.dataset.answer)));
 }
 
@@ -359,14 +382,14 @@ async function loadTogether() {
   if (sessionError || !sessionData.session) return window.location.href = "login.html";
   TOGETHER.user = sessionData.session.user;
 
-  const [momentsResult, clubsResult, relationshipsResult, membershipsResult] = await Promise.all([
+  const [momentsResult, clubsResult, circleResult, membershipsResult] = await Promise.all([
     window.momentumDB.from("moments").select("*, moment_participants(count), moment_date_options(*, moment_availability(*))").order("start_at", { ascending: true, nullsFirst: true }),
     window.momentumDB.from("clubs").select("*, club_members(count)").eq("status", "ACTIVE").order("created_at", { ascending: false }),
-    window.momentumDB.from("circle_relationships").select("*").or(`requester_id.eq.${TOGETHER.user.id},recipient_id.eq.${TOGETHER.user.id}`).order("created_at", { ascending: false }),
+    window.momentumDB.rpc("get_circle_overview"),
     window.momentumDB.from("club_members").select("*").eq("user_id", TOGETHER.user.id),
   ]);
 
-  const firstError = momentsResult.error || clubsResult.error || relationshipsResult.error || membershipsResult.error;
+  const firstError = momentsResult.error || clubsResult.error || circleResult.error || membershipsResult.error;
   if (firstError) {
     console.error("TOGETHER:", firstError);
     setStatus(firstError.code === "42P01" || firstError.code === "PGRST205" ? "Le module est prêt. La migration Supabase TOGETHER doit encore être appliquée pour activer les données." : `Impossible de charger TOGETHER : ${firstError.message}`, true);
@@ -374,7 +397,12 @@ async function loadTogether() {
 
   TOGETHER.moments = momentsResult.data || [];
   TOGETHER.clubs = clubsResult.data || [];
-  TOGETHER.relationships = relationshipsResult.data || [];
+  TOGETHER.circle = circleResult.data || { received: [], sent: [], members: [] };
+  TOGETHER.relationships = (TOGETHER.circle.members || []).map((member) => ({
+    requester_id: TOGETHER.user.id,
+    recipient_id: member.user_id,
+    status: "ACCEPTED",
+  }));
   TOGETHER.clubMemberships = membershipsResult.data || [];
 
   const logoClubs = TOGETHER.clubs.filter((club) => club.logo_url);
@@ -384,11 +412,7 @@ async function loadTogether() {
   }));
   TOGETHER.logoUrls = new Map(signedLogos.filter(([, url]) => url));
 
-  const memberIds = [...new Set(TOGETHER.relationships.flatMap((item) => [item.requester_id, item.recipient_id]).filter((id) => id !== TOGETHER.user.id))];
-  if (memberIds.length) {
-    const { data: passports } = await window.momentumDB.from("passports").select("user_id, display_name, city, country, avatar_url").in("user_id", memberIds);
-    (passports || []).forEach((passport) => TOGETHER.passports.set(passport.user_id, passport));
-  }
+  TOGETHER.passports = new Map((TOGETHER.circle.members || []).map((member) => [member.user_id, member]));
   renderClubOptions();
   renderMoments();
   renderCircle();
@@ -461,10 +485,74 @@ async function createClub(form) {
   form.reset(); elements.clubDialog.close(); setStatus("Le Club a été créé."); await loadTogether();
 }
 
-async function acceptRelationship(id) {
-  const { error } = await window.momentumDB.from("circle_relationships").update({ status: "ACCEPTED", accepted_at: new Date().toISOString() }).eq("id", id).eq("recipient_id", TOGETHER.user.id);
-  if (error) return setStatus(`Invitation non acceptée : ${error.message}`, true);
+async function answerCircleInvitation(id, answer, button) {
+  button.disabled = true;
+  const { error } = await window.momentumDB.rpc("answer_circle_invitation", { target_invitation: id, answer });
+  if (error) {
+    button.disabled = false;
+    return setStatus(`Réponse non enregistrée : ${error.message}`, true);
+  }
+  setStatus(answer === "accept" ? "La personne fait maintenant partie de ton Cercle." : answer === "decline" ? "L’invitation a été refusée." : "L’invitation a été annulée.");
   await loadTogether();
+}
+
+async function endCircleConnection(userId, shouldBlock, button) {
+  const message = shouldBlock
+    ? "Bloquer cette personne ? Elle sera retirée du Cercle et ne pourra plus t’inviter."
+    : "Retirer cette personne de ton Cercle ? Les Moments déjà vécus seront conservés.";
+  if (!window.confirm(message)) return;
+  button.disabled = true;
+  const { error } = await window.momentumDB.rpc("end_circle_connection", { target_user: userId, should_block: shouldBlock });
+  if (error) {
+    button.disabled = false;
+    return setStatus(`Action non enregistrée : ${error.message}`, true);
+  }
+  setStatus(shouldBlock ? "La personne a été bloquée et retirée du Cercle." : "La personne a été retirée du Cercle.");
+  await loadTogether();
+}
+
+function renderCircleSearchResult(result) {
+  if (!result?.available) {
+    elements.circleSearchResult.innerHTML = '<div class="search-neutral" role="status"><strong>Aucune personne disponible pour cette invitation.</strong><span>Vérifie l’adresse saisie ou demande à ton proche de rendre son profil découvrable.</span></div>';
+    return;
+  }
+  const labels = { connected: "Déjà dans ton Cercle", pending: "Invitation déjà en attente" };
+  const canInvite = result.relationship_status === "available";
+  elements.circleSearchResult.innerHTML = `<article class="search-person">
+    ${circleIdentity(result)}
+    <div><strong>${escapeHTML(result.display_name || "Membre MOMENTUM")}</strong><span>${escapeHTML(labels[result.relationship_status] || "Compte MOMENTUM trouvé")}</span></div>
+    ${canInvite ? `<button class="together-primary compact" data-invite-circle="${result.user_id}" type="button">Envoyer l’invitation</button>` : ""}
+  </article>`;
+  elements.circleSearchResult.querySelector("[data-invite-circle]")?.addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    const { data, error } = await window.momentumDB.rpc("send_circle_invitation", { target_user: button.dataset.inviteCircle });
+    if (error) {
+      button.disabled = false;
+      return setStatus(`Invitation non envoyée : ${error.message}`, true);
+    }
+    if (data?.status === "connected") setStatus("Cette personne est déjà dans ton Cercle.");
+    else if (data?.status === "pending") setStatus("Une invitation est déjà en attente.");
+    else setStatus("Invitation envoyée.");
+    elements.circleInviteDialog.close();
+    elements.circleInviteForm.reset();
+    elements.circleSearchResult.innerHTML = "";
+    await loadTogether();
+  });
+}
+
+async function searchCircleUser(form) {
+  const email = new FormData(form).get("email")?.trim();
+  elements.circleSearchResult.innerHTML = '<div class="search-loading" role="status">Recherche sécurisée…</div>';
+  const submit = form.querySelector('[type="submit"]');
+  submit.disabled = true;
+  const { data, error } = await window.momentumDB.rpc("search_circle_user", { target_email: email });
+  submit.disabled = false;
+  if (error) {
+    elements.circleSearchResult.innerHTML = "";
+    return setStatus(`Recherche impossible : ${error.message}`, true);
+  }
+  renderCircleSearchResult(data);
 }
 
 function setTogetherView(view) {
@@ -472,13 +560,19 @@ function setTogetherView(view) {
   elements.tabs.forEach((item) => { const active = item.dataset.view === view; item.classList.toggle("active", active); item.setAttribute("aria-selected", String(active)); });
   elements.momentsView.hidden = view !== "moments";
   elements.circleView.hidden = view !== "circle";
-  if (elements.primaryAction) elements.primaryAction.textContent = view === "moments" ? "Créer un Moment" : "Créer un Club";
+  if (elements.primaryAction) elements.primaryAction.textContent = view === "moments" ? "Créer un Moment" : "Inviter dans mon Cercle";
 }
 
 elements.tabs.forEach((tab) => tab.addEventListener("click", () => {
   setTogetherView(tab.dataset.view);
 }));
-elements.primaryAction?.addEventListener("click", () => TOGETHER.view === "moments" ? elements.momentDialog.showModal() : openClubForm());
+elements.primaryAction?.addEventListener("click", () => {
+  if (TOGETHER.view === "moments") return elements.momentDialog.showModal();
+  elements.circleInviteForm.reset();
+  elements.circleSearchResult.innerHTML = "";
+  elements.circleInviteDialog.showModal();
+  window.setTimeout(() => elements.circleInviteForm.elements.email.focus(), 0);
+});
 document.getElementById("addDateOption")?.addEventListener("click", () => {
   const row = document.createElement("div");
   row.className = "date-option-input";
@@ -494,6 +588,11 @@ elements.clubLogo?.addEventListener("change", () => {
 });
 elements.momentForm?.addEventListener("submit", (event) => { event.preventDefault(); if (event.submitter?.value !== "cancel" && elements.momentForm.reportValidity()) createMoment(elements.momentForm); else elements.momentDialog.close(); });
 elements.clubForm?.addEventListener("submit", (event) => { event.preventDefault(); if (event.submitter?.value !== "cancel" && elements.clubForm.reportValidity()) createClub(elements.clubForm); else elements.clubDialog.close(); });
+elements.circleInviteForm?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  if (event.submitter?.value === "cancel") return elements.circleInviteDialog.close();
+  if (elements.circleInviteForm.reportValidity()) searchCircleUser(elements.circleInviteForm);
+});
 document.getElementById("logoutBtn")?.addEventListener("click", async () => { await window.momentumDB.auth.signOut(); window.location.href = "login.html"; });
 
 renderSportOptions();

@@ -42,6 +42,20 @@
     <section id="circleView" class="together-view" hidden></section>
   </main>
 
+  <dialog id="circleInviteDialog" class="together-dialog circle-invite-dialog">
+    <form id="circleInviteForm" method="dialog">
+      <div class="dialog-head">
+        <div><span class="card-label">Mon Cercle</span><h2>Inviter un proche</h2></div>
+        <button class="dialog-close" value="cancel" formnovalidate aria-label="Fermer">×</button>
+      </div>
+      <p class="dialog-intro">Saisis l’adresse e-mail exacte utilisée par ton proche sur MOMENTUM. La recherche reste privée et ne parcourt aucun annuaire public.</p>
+      <label class="circle-email-field">Adresse e-mail
+        <span><input name="email" type="email" autocomplete="email" required placeholder="proche@exemple.ch" /><button class="together-primary" type="submit">Rechercher</button></span>
+      </label>
+      <div id="circleSearchResult" class="circle-search-result" aria-live="polite"></div>
+    </form>
+  </dialog>
+
   <dialog id="momentDialog" class="together-dialog">
     <form id="momentForm" method="dialog">
       <div class="dialog-head">
