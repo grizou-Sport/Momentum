@@ -28,6 +28,13 @@ test("Circle UI covers search, received, sent, removal and blocking", () => {
   assert.match(page, /type="email"/);
 });
 
+test("Moments UI hides empty categories and uses the finalization label", () => {
+  assert.match(client, /if \(!moments\.length\) return "";/);
+  assert.match(client, /\["planning", "À finaliser"/);
+  assert.match(client, /PLANNING:"À finaliser"/);
+  assert.doesNotMatch(client, /À organiser/);
+});
+
 test("database rules prevent duplicate open invitations and unordered connections", () => {
   assert.match(migration, /invitations_open_circle_pair_idx/);
   assert.match(migration, /unique \(user_low_id, user_high_id\)/);
