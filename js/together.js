@@ -74,7 +74,7 @@ function sportLabel(value) {
 }
 
 function momentStatusLabel(value) {
-  return ({ DRAFT:"Brouillon", PLANNING:"À organiser", CONFIRMED:"Confirmé", ONGOING:"En cours", COMPLETED:"Terminé", CANCELLED:"Annulé" })[value] || value;
+  return ({ DRAFT:"Brouillon", PLANNING:"À finaliser", CONFIRMED:"Confirmé", ONGOING:"En cours", COMPLETED:"Terminé", CANCELLED:"Annulé" })[value] || value;
 }
 
 function visibilityLabel(value) {
@@ -143,14 +143,15 @@ function emptyCard(title, text) {
 
 function renderMoments() {
   const sections = [
-    ["planning", "À organiser", "Une date ou une réponse est encore attendue."],
+    ["planning", "À finaliser", "Une date ou une réponse est encore attendue."],
     ["today", "Aujourd’hui", "Les Moments que l’on vit maintenant."],
     ["upcoming", "À venir", "Les prochaines histoires déjà confirmées."],
     ["past", "Passés", "Quelques traces de ce qui a été vécu."],
   ];
   elements.momentsView.innerHTML = sections.map(([bucket, title, subtitle]) => {
     const moments = TOGETHER.moments.filter((moment) => momentBucket(moment) === bucket);
-    return `<section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>${title}</h2><span class="section-count" aria-label="${moments.length} Moment${moments.length > 1 ? "s" : ""}">${moments.length}</span></div><p>${subtitle}</p></div></div><div class="moment-grid">${moments.length ? moments.map(momentCard).join("") : emptyCard("Rien pour le moment", bucket === "planning" ? "Crée un Moment pour lancer la prochaine aventure." : "Cet espace se remplira naturellement.")}</div></section>`;
+    if (!moments.length) return "";
+    return `<section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>${title}</h2><span class="section-count" aria-label="${moments.length} Moment${moments.length > 1 ? "s" : ""}">${moments.length}</span></div><p>${subtitle}</p></div></div><div class="moment-grid">${moments.map(momentCard).join("")}</div></section>`;
   }).join("");
   elements.momentsView.querySelectorAll("[data-open-moment]").forEach((button) => button.addEventListener("click", () => openMomentDetail(button.dataset.openMoment)));
 }
