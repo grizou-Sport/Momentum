@@ -100,7 +100,8 @@ function dayCategoryLabel(category) {
   const labels = {
     sport: "Sport",
     wellbeing: "Bien-être",
-    adventure: "Aventure"
+    adventure: "Aventure",
+    shared: "Moment partagé"
   };
 
   return labels[category] || "Moment";
@@ -176,7 +177,7 @@ async function openDay(date) {
             <article class="day-moment-card">
               <div class="day-moment-content">
                 <span class="card-label">
-                  ${session.status === "done" ? "Réalisé" : "Prévu"}
+                  ${escapeHtml(sessionStatusLabel(session))}
                   · ${escapeHtml(dayCategoryLabel(session.category))}
                 </span>
                 <h3>${escapeHtml(sessionLabel(session))}</h3>
@@ -205,6 +206,12 @@ async function openDay(date) {
               </div>
 
               <div class="day-moment-actions">
+                ${session.source === "shared_moment" ? `
+                  <a
+                    class="day-open-shared-moment"
+                    href="together.html?moment=${encodeURIComponent(session.momentId)}"
+                  >Ouvrir dans TOGETHER</a>
+                ` : `
                 <button
                   type="button"
                   class="day-edit-moment"
@@ -220,6 +227,7 @@ async function openDay(date) {
                   data-activity-id="${session.id}"
                   data-date="${date}"
                 >Supprimer</button>
+                `}
               </div>
             </article>
           `).join("")

@@ -109,12 +109,7 @@ function openClubForm(club = null) {
 }
 
 function momentBucket(moment) {
-  if (moment.status === "COMPLETED" || moment.status === "CANCELLED") return "past";
-  if (["DRAFT", "PLANNING"].includes(moment.status) || !moment.start_at) return "planning";
-  const date = new Date(moment.start_at);
-  const today = new Date();
-  if (date.toDateString() === today.toDateString()) return "today";
-  return date > today ? "upcoming" : "past";
+  return window.MomentumMoments.calendarStatus(moment);
 }
 
 function momentCard(moment) {
@@ -417,6 +412,19 @@ async function loadTogether() {
   renderClubOptions();
   renderMoments();
   renderCircle();
+
+  const requestedMomentId = new URLSearchParams(window.location.search).get("moment");
+  if (requestedMomentId) {
+    const cleanUrl = new URL(window.location.href);
+    cleanUrl.searchParams.delete("moment");
+    window.history.replaceState({}, "", `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`);
+
+    if (TOGETHER.moments.some((moment) => moment.id === requestedMomentId)) {
+      await openMomentDetail(requestedMomentId);
+    } else {
+      setStatus("Ce Moment n’est plus disponible ou tu n’y as pas accès.", true);
+    }
+  }
 }
 
 async function createMoment(form) {

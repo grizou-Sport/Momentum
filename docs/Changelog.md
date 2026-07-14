@@ -6,6 +6,8 @@ Les changements notables du projet sont consignés dans ce fichier.
 
 ### Ajouté
 
+- Connexion des Moments TOGETHER « Aujourd’hui », « À venir » et « Passés » aux calendriers HOME.
+- Accès direct depuis HOME vers le détail du Moment partagé dans TOGETHER.
 - Structure documentaire `docs/`, `specs/` et `backlog/`.
 - Règles communes pour les contributions assistées par IA.
 - Emplacement `src/` réservé à une future migration contrôlée.

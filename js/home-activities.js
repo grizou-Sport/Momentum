@@ -23,6 +23,26 @@ function activitySportLabel(value) {
 }
 
 function sessionMeta(session) {
+  if (session?.source === "shared_moment") {
+    const typeLabels = {
+      SPORT: "Sport",
+      ADVENTURE: "Aventure",
+      TRAVEL: "Voyage",
+      SOCIAL: "Rencontre",
+      OTHER: "Moment"
+    };
+    const parts = [typeLabels[session.momentType] || "Moment partagé"];
+
+    if (session.startAt) {
+      parts.push(new Intl.DateTimeFormat("fr-CH", {
+        hour: "2-digit",
+        minute: "2-digit"
+      }).format(new Date(session.startAt)));
+    }
+
+    return parts.join(" · ");
+  }
+
   const parts = [];
 
   if (session.sport) {
@@ -65,7 +85,8 @@ function activityCategoryLabel(category) {
   const labels = {
     sport: "Sport",
     wellbeing: "Bien-être",
-    adventure: "Aventure"
+    adventure: "Aventure",
+    shared: "Moment partagé"
   };
 
   return labels[category] || "Moment";
@@ -109,9 +130,7 @@ function renderActivityList(date, sessions) {
         <div class="day-feed-content">
         <span class="card-label">
           ${
-            session.status === "done"
-              ? "Réalisé"
-              : "Prévu"
+            sessionStatusLabel(session)
           }
           ·
           ${escapeHtml(
@@ -138,6 +157,11 @@ function renderActivityList(date, sessions) {
             "Lieu à définir"
           )}
         </p>
+        ${session.source === "shared_moment" ? `
+          <a class="shared-moment-link" href="together.html?moment=${encodeURIComponent(session.momentId)}">
+            Ouvrir dans TOGETHER
+          </a>
+        ` : ""}
         </div>
       </article>
     `)

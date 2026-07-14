@@ -8,8 +8,12 @@ function sessionsOn(date) {
   return (state.sessions || [])
     .filter((session) => session.date === date)
     .sort((a, b) => {
-      if (a.status === b.status) return 0;
-      return a.status === "done" ? -1 : 1;
+      const aRank = a.status === "done" || a.calendarStatus === "past" ? 0 : 1;
+      const bRank = b.status === "done" || b.calendarStatus === "past" ? 0 : 1;
+
+      if (aRank !== bRank) return aRank - bRank;
+      return String(a.sortAt || a.createdAt || "")
+        .localeCompare(String(b.sortAt || b.createdAt || ""));
     });
 }
 
@@ -36,7 +40,40 @@ function mapActivityRow(row) {
     sourceFileType: row.source_file_type || null,
     gpxUrl: row.gpx_url || null,
     weather: row.weather || null,
-    createdAt: row.created_at
+    createdAt: row.created_at,
+    source: "activity"
+  };
+}
+
+function sharedMomentCalendarStatus(row, today = iso(new Date())) {
+  const calendarStatus = window.MomentumMoments?.calendarStatus(row, today);
+  return calendarStatus === "planning" ? null : calendarStatus;
+}
+
+function mapSharedMomentRow(row, today = iso(new Date())) {
+  const calendarStatus = sharedMomentCalendarStatus(row, today);
+
+  if (!calendarStatus) return null;
+
+  return {
+    id: row.id,
+    momentId: row.id,
+    date: iso(new Date(row.start_at)),
+    status: row.status,
+    calendarStatus,
+    category: "shared",
+    activity_category: "shared",
+    type: row.title || "Moment partagé",
+    momentType: row.moment_type || "OTHER",
+    startAt: row.start_at,
+    endAt: row.end_at || null,
+    locationName: row.location_name || "",
+    placeName: row.location_name || "",
+    comment: row.description || "",
+    clubId: row.club_id || null,
+    createdAt: row.created_at,
+    sortAt: row.start_at,
+    source: "shared_moment"
   };
 }
 
@@ -70,29 +107,63 @@ async function loadActivitiesForHome(
   const rangeEnd =
     livingEnd > calendarRange.end ? livingEnd : calendarRange.end;
 
-  const { data, error } = await window.momentumDB
-    .from("activities")
-    .select(
-      "id,user_id,sport,activity_type,status,distance_km,duration_min,elevation_m,avg_hr,rpe,gear,notes,created_at,activity_date,weather,location_name,route_summary,activity_category,source_file_url,source_file_type,gpx_url"
-    )
-    .eq("user_id", user.id)
-    .gte("activity_date", iso(rangeStart))
-    .lte("activity_date", iso(rangeEnd))
-    .order("activity_date", { ascending: true })
-    .order("created_at", { ascending: true });
+  const momentRangeStart = new Date(
+    rangeStart.getFullYear(),
+    rangeStart.getMonth(),
+    rangeStart.getDate()
+  ).toISOString();
+  const dayAfterRangeEnd = addDays(rangeEnd, 1);
+  const momentRangeEnd = new Date(
+    dayAfterRangeEnd.getFullYear(),
+    dayAfterRangeEnd.getMonth(),
+    dayAfterRangeEnd.getDate()
+  ).toISOString();
 
-  if (error) {
+  const [activitiesResult, momentsResult] = await Promise.all([
+    window.momentumDB
+      .from("activities")
+      .select(
+        "id,user_id,sport,activity_type,status,distance_km,duration_min,elevation_m,avg_hr,rpe,gear,notes,created_at,activity_date,weather,location_name,route_summary,activity_category,source_file_url,source_file_type,gpx_url"
+      )
+      .eq("user_id", user.id)
+      .gte("activity_date", iso(rangeStart))
+      .lte("activity_date", iso(rangeEnd))
+      .order("activity_date", { ascending: true })
+      .order("created_at", { ascending: true }),
+    window.momentumDB
+      .from("moments")
+      .select(
+        "id,title,description,moment_type,status,start_at,end_at,location_name,club_id,created_at"
+      )
+      .in("status", ["CONFIRMED", "ONGOING", "COMPLETED", "CANCELLED"])
+      .not("start_at", "is", null)
+      .gte("start_at", momentRangeStart)
+      .lt("start_at", momentRangeEnd)
+      .order("start_at", { ascending: true })
+  ]);
+
+  if (activitiesResult.error) {
     console.error(
       "HOME : impossible de charger les activités du calendrier.",
-      error
+      activitiesResult.error
     );
-    state.sessions = [];
-    return [];
   }
 
-  state.sessions = (data || [])
+  if (momentsResult.error) {
+    console.error(
+      "HOME : impossible de charger les Moments partagés du calendrier.",
+      momentsResult.error
+    );
+  }
+
+  const activities = (activitiesResult.data || [])
     .filter((row) => row.activity_date)
     .map(mapActivityRow);
+  const sharedMoments = (momentsResult.data || [])
+    .map((row) => mapSharedMomentRow(row))
+    .filter(Boolean);
+
+  state.sessions = [...activities, ...sharedMoments];
 
   return state.sessions;
 }

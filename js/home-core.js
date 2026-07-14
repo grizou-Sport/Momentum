@@ -76,6 +76,10 @@ function saveState() {
 }
 
 function sessionIconHtml(session, className = "session-icon") {
+  if (session?.source === "shared_moment") {
+    return window.MomentumIcons?.render("users", { collection:"sports", size:22, className }) || "";
+  }
+
   const category = session?.category || session?.activity_category || "sport";
   if (category === "wellbeing") {
     return window.MomentumIcons?.render("mobility", { collection:"sports", size:22, className }) || "";
@@ -84,6 +88,18 @@ function sessionIconHtml(session, className = "session-icon") {
     return window.MomentumIcons?.render("mountain", { collection:"sports", size:22, className }) || "";
   }
   return window.MomentumIcons?.renderSport(session?.sport || session?.activity_type || "activity", { size:22, className }) || "";
+}
+
+function sessionStatusLabel(session) {
+  if (session?.source === "shared_moment") {
+    return ({
+      upcoming: "À venir",
+      today: "Aujourd’hui",
+      past: "Passé"
+    })[session.calendarStatus] || "Moment partagé";
+  }
+
+  return session?.status === "done" ? "Réalisé" : "Prévu";
 }
 
 function sessionIconsHtml(sessions, className = "session-icon") {

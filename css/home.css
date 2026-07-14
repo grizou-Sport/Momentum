@@ -1589,6 +1589,19 @@ main{
   cursor:pointer;
 }
 
+.day-open-shared-moment,
+.shared-moment-link{
+  color:var(--ink);
+  font-size:13px;
+  font-weight:750;
+  text-decoration:none;
+}
+
+.day-open-shared-moment{padding:8px 0;white-space:nowrap}
+.day-open-shared-moment:hover,
+.shared-moment-link:hover{color:var(--accent)}
+.shared-moment-link{display:inline-flex;margin-top:8px}
+
 .day-edit-moment:hover{color:var(--accent)}
 .day-delete-moment:hover{color:var(--danger)}
 
