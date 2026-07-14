@@ -9,7 +9,7 @@ Les changements notables du projet sont consignés dans ce fichier.
 - Structure documentaire `docs/`, `specs/` et `backlog/`.
 - Règles communes pour les contributions assistées par IA.
 - Emplacement `src/` réservé à une future migration contrôlée.
-- Sélecteur de période commun aux graphiques HOME : 4 semaines, 1 mois, 3 mois, 6 mois, 1 année ou période personnalisée.
+- Sélecteur de période commun aux graphiques HOME : semaine en cours (par défaut), 4 semaines, 12 semaines, 6 mois, 1 année ou période personnalisée.
 - Création, modification et suppression des données Bien-être depuis HOME et le calendrier.
 
 ### Modifié

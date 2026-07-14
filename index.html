@@ -116,9 +116,9 @@
       <div class="period-selector" data-period-selector data-compatible-mode="horizon">
         <label for="chartPeriod">Période</label>
         <select id="chartPeriod" data-period-preset>
-          <option value="4-weeks" selected>4 semaines</option>
-          <option value="1-month">1 mois</option>
-          <option value="3-months">3 mois</option>
+          <option value="current-week" selected>Semaine en cours</option>
+          <option value="4-weeks">4 semaines</option>
+          <option value="12-weeks">12 semaines</option>
           <option value="6-months">6 mois</option>
           <option value="1-year">1 année</option>
           <option value="custom">Période personnalisée</option>
@@ -146,7 +146,7 @@
           <p class="chart-insight" id="loadInsight"></p>
         </article>
         <article class="chart-card progression-chart-card progression-reveal" id="sportChartCard">
-          <div class="chart-heading"><div><span class="card-label">Comment est-ce que je m'entraîne ?</span><h3>Répartition sportive</h3><p>Le temps réellement consacré à chaque discipline.</p></div><span class="model-phase" id="sportPeriodLabel">4 semaines</span></div>
+          <div class="chart-heading"><div><span class="card-label">Comment est-ce que je m'entraîne ?</span><h3>Répartition sportive</h3><p>Le temps réellement consacré à chaque discipline.</p></div><span class="model-phase" id="sportPeriodLabel">Semaine en cours</span></div>
           <div class="sport-chart-wrap"><canvas id="sportChart"></canvas></div>
           <p class="chart-insight" id="sportInsight"></p>
         </article>

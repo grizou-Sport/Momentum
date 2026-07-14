@@ -1,8 +1,8 @@
 /* MOMENTUM — PROGRESSION v1.0 */
 const PROGRESSION_PERIODS = {
+  "current-week": { label:"Semaine en cours", kind:"rolling-days", amount:7 },
   "4-weeks": { label:"4 semaines", kind:"rolling-days", amount:28 },
-  "1-month": { label:"1 mois", kind:"rolling-months", amount:1 },
-  "3-months": { label:"3 mois", kind:"rolling-months", amount:3 },
+  "12-weeks": { label:"12 semaines", kind:"rolling-days", amount:84 },
   "6-months": { label:"6 mois", kind:"rolling-months", amount:6 },
   "1-year": { label:"1 année", kind:"rolling-months", amount:12 },
   custom: { label:"Période personnalisée", kind:"custom" }
@@ -12,11 +12,11 @@ const progressionState = {
   activities:[], weeks:[], chart:null, loadChart:null, sportChart:null,
   wellnessChart:null, mode:"time", wellnessMode:"summary", passport:null,
   physiological:null, loadSeries:[], sportGroups:[], wellbeingDays:[],
-  periodPreset:"4-weeks", periodStart:null, periodEnd:null
+  periodPreset:"current-week", periodStart:null, periodEnd:null
 };
 
 function progressionPeriodRange(preset = progressionState.periodPreset, customStart = null, customEnd = null) {
-  const definition = PROGRESSION_PERIODS[preset] || PROGRESSION_PERIODS["4-weeks"];
+  const definition = PROGRESSION_PERIODS[preset] || PROGRESSION_PERIODS["current-week"];
   if (definition.kind === "custom") {
     return { start:customStart, end:customEnd, label:definition.label };
   }
@@ -421,7 +421,7 @@ function bindProgression() {
     await applyProgressionPeriod("custom", customStart?.value, customEnd?.value);
   });
 
-  const initialRange = progressionPeriodRange("4-weeks");
+  const initialRange = progressionPeriodRange("current-week");
   if (customStart) customStart.value = initialRange.start;
   if (customEnd) customEnd.value = initialRange.end;
 
