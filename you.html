@@ -6,25 +6,12 @@
   <title>Momentum — YOU</title>
 
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/navigation.css">
   <link rel="stylesheet" href="css/you.css">
 </head>
 
-<body class="you-body">
-  <header class="topbar">
-    <a class="brand" href="index.html">
-      <span class="mark">△</span><strong>Momentum</strong><em>v0.09</em>
-    </a>
-
-    <nav>
-      <a href="index.html">HOME</a>
-      <a href="together.html">TOGETHER</a>
-      <a class="active-nav" href="you.html">YOU</a>
-    </nav>
-
-    <div class="top-actions">
-      <button id="logoutBtn" class="topbar-logout you-logout" type="button">Déconnexion</button>
-    </div>
-  </header>
+<body class="you-body" data-momentum-page="you">
+  <div data-momentum-navigation></div>
 
   <main class="you-page">
     <section class="you-hero">
@@ -89,6 +76,7 @@
     </section>
   </main>
 
+  <script src="js/navigation.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
   <script src="js/guard.js"></script>

@@ -29,3 +29,17 @@ Les décisions structurantes sont ajoutées ici avec leur contexte, leurs consé
 - **Décision :** construire « Je vis pour » à l’affichage en fusionnant les sports déclarés pendant l’inscription avec les activités réalisées sur les douze derniers mois.
 - **Conséquence :** les pratiques sont qualifiées comme déclarées, occasionnelles, saisonnières ou régulières par un module autonome ; aucune table ni donnée sportive existante n’est modifiée.
 - **Motif :** laisser l’identité sportive évoluer avec la vie réelle de l’utilisateur tout en conservant le questionnaire comme point de départ.
+
+## 2026-07-15 — Navigation UX v1 par rail contextuel
+
+- **Statut :** accepté après validation des maquettes.
+- **Décision :** remplacer la TopBar de HOME, YOU et TOGETHER par un rail fixe compact sur Desktop, accompagné d’un panneau présentant les sous-sections du module actif. Sur Mobile, cette navigation devient un menu latéral ouvert par un bouton hamburger.
+- **Conséquence :** HOME, YOU et TOGETHER utilisent le même composant de navigation. Les sous-sections existantes conservent leurs écrans et leurs données ; le Fil d’actualité et Paramètres restent identifiés comme extensions futures sans faux parcours actif.
+- **Motif :** préserver l’espace éditorial de MOMENTUM tout en rendant les destinations immédiatement compréhensibles et évolutives.
+
+## 2026-07-15 — Maîtrise du cycle de vie des Moments
+
+- **Statut :** accepté.
+- **Décision :** permettre à l’organisateur de modifier, dupliquer et supprimer un Moment, de sélectionner des participants de son Cercle et de consulter leurs réponses. Chaque participant peut accepter ou refuser son invitation depuis le détail du Moment.
+- **Conséquence :** l’interface s’appuie sur `moments` et `moment_participants` ainsi que sur leurs politiques RLS existantes ; aucune migration supplémentaire n’est nécessaire pour cette étape.
+- **Motif :** garantir que la création, l’invitation, l’affichage partagé et la réponse forment un seul parcours cohérent.

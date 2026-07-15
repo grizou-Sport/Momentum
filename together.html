@@ -5,22 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Momentum — TOGETHER</title>
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/navigation.css" />
   <link rel="stylesheet" href="css/together.css" />
 </head>
-<body class="together-body">
-  <header class="topbar">
-    <a class="brand" href="index.html">
-      <span class="mark">△</span><strong>Momentum</strong><em>v0.09</em>
-    </a>
-    <nav>
-      <a href="index.html">HOME</a>
-      <a class="active-nav" href="together.html">TOGETHER</a>
-      <a href="you.html">YOU</a>
-    </nav>
-    <div class="top-actions">
-      <button id="logoutBtn" class="topbar-logout together-logout" type="button">Déconnexion</button>
-    </div>
-  </header>
+<body class="together-body" data-momentum-page="together">
+  <div data-momentum-navigation></div>
 
   <main class="together-page">
     <section class="together-hero">
@@ -58,18 +47,24 @@
 
   <dialog id="momentDialog" class="together-dialog">
     <form id="momentForm" method="dialog">
+      <input name="moment_id" type="hidden" />
       <div class="dialog-head">
-        <div><span class="card-label">Nouveau</span><h2>Créer un Moment</h2></div>
+        <div><span class="card-label" id="momentDialogKicker">Nouveau</span><h2 id="momentDialogTitle">Créer un Moment</h2></div>
         <button class="dialog-close" value="cancel" formnovalidate aria-label="Fermer">×</button>
       </div>
       <div class="together-form-grid">
         <label class="wide">Titre<input name="title" required maxlength="120" placeholder="Soirée Padel" /></label>
         <label>Type<select name="moment_type"><option value="SPORT">Sport</option><option value="ADVENTURE">Aventure</option><option value="TRAVEL">Voyage</option><option value="SOCIAL">Rencontre</option><option value="OTHER">Autre</option></select></label>
-        <label>Club<select name="club_id" id="momentClub"><option value="">Moment personnel</option></select></label>
         <label>Date et heure<input name="start_at" type="datetime-local" /></label>
         <label>Lieu<input name="location_name" placeholder="Bienne" /></label>
         <label>Capacité<input name="capacity" type="number" min="1" placeholder="8" /></label>
-        <label>Visibilité<select name="visibility"><option value="PARTICIPANTS">Participants</option><option value="CIRCLE">Cercle</option><option value="PRIVATE">Privé</option></select></label>
+        <label>Visibilité<select name="visibility" id="momentVisibility"><option value="PRIVATE">Privé</option><option value="CIRCLE">Cercle</option><option value="CLUB">Club</option></select></label>
+        <label id="momentClubField" hidden>Club<select name="club_id" id="momentClub"><option value="">Choisir un Club</option></select></label>
+        <fieldset class="wide participant-picker" id="momentParticipantPicker">
+          <legend>Participants</legend>
+          <p>Sélectionne les personnes de ton Cercle à inviter.</p>
+          <div id="momentParticipantOptions"></div>
+        </fieldset>
         <label class="wide">Description<textarea name="description" rows="4" placeholder="Quelques mots pour donner le ton…"></textarea></label>
         <div class="wide date-options-field">
           <div><span>Autres créneaux proposés</span><button id="addDateOption" class="text-button" type="button">+ Ajouter un créneau</button></div>
@@ -109,6 +104,7 @@
     <div id="momentDetail"></div>
   </dialog>
 
+  <script src="js/navigation.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
   <script src="js/guard.js"></script>

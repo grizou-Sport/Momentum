@@ -5,25 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Momentum — HOME</title>
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/navigation.css" />
   <link rel="stylesheet" href="css/home.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 
-<body class="home-body">
-  <header class="topbar">
-    <a class="brand" href="#hero">
-      <span class="mark">△</span><strong>Momentum</strong><em>v0.09</em>
-    </a>
-
-    <nav>
-      <a href="index.html" class="active-nav">HOME</a>
-      <a href="together.html">TOGETHER</a>
-      <a href="you.html">YOU</a>
-    </nav>
-    <div class="top-actions">
-      <button id="homeLogoutBtn" class="topbar-logout" type="button">Déconnexion</button>
-    </div>
-  </header>
+<body class="home-body" data-momentum-page="home">
+  <div data-momentum-navigation></div>
 
 <main>
 
@@ -624,6 +612,7 @@
 <script src="js/supabase.js"></script>
 <script src="js/guard.js"></script>
 
+<script src="js/navigation.js"></script>
 <script src="js/momentum-sports.js"></script>
 <script src="js/momentum-sport-visuals.js"></script>
 <script src="js/momentum-wellbeing.js"></script>

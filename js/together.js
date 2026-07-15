@@ -8,6 +8,7 @@ const TOGETHER = {
   passports: new Map(),
   logoUrls: new Map(),
   view: "circle",
+  section: "circle",
 };
 
 const elements = {
@@ -19,6 +20,13 @@ const elements = {
   momentDialog: document.getElementById("momentDialog"),
   clubDialog: document.getElementById("clubDialog"),
   momentForm: document.getElementById("momentForm"),
+  momentDialogKicker: document.getElementById("momentDialogKicker"),
+  momentDialogTitle: document.getElementById("momentDialogTitle"),
+  saveMoment: document.getElementById("saveMoment"),
+  momentVisibility: document.getElementById("momentVisibility"),
+  momentClubField: document.getElementById("momentClubField"),
+  momentParticipantPicker: document.getElementById("momentParticipantPicker"),
+  momentParticipantOptions: document.getElementById("momentParticipantOptions"),
   clubForm: document.getElementById("clubForm"),
   momentClub: document.getElementById("momentClub"),
   clubSport: document.getElementById("clubSport"),
@@ -54,6 +62,13 @@ function formatDate(value) {
   return new Intl.DateTimeFormat("fr-CH", { weekday: "short", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 }
 
+function localDateTimeValue(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+}
+
 function initials(name = "?") {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
 }
@@ -79,6 +94,52 @@ function momentStatusLabel(value) {
 
 function visibilityLabel(value) {
   return ({ PRIVATE:"Privé", PARTICIPANTS:"Participants", CIRCLE:"Cercle", SELECTED_USERS:"Personnes choisies", DISCOVERABLE:"Visible sur recherche" })[value] || value;
+}
+
+function invitationStatusLabel(value) {
+  return ({ PENDING:"En attente", ACCEPTED:"Accepté", DECLINED:"Refusé", REMOVED:"Retiré" })[value] || value;
+}
+
+function renderMomentParticipantOptions(selectedIds = []) {
+  const selected = new Set(selectedIds);
+  const members = TOGETHER.circle.members || [];
+  elements.momentParticipantOptions.innerHTML = members.length ? members.map((member) => `<label class="participant-option"><input name="participant_ids" type="checkbox" value="${member.user_id}" ${selected.has(member.user_id) ? "checked" : ""} /><span>${circleIdentity(member, "mini-avatar")}<span><strong>${escapeHTML(member.display_name || "Membre MOMENTUM")}</strong><small>Dans ton Cercle</small></span></span></label>`).join("") : '<p class="participant-picker-empty">Ton Cercle est encore vide. Tu pourras inviter des participants plus tard.</p>';
+}
+
+function syncMomentVisibility() {
+  const clubMode = elements.momentVisibility.value === "CLUB";
+  elements.momentClubField.hidden = !clubMode;
+  elements.momentClub.required = clubMode;
+  if (!clubMode) elements.momentClub.value = "";
+}
+
+function openMomentForm(moment = null, options = {}) {
+  const duplicate = Boolean(options.duplicate);
+  const participantIds = options.participantIds || [];
+  elements.momentForm.reset();
+  elements.dateOptions.innerHTML = "";
+  elements.momentForm.elements.moment_id.value = moment && !duplicate ? moment.id : "";
+  elements.momentDialogKicker.textContent = duplicate ? "Nouvelle aventure" : moment ? "Organisation" : "Nouveau";
+  elements.momentDialogTitle.textContent = duplicate ? "Dupliquer le Moment" : moment ? "Modifier le Moment" : "Créer un Moment";
+  elements.saveMoment.textContent = moment && !duplicate ? "Enregistrer" : "Créer le Moment";
+  if (moment) {
+    elements.momentForm.elements.title.value = duplicate ? `Copie — ${moment.title}` : moment.title;
+    elements.momentForm.elements.moment_type.value = moment.moment_type || "OTHER";
+    elements.momentForm.elements.start_at.value = localDateTimeValue(moment.start_at);
+    elements.momentForm.elements.location_name.value = moment.location_name || "";
+    elements.momentForm.elements.capacity.value = moment.capacity || "";
+    elements.momentForm.elements.description.value = moment.description || "";
+    elements.momentVisibility.value = moment.club_id ? "CLUB" : moment.visibility === "CIRCLE" ? "CIRCLE" : "PRIVATE";
+    elements.momentClub.value = moment.club_id || "";
+  } else if (options.clubId) {
+    elements.momentVisibility.value = "CLUB";
+    elements.momentClub.value = options.clubId;
+  }
+  renderMomentParticipantOptions(participantIds);
+  syncMomentVisibility();
+  if (moment?.club_id) elements.momentClub.value = moment.club_id;
+  elements.momentDialog.showModal();
+  window.setTimeout(() => elements.momentForm.elements.title.focus(), 0);
 }
 
 function memberRoleLabel(value) {
@@ -205,10 +266,9 @@ function renderCircle() {
     </div>`;
   } else {
     elements.circleView.innerHTML = [
-      receivedInvitations.length ? `<section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>Invitations reçues</h2><span class="section-count">${received.length + pendingClubs.length}</span></div><p>Les demandes qui attendent ta réponse.</p></div></div><div class="circle-grid">${receivedInvitations.join("")}</div></section>` : "",
-      sent.length ? `<section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>Invitations envoyées</h2><span class="section-count">${sent.length}</span></div><p>Tu peux annuler une demande tant qu’elle n’a pas été acceptée.</p></div></div><div class="circle-grid">${sent.map((item) => circleInvitationCard(item, "sent")).join("")}</div></section>` : "",
-      members.length ? `<section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>Mon Cercle</h2><span class="section-count">${members.length}</span></div><p>Les personnes avec lesquelles tu choisis de partager.</p></div></div><div class="circle-grid">${members.map(personCard).join("")}</div></section>` : "",
-      TOGETHER.clubs.length ? `<section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>Mes Clubs</h2><span class="section-count">${TOGETHER.clubs.length}</span></div><p>Les communautés auxquelles tu appartiens.</p></div><button class="together-secondary" id="openCreateClub" type="button">Créer un Club</button></div><div class="club-grid">${TOGETHER.clubs.map(clubCard).join("")}</div></section>` : "",
+      receivedInvitations.length || sent.length ? `<div id="togetherInvitations" class="together-section-group">${receivedInvitations.length ? `<section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>Invitations reçues</h2><span class="section-count">${received.length + pendingClubs.length}</span></div><p>Les demandes qui attendent ta réponse.</p></div></div><div class="circle-grid">${receivedInvitations.join("")}</div></section>` : ""}${sent.length ? `<section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>Invitations envoyées</h2><span class="section-count">${sent.length}</span></div><p>Tu peux annuler une demande tant qu’elle n’a pas été acceptée.</p></div></div><div class="circle-grid">${sent.map((item) => circleInvitationCard(item, "sent")).join("")}</div></section>` : ""}</div>` : "",
+      members.length ? `<section class="together-section" id="togetherCircle"><div class="together-section-head"><div><div class="together-section-title"><h2>Mon Cercle</h2><span class="section-count">${members.length}</span></div><p>Les personnes avec lesquelles tu choisis de partager.</p></div></div><div class="circle-grid">${members.map(personCard).join("")}</div></section>` : "",
+      TOGETHER.clubs.length ? `<section class="together-section" id="togetherClubs"><div class="together-section-head"><div><div class="together-section-title"><h2>Mes Clubs</h2><span class="section-count">${TOGETHER.clubs.length}</span></div><p>Les communautés auxquelles tu appartiens.</p></div><button class="together-secondary" id="openCreateClub" type="button">Créer un Club</button></div><div class="club-grid">${TOGETHER.clubs.map(clubCard).join("")}</div></section>` : "",
     ].join("");
   }
   document.getElementById("openCreateClub")?.addEventListener("click", () => openClubForm());
@@ -222,7 +282,7 @@ function renderCircle() {
 }
 
 function renderClubOptions() {
-  elements.momentClub.innerHTML = `<option value="">Moment personnel</option>${TOGETHER.clubs.map((club) => `<option value="${club.id}">${escapeHTML(club.name)}</option>`).join("")}`;
+  elements.momentClub.innerHTML = `<option value="">Choisir un Club</option>${TOGETHER.clubs.map((club) => `<option value="${club.id}">${escapeHTML(club.name)}</option>`).join("")}`;
 }
 
 async function openClubDetail(clubId) {
@@ -254,7 +314,7 @@ async function openClubDetail(clubId) {
   document.getElementById("editClub")?.addEventListener("click", () => { elements.clubDetailDialog.close(); openClubForm(club); });
   document.getElementById("clubInviteUser")?.addEventListener("change", (event) => inviteClubMember(club.id, event.target.value));
   elements.clubDetail.querySelectorAll("[data-member-role]").forEach((select) => select.addEventListener("change", () => updateClubMemberRole(club.id, select.dataset.memberRole, select.value)));
-  document.getElementById("clubCreateMoment")?.addEventListener("click", () => { elements.clubDetailDialog.close(); elements.momentForm.reset(); elements.momentClub.value = club.id; elements.momentDialog.showModal(); });
+  document.getElementById("clubCreateMoment")?.addEventListener("click", () => { elements.clubDetailDialog.close(); openMomentForm(null, { clubId: club.id }); });
   elements.clubDetail.querySelectorAll("[data-detail-moment]").forEach((button) => button.addEventListener("click", () => { elements.clubDetailDialog.close(); openMomentDetail(button.dataset.detailMoment); }));
 }
 
@@ -284,14 +344,15 @@ async function openMomentDetail(momentId) {
   if (!moment) return;
   elements.momentDetail.innerHTML = '<div class="detail-loading">Ouverture du Moment…</div>';
   if (!elements.momentDetailDialog.open) elements.momentDetailDialog.showModal();
-  const [mediaResult, linksResult, activitiesResult, reactionsResult, presetsResult] = await Promise.all([
+  const [mediaResult, linksResult, activitiesResult, reactionsResult, presetsResult, participantsResult] = await Promise.all([
     window.momentumDB.from("moment_media").select("*").eq("moment_id", moment.id).order("created_at", { ascending: false }),
     window.momentumDB.from("moment_activities").select("*, activities(*)").eq("moment_id", moment.id).order("created_at", { ascending: false }),
     window.momentumDB.from("activities").select("id,sport,activity_type,activity_date,distance_km,duration_min,elevation_m").eq("user_id", TOGETHER.user.id).order("activity_date", { ascending: false }).limit(50),
     window.momentumDB.from("reactions").select("*").eq("moment_id", moment.id),
     window.momentumDB.from("preset_messages").select("*").eq("is_active", true).order("display_order"),
+    window.momentumDB.from("moment_participants").select("*").eq("moment_id", moment.id).neq("invitation_status", "REMOVED").order("created_at"),
   ]);
-  const loadError = mediaResult.error || linksResult.error || activitiesResult.error || reactionsResult.error || presetsResult.error;
+  const loadError = mediaResult.error || linksResult.error || activitiesResult.error || reactionsResult.error || presetsResult.error || participantsResult.error;
   if (loadError) return elements.momentDetail.innerHTML = `<div class="dialog-shell"><button class="dialog-close detail-close" type="button">×</button><p>${escapeHTML(loadError.message)}</p></div>`;
 
   const signedMedia = await Promise.all((mediaResult.data || []).map(async (media) => {
@@ -300,12 +361,20 @@ async function openMomentDetail(momentId) {
   }));
   const options = (moment.moment_date_options || []).sort((a, b) => new Date(a.start_at) - new Date(b.start_at));
   const canManage = moment.created_by === TOGETHER.user.id;
+  const participants = participantsResult.data || [];
+  const participantIds = participants.map((participant) => participant.user_id);
+  const { data: participantProfiles } = participantIds.length ? await window.momentumDB.from("passports").select("user_id,display_name,avatar_url").in("user_id", participantIds) : { data: [] };
+  const participantProfileMap = new Map((participantProfiles || []).map((profile) => [profile.user_id, profile]));
+  const myParticipation = participants.find((participant) => participant.user_id === TOGETHER.user.id);
   const linkedIds = new Set((linksResult.data || []).map((link) => link.activity_id));
   const availableActivities = (activitiesResult.data || []).filter((activity) => !linkedIds.has(activity.id));
   const myReaction = (reactionsResult.data || []).find((reaction) => reaction.user_id === TOGETHER.user.id);
   const emojis = [["HEART","❤️"],["APPLAUSE","👏"],["FIRE","🔥"],["SPARKLES","✨"],["MOUNTAIN","🏔️"],["TENNIS","🎾"],["COFFEE","☕"]];
-  elements.momentDetail.innerHTML = `<div class="dialog-shell moment-memory-shell"><button class="dialog-close detail-close" type="button">×</button><span class="card-label">${escapeHTML(moment.status)}</span><h2>${escapeHTML(moment.title)}</h2><p class="detail-lead">${escapeHTML(moment.description || "Un Moment partagé.")}</p><div class="detail-facts"><span>${escapeHTML(formatDate(moment.start_at))}</span><span>${escapeHTML(moment.location_name || "Lieu à définir")}</span></div>
+  elements.momentDetail.innerHTML = `<div class="dialog-shell moment-memory-shell"><button class="dialog-close detail-close" type="button">×</button><span class="card-label">${escapeHTML(moment.status)}</span><h2>${escapeHTML(moment.title)}</h2><p class="detail-lead">${escapeHTML(moment.description || "Un Moment partagé.")}</p><div class="detail-facts"><span>${escapeHTML(formatDate(moment.start_at))}</span><span>${escapeHTML(moment.location_name || "Lieu à définir")}</span><span>${escapeHTML(visibilityLabel(moment.club_id ? "Club" : moment.visibility))}</span></div>
+    ${canManage ? '<div class="moment-owner-actions"><button class="together-secondary" id="editMoment" type="button">Modifier</button><button class="together-secondary" id="duplicateMoment" type="button">Dupliquer</button><button class="moment-danger-action" id="deleteMoment" type="button">Supprimer</button></div>' : ""}
+    ${myParticipation?.invitation_status === "PENDING" ? '<section class="moment-invitation-answer"><div><strong>Ton invitation attend une réponse</strong><span>Ta décision sera immédiatement visible par l’organisateur.</span></div><div><button class="together-primary" data-answer-moment="ACCEPTED" type="button">Accepter</button><button class="together-secondary" data-answer-moment="DECLINED" type="button">Refuser</button></div></section>' : ""}
     ${canManage && moment.status === "CONFIRMED" ? '<button class="together-secondary" id="completeMoment" type="button">Marquer comme terminé</button>' : ""}
+    <section class="detail-section"><div class="detail-title"><h3>Participants</h3><span class="section-count">${participants.length}</span></div><div class="moment-participant-list">${participants.length ? participants.map((participant) => { const profile = participantProfileMap.get(participant.user_id) || {}; const name = participant.user_id === TOGETHER.user.id ? "Toi" : profile.display_name || "Membre MOMENTUM"; return `<div class="moment-participant-row">${circleIdentity(profile, "mini-avatar")}<span><strong>${escapeHTML(name)}</strong><small>${escapeHTML(participant.role === "OWNER" ? "Organisateur" : "Participant")}</small></span><span class="participant-invitation-status status-${participant.invitation_status.toLowerCase()}">${escapeHTML(invitationStatusLabel(participant.invitation_status))}</span></div>`; }).join("") : '<p class="memory-empty">Aucun participant invité.</p>'}</div></section>
     ${options.length ? `<section class="detail-section"><div class="detail-title"><h3>Créneaux</h3></div><div class="option-list">${options.map((option) => { const mine = option.moment_availability?.find((item) => item.user_id === TOGETHER.user.id)?.availability_status || "NO_RESPONSE"; const yes = option.moment_availability?.filter((item) => item.availability_status === "AVAILABLE").length || 0; return `<article class="date-option ${option.is_selected ? "selected" : ""}"><div><strong>${escapeHTML(formatDate(option.start_at))}</strong><small>${escapeHTML(option.location_name || moment.location_name || "Lieu à définir")} · ${yes} disponible${yes > 1 ? "s" : ""}</small></div><div class="availability-actions">${[["AVAILABLE","Oui"],["MAYBE","Peut-être"],["UNAVAILABLE","Non"]].map(([value,label]) => `<button class="${mine === value ? "active" : ""}" data-availability="${option.id}" data-value="${value}" type="button">${label}</button>`).join("")}</div>${canManage && !option.is_selected && moment.status === "PLANNING" ? `<button class="confirm-option" data-confirm-option="${option.id}" type="button">Confirmer ce créneau</button>` : option.is_selected ? '<span class="confirmed-label">Créneau confirmé</span>' : ""}</article>`; }).join("")}</div></section>` : ""}
     <section class="detail-section"><div class="detail-title"><h3>Photos</h3><label class="memory-upload">Ajouter une photo<input id="momentPhoto" type="file" accept="image/png,image/jpeg,image/webp" /></label></div><div class="memory-gallery">${signedMedia.length ? signedMedia.map((media) => `<figure>${media.signed_url ? `<img src="${escapeHTML(media.signed_url)}" alt="${escapeHTML(media.caption || "Photo du Moment")}" />` : ""}${media.caption ? `<figcaption>${escapeHTML(media.caption)}</figcaption>` : ""}</figure>`).join("") : '<p class="memory-empty">Aucune photo pour l’instant.</p>'}</div></section>
     <section class="detail-section"><div class="detail-title"><h3>Activités liées</h3>${availableActivities.length ? `<select id="linkActivity"><option value="">Lier une activité HOME…</option>${availableActivities.map((activity) => `<option value="${activity.id}">${escapeHTML(sportLabel(activity.sport) || activity.activity_type || "Activité")} · ${escapeHTML(activity.activity_date || "Sans date")}</option>`).join("")}</select>` : ""}</div><div class="linked-activities">${(linksResult.data || []).length ? (linksResult.data || []).map((link) => activityMemoryCard(link.activities)).join("") : '<p class="memory-empty">Aucune activité liée.</p>'}</div></section>
@@ -316,6 +385,10 @@ async function openMomentDetail(momentId) {
   if (statusLabel) statusLabel.textContent = momentStatusLabel(moment.status);
   elements.momentDetail.querySelectorAll("[data-availability]").forEach((button) => button.addEventListener("click", () => saveAvailability(button.dataset.availability, button.dataset.value, moment.id)));
   elements.momentDetail.querySelectorAll("[data-confirm-option]").forEach((button) => button.addEventListener("click", () => confirmDateOption(moment, button.dataset.confirmOption)));
+  elements.momentDetail.querySelectorAll("[data-answer-moment]").forEach((button) => button.addEventListener("click", () => answerMomentInvitation(moment.id, button.dataset.answerMoment)));
+  document.getElementById("editMoment")?.addEventListener("click", () => { elements.momentDetailDialog.close(); openMomentForm(moment, { participantIds: participants.filter((participant) => participant.role !== "OWNER").map((participant) => participant.user_id) }); });
+  document.getElementById("duplicateMoment")?.addEventListener("click", () => { elements.momentDetailDialog.close(); openMomentForm(moment, { duplicate: true, participantIds: participants.filter((participant) => participant.role !== "OWNER").map((participant) => participant.user_id) }); });
+  document.getElementById("deleteMoment")?.addEventListener("click", () => deleteMoment(moment));
   document.getElementById("completeMoment")?.addEventListener("click", () => completeMoment(moment.id));
   document.getElementById("momentPhoto")?.addEventListener("change", (event) => addMomentPhoto(moment.id, event.target.files?.[0]));
   document.getElementById("linkActivity")?.addEventListener("change", (event) => linkMomentActivity(moment.id, event.target.value));
@@ -333,6 +406,32 @@ async function completeMoment(momentId) {
   const { error } = await window.momentumDB.from("moments").update({ status: "COMPLETED", updated_at: new Date().toISOString() }).eq("id", momentId);
   if (error) return setStatus(`Moment non terminé : ${error.message}`, true);
   elements.momentDetailDialog.close(); setStatus("Le Moment rejoint maintenant les souvenirs."); await loadTogether();
+}
+
+async function answerMomentInvitation(momentId, answer) {
+  const values = answer === "ACCEPTED"
+    ? { invitation_status: "ACCEPTED", participation_status: "REGISTERED", updated_at: new Date().toISOString() }
+    : { invitation_status: "DECLINED", participation_status: "DECLINED", updated_at: new Date().toISOString() };
+  const { error } = await window.momentumDB.from("moment_participants").update(values).eq("moment_id", momentId).eq("user_id", TOGETHER.user.id);
+  if (error) return setStatus(`Réponse non enregistrée : ${error.message}`, true);
+  elements.momentDetailDialog.close();
+  setStatus(answer === "ACCEPTED" ? "Invitation acceptée." : "Invitation refusée.");
+  await loadTogether();
+}
+
+async function deleteMoment(moment) {
+  if (!window.confirm(`Supprimer définitivement « ${moment.title} » ? Les invitations et souvenirs liés seront également supprimés.`)) return;
+  const { data: media } = await window.momentumDB.from("moment_media").select("file_path").eq("moment_id", moment.id);
+  const { error } = await window.momentumDB.from("moments").delete().eq("id", moment.id);
+  if (error) return setStatus(`Moment non supprimé : ${error.message}`, true);
+  const paths = (media || []).map((item) => item.file_path).filter(Boolean);
+  if (paths.length) {
+    const { error: storageError } = await window.momentumDB.storage.from("moment-media").remove(paths);
+    if (storageError) console.warn("MOMENTUM: fichiers du Moment non nettoyés", storageError);
+  }
+  elements.momentDetailDialog.close();
+  setStatus("Le Moment a été supprimé.");
+  await loadTogether();
 }
 
 async function addMomentPhoto(momentId, file) {
@@ -443,28 +542,67 @@ async function loadTogether() {
   }
 }
 
+async function syncMomentParticipants(momentId, selectedIds) {
+  const { data: existing, error: existingError } = await window.momentumDB.from("moment_participants").select("id,user_id,role,invitation_status").eq("moment_id", momentId);
+  if (existingError) return existingError;
+  const selected = new Set(selectedIds.filter((id) => id !== TOGETHER.user.id));
+  const current = new Map((existing || []).map((participant) => [participant.user_id, participant]));
+  const inserts = [...selected].filter((id) => !current.has(id)).map((userId) => ({ moment_id: momentId, user_id: userId, role: "PARTICIPANT", invitation_status: "PENDING", participation_status: "INVITED" }));
+  if (inserts.length) {
+    const { error } = await window.momentumDB.from("moment_participants").insert(inserts);
+    if (error) return error;
+  }
+  for (const participant of existing || []) {
+    if (participant.role === "OWNER") continue;
+    const shouldInvite = selected.has(participant.user_id);
+    if (shouldInvite && participant.invitation_status === "REMOVED") {
+      const { error } = await window.momentumDB.from("moment_participants").update({ invitation_status: "PENDING", participation_status: "INVITED", updated_at: new Date().toISOString() }).eq("id", participant.id);
+      if (error) return error;
+    } else if (!shouldInvite && participant.invitation_status !== "REMOVED") {
+      const { error } = await window.momentumDB.from("moment_participants").update({ invitation_status: "REMOVED", participation_status: "DECLINED", updated_at: new Date().toISOString() }).eq("id", participant.id);
+      if (error) return error;
+    }
+  }
+  return null;
+}
+
 async function createMoment(form) {
   const values = Object.fromEntries(new FormData(form));
+  const editingId = values.moment_id || null;
   const proposedDates = [values.start_at, ...Array.from(form.querySelectorAll('[name="date_option"]')).map((input) => input.value)].filter(Boolean);
+  const participantIds = new FormData(form).getAll("participant_ids");
   const payload = {
     user_id: TOGETHER.user.id,
     created_by: TOGETHER.user.id,
-    club_id: values.club_id || null,
+    club_id: values.visibility === "CLUB" ? values.club_id || null : null,
     title: values.title.trim(), description: values.description.trim() || null,
-    moment_type: values.moment_type, status: proposedDates.length === 1 ? "CONFIRMED" : "PLANNING",
-    start_at: proposedDates.length === 1 ? new Date(proposedDates[0]).toISOString() : null,
+    moment_type: values.moment_type,
+    start_at: proposedDates.length === 1 || editingId ? (proposedDates[0] ? new Date(proposedDates[0]).toISOString() : null) : null,
     location_name: values.location_name.trim() || null,
-    capacity: values.capacity ? Number(values.capacity) : null, visibility: values.visibility,
+    capacity: values.capacity ? Number(values.capacity) : null,
+    visibility: values.visibility === "CLUB" ? "PARTICIPANTS" : values.visibility,
   };
+  if (editingId) {
+    delete payload.user_id;
+    delete payload.created_by;
+    const { data, error } = await window.momentumDB.from("moments").update({ ...payload, updated_at: new Date().toISOString() }).eq("id", editingId).select().single();
+    if (error) return setStatus(`Moment non modifié : ${error.message}`, true);
+    const participantError = await syncMomentParticipants(data.id, participantIds);
+    if (participantError) return setStatus(`Moment modifié, mais invitations incomplètes : ${participantError.message}`, true);
+    form.reset(); elements.momentDialog.close(); setStatus("Le Moment a été modifié."); await loadTogether(); return;
+  }
+  payload.status = proposedDates.length === 1 ? "CONFIRMED" : "PLANNING";
   const { data, error } = await window.momentumDB.from("moments").insert(payload).select().single();
   if (error) return setStatus(`Moment non créé : ${error.message}`, true);
   const participantResult = await window.momentumDB.from("moment_participants").insert({ moment_id: data.id, user_id: TOGETHER.user.id, role: "OWNER", invitation_status: "ACCEPTED", participation_status: "REGISTERED" });
   if (participantResult.error) return setStatus(`Moment créé, mais organisateur non lié : ${participantResult.error.message}`, true);
+  const inviteError = await syncMomentParticipants(data.id, participantIds);
+  if (inviteError) return setStatus(`Moment créé, mais invitations incomplètes : ${inviteError.message}`, true);
   if (proposedDates.length) {
     const { error: optionsError } = await window.momentumDB.from("moment_date_options").insert(proposedDates.map((date, index) => ({ moment_id: data.id, start_at: new Date(date).toISOString(), location_name: payload.location_name, created_by: TOGETHER.user.id, is_selected: proposedDates.length === 1 && index === 0 })));
     if (optionsError) return setStatus(`Moment créé, mais créneaux non enregistrés : ${optionsError.message}`, true);
   }
-  form.reset(); elements.momentDialog.close(); setStatus("Le Moment a été créé."); await loadTogether();
+  form.reset(); elements.momentDialog.close(); setStatus(participantIds.length ? "Le Moment a été créé et les invitations ont été envoyées." : "Le Moment a été créé."); await loadTogether();
 }
 
 async function uploadClubLogo(clubId, file) {
@@ -589,6 +727,23 @@ function setTogetherView(view) {
   if (elements.primaryAction) elements.primaryAction.hidden = view === "circle" && elements.circleView.querySelector(".together-empty-state");
 }
 
+function openTogetherSection(section, updateHistory = true) {
+  const valid = ["moments", "circle", "clubs", "invitations"];
+  const next = valid.includes(section) ? section : "circle";
+  TOGETHER.section = next;
+  setTogetherView(next === "moments" ? "moments" : "circle");
+  window.MomentumNavigation?.setSubsection(next);
+  if (elements.primaryAction) {
+    elements.primaryAction.hidden = false;
+    elements.primaryAction.textContent = next === "moments" ? "Créer un Moment" : next === "clubs" ? "Créer un Club" : "Inviter dans mon Cercle";
+  }
+  if (updateHistory) window.history.replaceState({}, "", `together.html?view=${next}`);
+  const targetId = next === "clubs" ? "togetherClubs" : next === "invitations" ? "togetherInvitations" : next === "circle" ? "togetherCircle" : null;
+  if (targetId) window.requestAnimationFrame(() => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+}
+
+window.MomentumTogetherNavigation = { open: openTogetherSection };
+
 function openCircleInviteForm() {
   elements.circleInviteForm.reset();
   elements.circleSearchResult.innerHTML = "";
@@ -597,10 +752,11 @@ function openCircleInviteForm() {
 }
 
 elements.tabs.forEach((tab) => tab.addEventListener("click", () => {
-  setTogetherView(tab.dataset.view);
+  openTogetherSection(tab.dataset.view);
 }));
 elements.primaryAction?.addEventListener("click", () => {
-  if (TOGETHER.view === "moments") return elements.momentDialog.showModal();
+  if (TOGETHER.section === "moments") return openMomentForm();
+  if (TOGETHER.section === "clubs") return openClubForm();
   openCircleInviteForm();
 });
 document.getElementById("addDateOption")?.addEventListener("click", () => {
@@ -616,6 +772,7 @@ elements.clubLogo?.addEventListener("change", () => {
   const url = URL.createObjectURL(file);
   elements.clubLogoPreview.innerHTML = `<img src="${url}" alt="Aperçu du logo" />`;
 });
+elements.momentVisibility?.addEventListener("change", syncMomentVisibility);
 elements.momentForm?.addEventListener("submit", (event) => { event.preventDefault(); if (event.submitter?.value !== "cancel" && elements.momentForm.reportValidity()) createMoment(elements.momentForm); else elements.momentDialog.close(); });
 elements.clubForm?.addEventListener("submit", (event) => { event.preventDefault(); if (event.submitter?.value !== "cancel" && elements.clubForm.reportValidity()) createClub(elements.clubForm); else elements.clubDialog.close(); });
 elements.circleInviteForm?.addEventListener("submit", (event) => {
@@ -626,4 +783,4 @@ elements.circleInviteForm?.addEventListener("submit", (event) => {
 document.getElementById("logoutBtn")?.addEventListener("click", async () => { await window.momentumDB.auth.signOut(); window.location.href = "login.html"; });
 
 renderSportOptions();
-loadTogether();
+loadTogether().then(() => openTogetherSection(new URLSearchParams(window.location.search).get("view") || "circle", false));
