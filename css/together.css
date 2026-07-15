@@ -43,6 +43,12 @@ button:disabled{cursor:wait;opacity:.55}
 .together-status:empty{display:none}
 .together-view{display:grid;gap:34px}
 .together-view[hidden]{display:none}
+.together-empty-state{min-height:clamp(300px,45vh,520px);display:grid;place-content:center;justify-items:center;gap:28px;text-align:center}
+.together-empty-state > div:first-child{display:grid;justify-items:center;gap:10px;max-width:610px}
+.together-empty-state h2{margin:0;font-size:clamp(34px,5vw,58px);line-height:1;letter-spacing:-.05em}
+.together-empty-state p{max-width:540px;margin:0;color:#77766f;font-size:16px;line-height:1.5}
+.together-empty-actions{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:12px}
+.together-empty-actions .together-primary,.together-empty-actions .together-secondary{min-height:62px;padding:0 30px;font-size:15px}
 .together-section{display:grid;gap:12px}
 .together-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;border-bottom:1px solid #d8d1c6;padding-bottom:10px}
 .together-section-title{display:flex;align-items:center;gap:10px}
@@ -132,6 +138,7 @@ button:disabled{cursor:wait;opacity:.55}
   .together-body .topbar nav{gap:1px;margin-left:auto}.together-body .topbar nav a{min-height:32px;padding:0 7px;font-size:10px}.together-body .top-actions{gap:0}.together-logout{min-height:32px;padding:0 7px;font-size:0}.together-logout::before{content:"Sortir";font-size:9px}
   .together-page{width:calc(100% - 20px);padding:82px 0 56px}.together-hero{align-items:flex-start;flex-direction:column;gap:17px;margin-bottom:24px}.together-hero h1{font-size:clamp(54px,18vw,70px)}.together-lead{margin-top:12px;font-size:16px}.together-hero .together-primary{min-height:42px}
   .together-tabs{width:100%;margin-bottom:24px}.together-tabs button{flex:1;padding:9px 14px;font-size:11px}
+  .together-empty-state{min-height:360px;padding:24px 10px}.together-empty-state h2{font-size:36px}.together-empty-actions{width:100%;flex-direction:column}.together-empty-actions .together-primary,.together-empty-actions .together-secondary{width:100%;min-height:56px}
   .together-view{gap:26px}.together-section{gap:10px}.together-section-head{align-items:flex-start;flex-direction:column;gap:10px;padding-bottom:8px}.together-section-head h2{font-size:28px}.moment-grid,.circle-grid,.club-grid{grid-template-columns:1fr}.moment-card{padding:17px;gap:17px}.circle-card,.club-card{padding:16px}.circle-card{min-height:0}.together-empty{min-height:64px;padding:14px 16px}.together-form-grid{grid-template-columns:1fr}.together-form-grid .wide{grid-column:auto}
   .member-list{grid-template-columns:1fr}.date-option{grid-template-columns:1fr}.availability-actions{flex-wrap:wrap}.detail-title{align-items:flex-start;flex-direction:column}.detail-title select{max-width:100%;width:100%}
   .circle-email-field > span{align-items:stretch;flex-direction:column}.circle-email-field .together-primary{width:100%}.search-person{grid-template-columns:auto 1fr}.search-person .together-primary{grid-column:1/-1;width:100%}

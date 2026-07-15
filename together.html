@@ -29,17 +29,17 @@
         <h1>TOGETHER</h1>
         <p class="together-lead">Organiser le futur. Vivre le présent. Garder quelques traces du passé.</p>
       </div>
-      <button class="together-primary" id="primaryTogetherAction" type="button">Créer un Moment</button>
+      <button class="together-primary" id="primaryTogetherAction" type="button">Inviter dans mon Cercle</button>
     </section>
 
     <div class="together-tabs" role="tablist" aria-label="Sections Together">
-      <button class="active" data-view="moments" role="tab" aria-selected="true" aria-controls="momentsView" type="button">MOMENTS</button>
-      <button data-view="circle" role="tab" aria-selected="false" aria-controls="circleView" type="button">CERCLE</button>
+      <button class="active" data-view="circle" role="tab" aria-selected="true" aria-controls="circleView" type="button">CERCLE</button>
+      <button data-view="moments" role="tab" aria-selected="false" aria-controls="momentsView" type="button">MOMENTS</button>
     </div>
 
     <section id="togetherStatus" class="together-status" aria-live="polite"></section>
-    <section id="momentsView" class="together-view"></section>
-    <section id="circleView" class="together-view" hidden></section>
+    <section id="circleView" class="together-view"></section>
+    <section id="momentsView" class="together-view" hidden></section>
   </main>
 
   <dialog id="circleInviteDialog" class="together-dialog circle-invite-dialog">

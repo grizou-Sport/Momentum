@@ -35,6 +35,20 @@ test("Moments UI hides empty categories and uses the finalization label", () => 
   assert.doesNotMatch(client, /À organiser/);
 });
 
+test("Circle UI hides empty categories and centers its first actions when everything is empty", () => {
+  assert.match(client, /const hasCircleContent = receivedInvitations\.length \|\| sent\.length \|\| members\.length \|\| TOGETHER\.clubs\.length;/);
+  assert.match(client, /if \(!hasCircleContent\)/);
+  assert.match(client, /class="together-empty-state"/);
+  assert.match(client, /openEmptyCircleInvite/);
+  assert.match(client, /openEmptyCreateClub/);
+});
+
+test("Circle comes before Moments and is the default Together view", () => {
+  assert.match(client, /view: "circle"/);
+  assert.ok(page.indexOf('data-view="circle"') < page.indexOf('data-view="moments"'));
+  assert.match(page, /class="active" data-view="circle"[^>]+aria-selected="true"/);
+});
+
 test("database rules prevent duplicate open invitations and unordered connections", () => {
   assert.match(migration, /invitations_open_circle_pair_idx/);
   assert.match(migration, /unique \(user_low_id, user_high_id\)/);

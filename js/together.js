@@ -7,7 +7,7 @@ const TOGETHER = {
   clubMemberships: [],
   passports: new Map(),
   logoUrls: new Map(),
-  view: "moments",
+  view: "circle",
 };
 
 const elements = {
@@ -192,12 +192,28 @@ function renderCircle() {
     ...received.map((item) => circleInvitationCard(item, "received")),
     ...pendingClubs.map(({ membership, club }) => `<article class="club-card invitation-card"><div><span class="card-label">Club</span><h3>${escapeHTML(club.name)}</h3><p>${escapeHTML(sportLabel(club.category))} · ${escapeHTML(club.location_name)}</p></div><div class="inline-actions"><button class="light-button" data-club-invite="${membership.id}" data-answer="ACCEPTED">Rejoindre</button><button class="ghost-light-button" data-club-invite="${membership.id}" data-answer="DECLINED">Refuser</button></div></article>`)
   ];
-  elements.circleView.innerHTML = `
-    <section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>Invitations reçues</h2><span class="section-count">${received.length + pendingClubs.length}</span></div><p>Les demandes qui attendent ta réponse.</p></div></div><div class="circle-grid">${receivedInvitations.length ? receivedInvitations.join("") : emptyCard("Aucune invitation reçue", "Ton Cercle est à jour.")}</div></section>
-    <section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>Invitations envoyées</h2><span class="section-count">${sent.length}</span></div><p>Tu peux annuler une demande tant qu’elle n’a pas été acceptée.</p></div></div><div class="circle-grid">${sent.length ? sent.map((item) => circleInvitationCard(item, "sent")).join("") : emptyCard("Aucune invitation envoyée", "Invite une personne avec son adresse e-mail exacte.")}</div></section>
-    <section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>Mon Cercle</h2><span class="section-count">${members.length}</span></div><p>Les personnes avec lesquelles tu choisis de partager.</p></div></div><div class="circle-grid">${members.length ? members.map(personCard).join("") : emptyCard("Ton Cercle est encore calme", "Les personnes apparaîtront ici après acceptation.")}</div></section>
-    <section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>Mes Clubs</h2><span class="section-count">${TOGETHER.clubs.length}</span></div><p>Les communautés auxquelles tu appartiens.</p></div><button class="together-secondary" id="openCreateClub" type="button">Créer un Club</button></div><div class="club-grid">${TOGETHER.clubs.length ? TOGETHER.clubs.map(clubCard).join("") : emptyCard("Créer le premier Club", "Réunis un petit groupe autour d’une pratique ou d’une envie commune.")}</div></section>`;
+  const hasCircleContent = receivedInvitations.length || sent.length || members.length || TOGETHER.clubs.length;
+  elements.primaryAction.hidden = TOGETHER.view === "circle" && !hasCircleContent;
+
+  if (!hasCircleContent) {
+    elements.circleView.innerHTML = `<div class="together-empty-state">
+      <div><span class="card-label">Ton espace partagé</span><h2>Commence par créer ton Cercle</h2><p>Invite une personne ou réunis un groupe dans un Club pour préparer vos premiers Moments.</p></div>
+      <div class="together-empty-actions">
+        <button class="together-primary" id="openEmptyCircleInvite" type="button">Inviter dans mon Cercle</button>
+        <button class="together-secondary" id="openEmptyCreateClub" type="button">Créer un Club</button>
+      </div>
+    </div>`;
+  } else {
+    elements.circleView.innerHTML = [
+      receivedInvitations.length ? `<section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>Invitations reçues</h2><span class="section-count">${received.length + pendingClubs.length}</span></div><p>Les demandes qui attendent ta réponse.</p></div></div><div class="circle-grid">${receivedInvitations.join("")}</div></section>` : "",
+      sent.length ? `<section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>Invitations envoyées</h2><span class="section-count">${sent.length}</span></div><p>Tu peux annuler une demande tant qu’elle n’a pas été acceptée.</p></div></div><div class="circle-grid">${sent.map((item) => circleInvitationCard(item, "sent")).join("")}</div></section>` : "",
+      members.length ? `<section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>Mon Cercle</h2><span class="section-count">${members.length}</span></div><p>Les personnes avec lesquelles tu choisis de partager.</p></div></div><div class="circle-grid">${members.map(personCard).join("")}</div></section>` : "",
+      TOGETHER.clubs.length ? `<section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>Mes Clubs</h2><span class="section-count">${TOGETHER.clubs.length}</span></div><p>Les communautés auxquelles tu appartiens.</p></div><button class="together-secondary" id="openCreateClub" type="button">Créer un Club</button></div><div class="club-grid">${TOGETHER.clubs.map(clubCard).join("")}</div></section>` : "",
+    ].join("");
+  }
   document.getElementById("openCreateClub")?.addEventListener("click", () => openClubForm());
+  document.getElementById("openEmptyCreateClub")?.addEventListener("click", () => openClubForm());
+  document.getElementById("openEmptyCircleInvite")?.addEventListener("click", () => openCircleInviteForm());
   elements.circleView.querySelectorAll("[data-open-club]").forEach((button) => button.addEventListener("click", () => openClubDetail(button.dataset.openClub)));
   elements.circleView.querySelectorAll("[data-circle-answer]").forEach((button) => button.addEventListener("click", () => answerCircleInvitation(button.dataset.circleAnswer, button.dataset.answer, button)));
   elements.circleView.querySelectorAll("[data-end-circle]").forEach((button) => button.addEventListener("click", () => endCircleConnection(button.dataset.endCircle, false, button)));
@@ -570,6 +586,14 @@ function setTogetherView(view) {
   elements.momentsView.hidden = view !== "moments";
   elements.circleView.hidden = view !== "circle";
   if (elements.primaryAction) elements.primaryAction.textContent = view === "moments" ? "Créer un Moment" : "Inviter dans mon Cercle";
+  if (elements.primaryAction) elements.primaryAction.hidden = view === "circle" && elements.circleView.querySelector(".together-empty-state");
+}
+
+function openCircleInviteForm() {
+  elements.circleInviteForm.reset();
+  elements.circleSearchResult.innerHTML = "";
+  elements.circleInviteDialog.showModal();
+  window.setTimeout(() => elements.circleInviteForm.elements.email.focus(), 0);
 }
 
 elements.tabs.forEach((tab) => tab.addEventListener("click", () => {
@@ -577,10 +601,7 @@ elements.tabs.forEach((tab) => tab.addEventListener("click", () => {
 }));
 elements.primaryAction?.addEventListener("click", () => {
   if (TOGETHER.view === "moments") return elements.momentDialog.showModal();
-  elements.circleInviteForm.reset();
-  elements.circleSearchResult.innerHTML = "";
-  elements.circleInviteDialog.showModal();
-  window.setTimeout(() => elements.circleInviteForm.elements.email.focus(), 0);
+  openCircleInviteForm();
 });
 document.getElementById("addDateOption")?.addEventListener("click", () => {
   const row = document.createElement("div");
