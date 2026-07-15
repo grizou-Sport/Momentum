@@ -317,6 +317,17 @@ function normalizeSubjective(value) {
   return Math.max(0,Math.min(100,number<=10?number*10:number));
 }
 
+function subjectiveValueOutOfTen(value) {
+  const number=Number(value);
+  if(!Number.isFinite(number))return null;
+  return Math.max(0,Math.min(10,number>10?number/10:number));
+}
+
+function physiologicalValue(value) {
+  const number=Number(value);
+  return Number.isFinite(number)&&number>=0?number:null;
+}
+
 function mergeWellbeingDays(dailyRows, legacyRows, start, end) {
   const dailyMap=new Map(dailyRows.map((row)=>[row.recorded_date,row]));
   const legacyMap=new Map(legacyRows.map((row)=>[row.day_date,row]));
@@ -326,23 +337,46 @@ function mergeWellbeingDays(dailyRows, legacyRows, start, end) {
     const date=iso(addDays(dateFromIso(start),index));
     const daily=dailyMap.get(date)||{};const legacy=legacyMap.get(date)||{};
     const sleepHours=daily.sleep_hours??legacy.sleep_hours??null;
-    const sleep=sleepHours==null?null:Math.max(0,Math.min(100,Number(sleepHours)/sleepTarget*100));
-    const motivation=daily.motivation!=null?normalizeSubjective(daily.motivation):(legacy.energy!=null?normalizeSubjective(legacy.energy):null);
-    const recovery=sleepQualityScore(daily.sleep_quality_value,daily.sleep_quality_unit);
-    const available=[sleep,motivation,recovery].filter((value)=>value!=null);
-    return {date,sleepHours,sleep,motivation,recovery,summary:available.length?available.reduce((sum,value)=>sum+value,0)/available.length:null,restingHr:daily.resting_hr??legacy.rest_hr??null,hrv:daily.hrv_ms??legacy.hrv??null,note:legacy.note||null,source:daily.source_label||null};
+    const normalizedSleepHours=physiologicalValue(sleepHours);
+    const sleepScore=normalizedSleepHours==null?null:Math.max(0,Math.min(100,normalizedSleepHours/sleepTarget*100));
+    const motivationSource=daily.motivation??legacy.energy??null;
+    const motivation=subjectiveValueOutOfTen(motivationSource);
+    const motivationScore=normalizeSubjective(motivationSource);
+    const recovery=sleepQualityLevel(daily.sleep_quality_value,daily.sleep_quality_unit);
+    const recoveryScore=sleepQualityScore(daily.sleep_quality_value,daily.sleep_quality_unit);
+    const available=[sleepScore,motivationScore,recoveryScore].filter((value)=>value!=null);
+    return {date,sleepHours:normalizedSleepHours,sleepTarget,motivation,recovery,summary:available.length?available.reduce((sum,value)=>sum+value,0)/available.length:null,restingHr:physiologicalValue(daily.resting_hr??legacy.rest_hr),hrv:physiologicalValue(daily.hrv_ms??legacy.hrv),note:legacy.note||null,source:daily.source_label||null};
   });
 }
 
 function wellnessDefinition(mode) {
-  return ({summary:{label:"Synthèse",color:"#273c31"},sleep:{label:"Sommeil",color:"#5d7894"},motivation:{label:"Motivation",color:"#d49a3a"},recovery:{label:"Qualité du sommeil",color:"#66845b"}})[mode];
+  return ({
+    summary:{label:"Synthèse",dataKey:"summary",color:"#273c31",scale:{min:0,max:100}},
+    sleep:{label:"Sommeil",dataKey:"sleepHours",color:"#5d7894",scale:{beginAtZero:true,suggestedMax:12}},
+    motivation:{label:"Motivation",dataKey:"motivation",color:"#d49a3a",scale:{min:0,max:10}},
+    recovery:{label:"Qualité du sommeil",dataKey:"recovery",color:"#66845b",scale:{min:1,max:5},stepSize:1},
+    restingHr:{label:"FC au repos",dataKey:"restingHr",color:"#d4655c",scale:{suggestedMin:30,suggestedMax:100}},
+    hrv:{label:"Variabilité de la FC",dataKey:"hrv",color:"#6f63a6",scale:{beginAtZero:true,suggestedMax:120}}
+  })[mode];
 }
 
 function wellnessChartValue(mode, value) {
   if (value == null) return "Aucune donnée";
-  return mode === "recovery"
-    ? sleepQualityLabel(value, "%")
-    : `${Math.round(value)} / 100`;
+  if(mode==="sleep")return formatSleepDuration(value);
+  if(mode==="motivation")return `${Number(value).toLocaleString("fr-CH",{maximumFractionDigits:1})} / 10`;
+  if(mode==="recovery")return sleepQualityLabel(value,"qualitative-v1");
+  if(mode==="restingHr")return `${Math.round(value)} bpm`;
+  if(mode==="hrv")return `${Math.round(value)} ms`;
+  return `${Math.round(value)} / 100`;
+}
+
+function wellnessAxisValue(mode, value) {
+  if(mode==="sleep")return `${Number(value).toLocaleString("fr-CH",{maximumFractionDigits:1})} h`;
+  if(mode==="motivation")return `${value} / 10`;
+  if(mode==="recovery")return Number.isInteger(Number(value))?sleepQualityLabel(value,"qualitative-v1"):"";
+  if(mode==="restingHr")return `${value} bpm`;
+  if(mode==="hrv")return `${value} ms`;
+  return value;
 }
 
 function renderWellnessChart() {
@@ -350,13 +384,13 @@ function renderWellnessChart() {
   if(!canvas||!window.Chart)return;
   const definition=wellnessDefinition(progressionState.wellnessMode);
   const days=progressionState.wellbeingDays;
-  const availableCount=days.filter((day)=>day[progressionState.wellnessMode]!=null).length;
+  const availableCount=days.filter((day)=>day[definition.dataKey]!=null).length;
   progressionState.wellnessChart?.destroy();
-  progressionState.wellnessChart=new Chart(canvas,{type:"line",data:{labels:days.map((day)=>new Intl.DateTimeFormat("fr-CH",{day:"numeric",month:"short"}).format(dateFromIso(day.date))),datasets:[{label:definition.label,data:days.map((day)=>day[progressionState.wellnessMode]),borderColor:definition.color,backgroundColor:`${definition.color}18`,fill:true,tension:.35,pointRadius:days.length>45?0:2,pointHoverRadius:5,spanGaps:true,borderWidth:2.5}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:850,easing:"easeOutQuart"},interaction:{mode:"index",intersect:false},onClick:(_event,elements)=>{if(elements[0])openWellnessDay(elements[0].index);},plugins:{legend:{display:false},tooltip:{callbacks:{label:(context)=>`${definition.label} : ${wellnessChartValue(progressionState.wellnessMode,context.parsed.y)}`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,maxRotation:0,color:"#858178"}},y:{min:0,max:100,grid:{color:"rgba(20,20,20,.07)"},ticks:{color:"#858178",callback:(value)=>progressionState.wellnessMode==="recovery"?sleepQualityLabel(value,"%"):value}}}}});
+  progressionState.wellnessChart=new Chart(canvas,{type:"line",data:{labels:days.map((day)=>new Intl.DateTimeFormat("fr-CH",{day:"numeric",month:"short"}).format(dateFromIso(day.date))),datasets:[{label:definition.label,data:days.map((day)=>day[definition.dataKey]),borderColor:definition.color,backgroundColor:`${definition.color}18`,fill:true,tension:.35,pointRadius:days.length>45?0:2,pointHoverRadius:5,spanGaps:true,borderWidth:2.5}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:850,easing:"easeOutQuart"},interaction:{mode:"index",intersect:false},onClick:(_event,elements)=>{if(elements[0])openWellnessDay(elements[0].index);},plugins:{legend:{display:false},tooltip:{callbacks:{label:(context)=>`${definition.label} : ${wellnessChartValue(progressionState.wellnessMode,context.parsed.y)}`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,maxRotation:0,color:"#858178"}},y:{...definition.scale,grid:{color:"rgba(20,20,20,.07)"},ticks:{color:"#858178",stepSize:definition.stepSize,callback:(value)=>wellnessAxisValue(progressionState.wellnessMode,value)}}}}});
   if(availableCount<5){progressionState.wellnessChart.data.datasets[0].pointRadius=4;progressionState.wellnessChart.update("none");}
-  const recent=[...days].reverse().find((day)=>day[progressionState.wellnessMode]!=null);
+  const recent=[...days].reverse().find((day)=>day[definition.dataKey]!=null);
   const insight=document.getElementById("wellnessInsight");
-  insight.textContent=recent?`${definition.label} : ${wellnessChartValue(progressionState.wellnessMode,recent[progressionState.wellnessMode])} lors de la dernière journée renseignée.`:"Aucune donnée disponible pour cet indicateur. MOMENTUM attend une saisie ou une source connectée.";
+  insight.textContent=recent?`${definition.label} : ${wellnessChartValue(progressionState.wellnessMode,recent[definition.dataKey])} lors de la dernière journée renseignée.`:"Aucune donnée disponible pour cet indicateur. MOMENTUM attend une saisie ou une source connectée.";
   requestAnimationFrame(()=>document.getElementById("wellnessChartCard")?.classList.add("is-visible"));
 }
 
@@ -367,7 +401,7 @@ function openWellnessDay(index) {
   const load=progressionState.loadSeries.find((item)=>item.date===day.date);
   const content=document.getElementById("progressionDialogContent");const dialog=document.getElementById("progressionDialog");
   if(!day||!content||!dialog)return;
-  content.innerHTML=`<span class="section-kicker">${escapeHtml(fmtDate(day.date))}</span><h2>${wellnessValue(day.summary)}</h2><div class="wellness-detail-grid"><div><span>Sommeil</span><strong>${day.sleepHours==null?"Non renseigné":escapeHtml(formatSleepDuration(day.sleepHours))}</strong><small>${wellnessValue(day.sleep)}</small></div><div><span>Motivation au réveil</span><strong>${wellnessValue(day.motivation)}</strong></div><div><span>Qualité du sommeil</span><strong>${day.recovery==null?"Non renseignée":escapeHtml(sleepQualityLabel(day.recovery,"%"))}</strong></div></div><div class="progression-detail-kpis"><div><strong>${Math.round(load?.actualLoad||0)}</strong><span>Charge sportive</span></div><div><strong>${day.restingHr??"—"}</strong><span>FC repos</span></div><div><strong>${day.hrv??"—"}</strong><span>VFC</span></div></div><section class="wellness-note-detail"><span class="card-label">Note utilisateur</span><p>${escapeHtml(day.note||"Aucune note pour cette journée.")}</p>${day.source?`<small>Source : ${escapeHtml(day.source)}</small>`:""}</section>`;
+  content.innerHTML=`<span class="section-kicker">${escapeHtml(fmtDate(day.date))}</span><h2>${wellnessValue(day.summary)}</h2><div class="wellness-detail-grid"><div><span>Sommeil</span><strong>${day.sleepHours==null?"Non renseigné":escapeHtml(formatSleepDuration(day.sleepHours))}</strong><small>${day.sleepHours==null?"Durée non renseignée":`Objectif ${escapeHtml(formatSleepDuration(day.sleepTarget))}`}</small></div><div><span>Motivation au réveil</span><strong>${day.motivation==null?"Non renseignée":`${day.motivation.toLocaleString("fr-CH",{maximumFractionDigits:1})} / 10`}</strong></div><div><span>Qualité du sommeil</span><strong>${day.recovery==null?"Non renseignée":escapeHtml(sleepQualityLabel(day.recovery,"qualitative-v1"))}</strong></div></div><div class="progression-detail-kpis"><div><strong>${Math.round(load?.actualLoad||0)}</strong><span>Charge sportive</span></div><div><strong>${day.restingHr==null?"—":`${Math.round(day.restingHr)} bpm`}</strong><span>FC repos</span></div><div><strong>${day.hrv==null?"—":`${Math.round(day.hrv)} ms`}</strong><span>VFC</span></div></div><section class="wellness-note-detail"><span class="card-label">Note utilisateur</span><p>${escapeHtml(day.note||"Aucune note pour cette journée.")}</p>${day.source?`<small>Source : ${escapeHtml(day.source)}</small>`:""}</section>`;
   openHomeDialog(dialog);
 }
 
