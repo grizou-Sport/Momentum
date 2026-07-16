@@ -21,7 +21,7 @@
       items: [
         ["today", "Aujourd’hui", "index.html#today"],
         ["journal", "Journal", "index.html#journal"],
-        ["statistics", "Statistiques", "index.html#progression"]
+        ["statistics", "Progression", "index.html#progression"]
       ]
     },
     you: {
