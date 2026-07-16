@@ -4,6 +4,7 @@ import test from "node:test";
 
 const files = await Promise.all(["index.html", "you.html", "together.html"].map((file) => readFile(new URL(`../${file}`, import.meta.url), "utf8")));
 const navigation = await readFile(new URL("../js/navigation.js", import.meta.url), "utf8");
+const navigationStyles = await readFile(new URL("../css/navigation.css", import.meta.url), "utf8");
 const together = await readFile(new URL("../js/together.js", import.meta.url), "utf8");
 const togetherPage = files[2];
 
@@ -24,6 +25,22 @@ test("mobile navigation exposes an accessible hamburger drawer", () => {
   assert.match(navigation, /aria-expanded="false"/);
   assert.match(navigation, /event\.key === "Escape"/);
   assert.match(navigation, /menu-open/);
+});
+
+test("desktop navigation reveals compact contextual cards and keeps the rail translucent", () => {
+  assert.match(navigation, /data-momentum-section/);
+  assert.match(navigation, /data-momentum-panel/);
+  assert.match(navigation, /mouseenter/);
+  assert.match(navigationStyles, /background:rgba\(247,247,245,\.14\)/);
+  assert.match(navigationStyles, /height:auto/);
+  assert.match(navigationStyles, /visibility:hidden/);
+});
+
+test("logout is an icon button immediately above settings", () => {
+  const logoutPosition = navigation.indexOf('aria-label="Déconnexion"');
+  const settingsPosition = navigation.indexOf('aria-label="Paramètres, bientôt disponible"');
+  assert.ok(logoutPosition > -1 && logoutPosition < settingsPosition);
+  assert.match(navigation, /icons\.logout/);
 });
 
 test("Moment form follows visibility then Circle participant selection", () => {
