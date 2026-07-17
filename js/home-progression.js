@@ -66,40 +66,51 @@ function progressionWeeks(startValue, endValue) {
 }
 
 async function loadProgressionData() {
-  const user = await getCurrentUser();
-  if (!user) return;
-  const range = progressionPeriodRange(
-    progressionState.periodPreset,
-    progressionState.periodStart,
-    progressionState.periodEnd
-  );
-  const start = range.start;
-  const end = range.end;
-  if (!start || !end) return;
-  progressionState.periodStart = start;
-  progressionState.periodEnd = end;
-  const [activitiesResult, passportResult, dailyResult, daysResult, physiologicalResult] = await Promise.all([
-    window.momentumDB.from("activities").select("id,sport,activity_type,activity_category,activity_date,duration_min,distance_km,elevation_m,rpe,avg_hr,status").eq("user_id", user.id).gte("activity_date", start).lte("activity_date", end).order("activity_date"),
-    window.momentumDB.from("passports").select("sport_level,habits,personalization").eq("user_id", user.id).maybeSingle(),
-    window.momentumDB.from("daily_wellbeing").select("recorded_date,sleep_hours,motivation,resting_hr,hrv_ms,sleep_quality_value,sleep_quality_unit,source_label").eq("user_id",user.id).gte("recorded_date",start).lte("recorded_date",end).order("recorded_date"),
-    window.momentumDB.from("days").select("day_date,note,mood,energy,sleep_hours,stress,rest_hr,hrv").eq("user_id",user.id).gte("day_date",start).lte("day_date",end).order("day_date"),
-    window.momentumDB.from("wellbeing_profile").select("resting_hr,preferred_sleep_hours").eq("user_id",user.id).maybeSingle(),
-  ]);
-  if (activitiesResult.error) { console.error("HOME : progression indisponible.", activitiesResult.error); return; }
-  progressionState.activities = activitiesResult.data || [];
-  progressionState.passport = passportResult.data || null;
-  progressionState.physiological = physiologicalResult.data || null;
-  progressionState.wellbeingDays = mergeWellbeingDays(dailyResult.data || [], daysResult.data || [], start, end);
-  progressionState.weeks = progressionWeeks(start, end);
-  progressionState.activities.forEach((activity) => {
-    const week = progressionState.weeks.find((item) => item.id === progressionWeekStart(activity.activity_date));
-    if (week) week.activities.push(activity);
-  });
-  renderProgressionKpis();
-  renderVolumeChart();
-  renderLoadChart();
-  renderSportChart();
-  renderWellnessChart();
+  const message = document.querySelector("[data-period-message]");
+
+  try {
+    const user = window.momentumPageReady
+      ? await window.momentumPageReady
+      : await getCurrentUser();
+    if (!user) return;
+    const range = progressionPeriodRange(
+      progressionState.periodPreset,
+      progressionState.periodStart,
+      progressionState.periodEnd
+    );
+    const start = range.start;
+    const end = range.end;
+    if (!start || !end) return;
+    progressionState.periodStart = start;
+    progressionState.periodEnd = end;
+    const [activitiesResult, passportResult, dailyResult, daysResult, physiologicalResult] = await Promise.all([
+      window.momentumDB.from("activities").select("id,sport,activity_type,activity_category,activity_date,duration_min,distance_km,elevation_m,rpe,avg_hr,status").eq("user_id", user.id).gte("activity_date", start).lte("activity_date", end).order("activity_date"),
+      window.momentumDB.from("passports").select("sport_level,habits,personalization").eq("user_id", user.id).maybeSingle(),
+      window.momentumDB.from("daily_wellbeing").select("recorded_date,sleep_hours,motivation,resting_hr,hrv_ms,sleep_quality_value,sleep_quality_unit,source_label").eq("user_id",user.id).gte("recorded_date",start).lte("recorded_date",end).order("recorded_date"),
+      window.momentumDB.from("days").select("day_date,note,mood,energy,sleep_hours,stress,rest_hr,hrv").eq("user_id",user.id).gte("day_date",start).lte("day_date",end).order("day_date"),
+      window.momentumDB.from("wellbeing_profile").select("resting_hr,preferred_sleep_hours").eq("user_id",user.id).maybeSingle(),
+    ]);
+    if (activitiesResult.error) throw activitiesResult.error;
+    progressionState.activities = activitiesResult.data || [];
+    progressionState.passport = passportResult.data || null;
+    progressionState.physiological = physiologicalResult.data || null;
+    progressionState.wellbeingDays = mergeWellbeingDays(dailyResult.data || [], daysResult.data || [], start, end);
+    progressionState.weeks = progressionWeeks(start, end);
+    progressionState.activities.forEach((activity) => {
+      const week = progressionState.weeks.find((item) => item.id === progressionWeekStart(activity.activity_date));
+      if (week) week.activities.push(activity);
+    });
+    if (message) message.textContent = "";
+    renderProgressionKpis();
+    renderVolumeChart();
+    renderLoadChart();
+    renderSportChart();
+    renderWellnessChart();
+  } catch (error) {
+    console.error("PROGRESSION : impossible de charger les indicateurs.", error);
+    if (message) message.textContent = "Les indicateurs n’ont pas pu être chargés. Réessaie dans un instant.";
+    document.querySelectorAll(".progression-reveal").forEach((card) => card.classList.add("is-visible"));
+  }
 }
 
 function completedActivities(activities = progressionState.activities) {

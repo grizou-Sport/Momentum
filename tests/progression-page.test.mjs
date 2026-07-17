@@ -7,6 +7,7 @@ const [home, progression, navigation] = await Promise.all([
   readFile(new URL("../progression.html", import.meta.url), "utf8"),
   readFile(new URL("../js/navigation.js", import.meta.url), "utf8")
 ]);
+const progressionScript = await readFile(new URL("../js/home-progression.js", import.meta.url), "utf8");
 
 test("HOME remains focused on the day and reserves Flow without analytics", () => {
   assert.match(home, /id="hero"/);
@@ -28,10 +29,24 @@ test("Progression owns every existing analytical view and its dependencies", () 
   assert.match(progression, /js\/home-progression\.js/);
   assert.match(progression, /chart\.js/);
   assert.match(progression, /data-momentum-page="progression"/);
+
+  const wellbeingDependency = progression.indexOf('src="js/home-wellbeing.js"');
+  const progressionModule = progression.indexOf('src="js/home-progression.js"');
+  assert.ok(wellbeingDependency > -1, "Progression doit charger les normalisateurs du bien-être");
+  assert.ok(
+    wellbeingDependency < progressionModule,
+    "Les normalisateurs du bien-être doivent être disponibles avant le rendu des graphiques"
+  );
 });
 
 test("shared navigation treats Progression as a first-level destination", () => {
   assert.match(navigation, /railLink\("progression", "progression\.html", "Progression"\)/);
   assert.match(navigation, /\["flow", "Flow", "index\.html#flow"\]/);
   assert.doesNotMatch(navigation, /index\.html#progression/);
+});
+
+test("Progression waits for the protected session and surfaces loading failures", () => {
+  assert.match(progressionScript, /await window\.momentumPageReady/);
+  assert.match(progressionScript, /Les indicateurs n’ont pas pu être chargés/);
+  assert.match(progressionScript, /PROGRESSION : impossible de charger les indicateurs/);
 });
