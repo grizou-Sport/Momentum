@@ -20,9 +20,12 @@ test("every authenticated area uses the shared contextual rail", () => {
   }
 });
 
-test("mobile navigation exposes an accessible hamburger drawer", () => {
-  assert.match(navigation, /aria-label="Ouvrir le menu"/);
-  assert.match(navigation, /aria-expanded="false"/);
+test("mobile navigation exposes an accessible bottom bar with contextual cards", () => {
+  assert.doesNotMatch(navigation, /aria-label="Ouvrir le menu"/);
+  assert.match(navigation, /aria-controls="momentum-panel-/);
+  assert.match(navigation, /data-mobile-section/);
+  assert.match(navigationStyles, /inset:auto 8px calc\(8px \+ env\(safe-area-inset-bottom,0px\)\)/);
+  assert.match(navigationStyles, /transform-origin:center bottom/);
   assert.match(navigation, /event\.key === "Escape"/);
   assert.match(navigation, /menu-open/);
 });

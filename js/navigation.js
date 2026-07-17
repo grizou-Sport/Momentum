@@ -10,7 +10,6 @@
     together: '<svg class="momentum-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"></circle><circle cx="17" cy="10" r="2.5"></circle><path d="M3 20a6 6 0 0 1 12 0"></path><path d="M14 15a5 5 0 0 1 7 4.5"></path></svg>',
     logout: '<svg class="momentum-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v10"></path><path d="M6.3 5.7a8 8 0 1 0 11.4 0"></path></svg>',
     settings: '<svg class="momentum-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"></path></svg>',
-    menu: '<svg class="momentum-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>',
     close: '<svg class="momentum-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>'
   };
 
@@ -51,10 +50,10 @@
   const params = new URLSearchParams(window.location.search);
   const initialSubsection = params.get("section") || params.get("view") || (page === "home" ? "today" : page === "you" ? "mission" : "circle");
 
-  const railLink = (key, href, label) => `<a class="momentum-rail-link ${page === key ? "active" : ""}" data-momentum-section="${key}" href="${href}" aria-label="${label}" ${page === key ? 'aria-current="page"' : ""}>${icons[key]}</a>`;
+  const railLink = (key, href, label) => `<a class="momentum-rail-link ${page === key ? "active" : ""}" data-momentum-section="${key}" href="${href}" aria-label="${label}" aria-controls="momentum-panel-${key}" aria-expanded="false" ${page === key ? 'aria-current="page"' : ""}>${icons[key]}</a>`;
   const contextPanel = ([sectionKey, menu]) => {
     const contextLinks = menu.items.map(([key, label, href, note]) => `<a class="momentum-context-link ${page === sectionKey && initialSubsection === key ? "active" : ""}" data-momentum-subsection="${key}" href="${href}" ${note ? 'aria-disabled="true"' : ""}><span>${label}</span>${note ? `<span class="momentum-context-note">${note}</span>` : ""}</a>`).join("");
-    return `<aside class="momentum-context-panel ${page === sectionKey ? "current" : ""}" data-momentum-panel="${sectionKey}" aria-label="Navigation ${menu.label}">
+    return `<aside id="momentum-panel-${sectionKey}" class="momentum-context-panel ${page === sectionKey ? "current" : ""}" data-momentum-panel="${sectionKey}" aria-label="Navigation ${menu.label}">
       <button class="momentum-panel-close" type="button" aria-label="Fermer le menu">${icons.close}</button>
       <div class="momentum-context-heading"><span class="momentum-context-kicker">${menu.kicker}</span><strong>${menu.label}</strong></div>
       <nav class="momentum-context-nav">${contextLinks}</nav>
@@ -63,11 +62,6 @@
 
   mount.className = "momentum-navigation";
   mount.innerHTML = `
-    <div class="momentum-mobile-bar">
-      <button class="momentum-menu-toggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false">${icons.menu}</button>
-      <span class="momentum-mobile-brand"><span class="momentum-nav-brand">M</span>Momentum</span>
-      <span class="momentum-mobile-balance" aria-hidden="true"></span>
-    </div>
     <aside class="momentum-rail" aria-label="Navigation principale">
       <a class="momentum-nav-brand" href="index.html" aria-label="Momentum, accueil">M</a>
       ${railLink("home", "index.html", "Home")}
@@ -82,16 +76,12 @@
 
   body.classList.add("has-momentum-navigation");
 
-  const toggle = mount.querySelector(".momentum-menu-toggle");
   const closeButtons = mount.querySelectorAll(".momentum-panel-close,.momentum-mobile-scrim");
   const closeMenu = () => {
     mount.classList.remove("menu-open");
-    toggle.setAttribute("aria-expanded", "false");
+    mount.removeAttribute("data-mobile-section");
+    mount.querySelectorAll("[data-momentum-section]").forEach((link) => link.setAttribute("aria-expanded", "false"));
   };
-  toggle.addEventListener("click", () => {
-    const open = mount.classList.toggle("menu-open");
-    toggle.setAttribute("aria-expanded", String(open));
-  });
   closeButtons.forEach((button) => button.addEventListener("click", closeMenu));
   document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeMenu(); });
 
@@ -120,6 +110,17 @@
     link.addEventListener("mouseenter", () => openDesktopPanel(link.dataset.momentumSection, link));
     link.addEventListener("focus", () => openDesktopPanel(link.dataset.momentumSection, link));
     link.addEventListener("mouseleave", scheduleDesktopPanelClose);
+    link.addEventListener("click", (event) => {
+      if (desktop.matches) return;
+      event.preventDefault();
+      const key = link.dataset.momentumSection;
+      const willOpen = !mount.classList.contains("menu-open") || mount.dataset.mobileSection !== key;
+      closeMenu();
+      if (!willOpen) return;
+      mount.dataset.mobileSection = key;
+      mount.classList.add("menu-open");
+      link.setAttribute("aria-expanded", "true");
+    });
   });
   mount.querySelectorAll("[data-momentum-panel]").forEach((panel) => {
     panel.addEventListener("mouseenter", () => window.clearTimeout(panelCloseTimer));
