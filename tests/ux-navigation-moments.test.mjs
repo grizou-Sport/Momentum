@@ -34,6 +34,7 @@ test("desktop navigation reveals compact contextual cards and keeps the rail tra
   assert.match(navigationStyles, /background:rgba\(247,247,245,\.14\)/);
   assert.match(navigationStyles, /height:auto/);
   assert.match(navigationStyles, /visibility:hidden/);
+  assert.match(navigationStyles, /body\.has-momentum-navigation\{\s*padding-left:0/);
 });
 
 test("logout is an icon button immediately above settings", () => {

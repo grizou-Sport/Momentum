@@ -4,7 +4,7 @@
 }
 
 body.has-momentum-navigation{
-  padding-left:var(--momentum-rail-width);
+  padding-left:0;
 }
 
 .momentum-navigation{
