@@ -122,6 +122,7 @@ body.has-momentum-navigation{
 
 @media(min-width:901px){
   .momentum-navigation[data-open-section="home"] .momentum-context-panel[data-momentum-panel="home"],
+  .momentum-navigation[data-open-section="progression"] .momentum-context-panel[data-momentum-panel="progression"],
   .momentum-navigation[data-open-section="you"] .momentum-context-panel[data-momentum-panel="you"],
   .momentum-navigation[data-open-section="together"] .momentum-context-panel[data-momentum-panel="together"]{
     opacity:1;
@@ -284,6 +285,7 @@ body.has-momentum-navigation{
   }
 
   .momentum-navigation[data-mobile-section="home"] .momentum-context-panel[data-momentum-panel="home"],
+  .momentum-navigation[data-mobile-section="progression"] .momentum-context-panel[data-momentum-panel="progression"],
   .momentum-navigation[data-mobile-section="you"] .momentum-context-panel[data-momentum-panel="you"],
   .momentum-navigation[data-mobile-section="together"] .momentum-context-panel[data-momentum-panel="together"]{
     opacity:1;

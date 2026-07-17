@@ -6,6 +6,7 @@
 
   const icons = {
     home: '<svg class="momentum-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8"></path><path d="M5 10v11h14V10"></path><path d="M9 21v-7h6v7"></path></svg>',
+    progression: '<svg class="momentum-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9"></path><path d="M10 19V5"></path><path d="M16 19v-7"></path><path d="M22 19V3"></path></svg>',
     you: '<svg class="momentum-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>',
     together: '<svg class="momentum-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"></circle><circle cx="17" cy="10" r="2.5"></circle><path d="M3 20a6 6 0 0 1 12 0"></path><path d="M14 15a5 5 0 0 1 7 4.5"></path></svg>',
     logout: '<svg class="momentum-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v10"></path><path d="M6.3 5.7a8 8 0 1 0 11.4 0"></path></svg>',
@@ -20,7 +21,17 @@
       items: [
         ["today", "Aujourd’hui", "index.html#today"],
         ["journal", "Journal", "index.html#journal"],
-        ["statistics", "Progression", "index.html#progression"]
+        ["flow", "Flow", "index.html#flow"]
+      ]
+    },
+    progression: {
+      label: "Progression",
+      kicker: "Ton évolution",
+      items: [
+        ["volume", "Volume hebdomadaire", "progression.html#volume"],
+        ["sports", "Répartition sportive", "progression.html#sports"],
+        ["charge", "Charge & forme", "progression.html#charge"],
+        ["bien-etre", "Bien-être", "progression.html#bien-etre"]
       ]
     },
     you: {
@@ -48,7 +59,7 @@
   };
 
   const params = new URLSearchParams(window.location.search);
-  const initialSubsection = params.get("section") || params.get("view") || (page === "home" ? "today" : page === "you" ? "mission" : "circle");
+  const initialSubsection = params.get("section") || params.get("view") || (page === "home" ? "today" : page === "progression" ? "volume" : page === "you" ? "mission" : "circle");
 
   const railLink = (key, href, label) => `<a class="momentum-rail-link ${page === key ? "active" : ""}" data-momentum-section="${key}" href="${href}" aria-label="${label}" aria-controls="momentum-panel-${key}" aria-expanded="false" ${page === key ? 'aria-current="page"' : ""}>${icons[key]}</a>`;
   const contextPanel = ([sectionKey, menu]) => {
@@ -65,6 +76,7 @@
     <aside class="momentum-rail" aria-label="Navigation principale">
       <a class="momentum-nav-brand" href="index.html" aria-label="Momentum, accueil">M</a>
       ${railLink("home", "index.html", "Home")}
+      ${railLink("progression", "progression.html", "Progression")}
       ${railLink("you", "you.html", "You")}
       ${railLink("together", "together.html", "Together")}
       <span class="momentum-rail-spacer"></span>

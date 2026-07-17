@@ -883,6 +883,30 @@ main{
 
 
 /* =========================================================
+   Flow — emplacement futur
+   ========================================================= */
+
+.flow-section{
+  padding-top:88px;
+  padding-bottom:130px;
+}
+
+.flow-section h2{
+  margin-bottom:34px;
+  font-size:clamp(52px,8vw,102px);
+}
+
+.flow-slot{
+  min-height:clamp(220px,32vw,420px);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.64),rgba(255,255,255,.18)),
+    var(--surface-soft);
+}
+
+
+/* =========================================================
    Progression
    ========================================================= */
 

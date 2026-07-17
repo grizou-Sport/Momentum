@@ -462,4 +462,11 @@ function bindProgression() {
   document.getElementById("closeProgressionDialog")?.addEventListener("click", () => closeHomeDialog(document.getElementById("progressionDialog")));
 }
 
-document.addEventListener("DOMContentLoaded", () => { bindProgression(); loadProgressionData(); });
+document.addEventListener("DOMContentLoaded", () => {
+  bindProgression();
+  loadProgressionData();
+  document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+    await window.momentumDB.auth.signOut();
+    window.location.href = "login.html";
+  });
+});

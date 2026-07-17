@@ -4,7 +4,7 @@ import test from "node:test";
 import vm from "node:vm";
 
 const progressionSource = await readFile(new URL("../js/home-progression.js", import.meta.url), "utf8");
-const homePage = await readFile(new URL("../index.html", import.meta.url), "utf8");
+const progressionPage = await readFile(new URL("../progression.html", import.meta.url), "utf8");
 
 function loadWellbeingFunctions() {
   const context = {
@@ -45,8 +45,8 @@ test("wellbeing chart exposes resting heart rate and HRV with their real units",
   assert.equal(wellnessAxisValue("sleep", 8), "8 h");
   assert.equal(wellnessDefinition("motivation").scale.max, 10);
   assert.equal(wellnessDefinition("recovery").scale.max, 5);
-  assert.match(homePage, /data-wellness-mode="restingHr"/);
-  assert.match(homePage, /data-wellness-mode="hrv"/);
+  assert.match(progressionPage, /data-wellness-mode="restingHr"/);
+  assert.match(progressionPage, /data-wellness-mode="hrv"/);
 });
 
 test("wellbeing series keeps raw display values and only normalizes the synthesis", () => {

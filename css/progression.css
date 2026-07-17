@@ -1,0 +1,126 @@
+/* MOMENTUM — PROGRESSION */
+
+.progression-body{background:#efefeb}
+.progression-body main{min-height:100svh;overflow:hidden}
+.progression-hero,.progression-dashboard{width:min(var(--page-width),calc(100% - var(--page-gutter) * 2));margin-inline:auto}
+
+.progression-hero{
+  min-height:76svh;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);
+  align-items:end;gap:70px;padding:150px 0 88px;
+}
+.progression-hero-copy h1{max-width:880px;margin:0;font-size:clamp(62px,8.4vw,124px);line-height:.82;letter-spacing:-.075em}
+.progression-hero-copy h1 em{color:#81857d;font-family:Georgia,"Times New Roman",serif;font-weight:400}
+.progression-hero-copy p{max-width:620px;margin:42px 0 0;color:var(--muted);font-size:clamp(18px,2vw,24px)}
+.progression-hero-mark{align-self:center;margin-top:84px;padding:30px 0 0;border-top:1px solid var(--line-strong)}
+.progression-hero-mark span{display:block;color:var(--muted);font-size:11px;font-weight:850;letter-spacing:.16em;text-transform:uppercase}
+.progression-hero-mark svg{width:100%;margin-top:24px;overflow:visible}
+.progression-path-muted,.progression-path{fill:none;stroke-width:2}
+.progression-path-muted{stroke:rgba(39,60,49,.12)}
+.progression-path{stroke:#273c31;stroke-dasharray:520;stroke-dashoffset:520;animation:draw-progression 1.4s .2s cubic-bezier(.22,.8,.34,1) forwards}
+.progression-hero-mark circle{fill:#d9763d;opacity:0;animation:show-progression-point .3s 1.45s ease forwards}
+@keyframes draw-progression{to{stroke-dashoffset:0}}
+@keyframes show-progression-point{to{opacity:1}}
+
+.progression-dashboard{padding:104px 0 140px;border-top:1px solid var(--line-strong)}
+.dashboard-intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,.7fr);align-items:end;gap:60px;margin-bottom:48px}
+.dashboard-intro h2{max-width:720px;margin:0;font-size:clamp(44px,6vw,76px)}
+
+.period-selector{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.62);box-shadow:0 18px 50px rgba(25,29,27,.04)}
+.period-selector > label,.period-custom label{color:var(--muted);font-size:10px;font-weight:850;letter-spacing:.09em;text-transform:uppercase}
+.period-selector select{width:auto;min-width:190px;background:#fff}
+.period-selector > p{flex-basis:100%;margin:0;color:var(--danger);font-size:12px}
+.period-custom{display:flex;align-items:flex-end;flex-wrap:wrap;gap:10px}
+.period-custom[hidden]{display:none}
+.period-custom label{display:grid;gap:6px}
+.period-custom input{width:auto;background:#fff}
+.period-custom button{width:auto}
+
+.kpi-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:22px;border:1px solid var(--line);border-radius:22px;overflow:hidden;background:#171a18;color:#fff}
+.kpi-strip > *{min-width:0;padding:28px 26px;border-right:1px solid rgba(255,255,255,.12)}
+.kpi-strip > *:last-child{border-right:0}
+.kpi-strip strong,.kpi-strip span{display:block}
+.kpi-strip strong{color:#fff;font-size:clamp(30px,4vw,50px);font-weight:850;letter-spacing:-.055em}
+.kpi-strip span{margin-top:8px;color:rgba(255,255,255,.54);font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+
+.charts-grid{display:grid;gap:22px}
+.chart-card{position:relative;min-height:560px;padding:clamp(28px,4vw,52px);overflow:hidden;border:1px solid rgba(24,27,25,.09);border-radius:28px;background:rgba(255,255,255,.78);box-shadow:0 22px 70px rgba(25,29,27,.045)}
+.chart-card::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:#273c31}
+#sportChartCard::before{background:#b27d42}
+#loadChartCard::before{background:#d9763d}
+#wellnessChartCard::before{background:#6f63a6}
+.chart-index{position:absolute;top:24px;right:28px;color:rgba(18,20,19,.08);font-size:clamp(64px,9vw,118px);font-weight:900;line-height:1;letter-spacing:-.08em;pointer-events:none}
+.chart-heading{position:relative;z-index:1;display:flex;align-items:flex-start;justify-content:space-between;gap:28px;margin-bottom:32px;padding-right:72px}
+.chart-heading h3{margin:6px 0 8px;font-size:clamp(30px,4vw,50px)}
+.chart-heading p{max-width:660px;margin:0;color:var(--muted)}
+.chart-mode,.wellness-mode{display:flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:999px;background:rgba(247,247,245,.74)}
+.wellness-mode{max-width:430px;flex-wrap:wrap;justify-content:flex-end;border-radius:18px}
+.chart-mode button,.wellness-mode button{border:0;border-radius:999px;padding:9px 14px;background:transparent;color:var(--muted);font-size:11px;font-weight:850}
+.wellness-mode button{padding:8px 10px}
+.chart-mode button.active,.wellness-mode button.active{background:var(--ink);color:#fff}
+.chart-canvas-wrap{position:relative;height:340px}
+.progression-chart-card canvas{width:100%!important;height:100%!important}
+.sport-chart-wrap{height:max(320px,calc(var(--sport-count,4) * 46px))}
+.sport-chart-wrap canvas{width:100%!important;height:100%!important}
+.chart-insight{margin:24px 0 0;padding:20px 0 0 24px;border-top:1px solid var(--line);border-left:2px solid #d9763d;color:var(--ink);font-family:Georgia,"Times New Roman",serif;font-size:19px;font-style:italic}
+.progression-reveal .chart-heading,.progression-reveal .chart-canvas-wrap,.progression-reveal .sport-chart-wrap,.progression-reveal .load-status,.progression-reveal .chart-insight{opacity:0;transform:translateY(8px)}
+.progression-reveal.is-visible .chart-heading{animation:progression-in .25s ease forwards}
+.progression-reveal.is-visible .chart-canvas-wrap,.progression-reveal.is-visible .sport-chart-wrap{animation:progression-in .3s .2s ease forwards}
+.progression-reveal.is-visible .load-status,.progression-reveal.is-visible .chart-insight{animation:progression-in .25s .65s ease forwards}
+@keyframes progression-in{to{opacity:1;transform:none}}
+
+.model-phase{position:relative;z-index:1;padding:9px 12px;border-radius:999px;background:#edf0eb;color:#496152;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.load-status{display:grid;grid-template-columns:repeat(3,1fr);margin-top:20px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.load-status div{padding:17px 12px;border-right:1px solid var(--line)}
+.load-status div:last-child{border-right:0}
+.load-status strong,.load-status span{display:block}
+.load-status strong{font-size:26px}
+.load-status span{margin-top:3px;color:var(--muted);font-size:10px;font-weight:850;text-transform:uppercase;letter-spacing:.08em}
+
+.progression-dialog{width:min(760px,calc(100% - 32px));max-height:calc(100svh - 40px);overflow:auto;border:0;border-radius:var(--radius-xl);padding:46px;background:var(--surface);box-shadow:var(--shadow-lg)}
+.progression-dialog::backdrop{background:rgba(0,0,0,.46);backdrop-filter:blur(8px)}
+.progression-dialog h2{font-size:clamp(38px,7vw,70px)}
+.progression-detail-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:28px 0}
+.progression-detail-kpis div{padding:18px;border-radius:18px;background:var(--surface-soft)}
+.progression-detail-kpis strong,.progression-detail-kpis span{display:block}
+.progression-detail-kpis strong{font-size:22px}
+.progression-detail-kpis span{margin-top:5px;color:var(--muted);font-size:11px;text-transform:uppercase}
+.progression-sport-list{display:grid;gap:8px}
+.progression-sport-list > button{display:flex;justify-content:space-between;padding:15px 16px;border:0;border-left:5px solid var(--sport-color);border-radius:14px;background:var(--surface-soft);font-weight:850}
+.progression-subdisciplines{padding:4px 16px 10px}
+.progression-subdisciplines p{display:flex;justify-content:space-between;gap:16px;margin:8px 0;color:var(--muted);font-size:13px}
+.progression-subdisciplines p strong{color:var(--ink)}
+.planned-detail,.progression-subdisciplines .is-planned{opacity:.48}
+.load-day-activities{display:grid;gap:8px;margin-top:24px}
+.load-day-activities article{display:flex;justify-content:space-between;gap:20px;padding:15px;border-radius:15px;background:var(--surface-soft)}
+.load-day-activities span{color:var(--muted);font-size:12px}
+.sport-detail-section{margin-top:28px}.sport-detail-section h3{font-size:24px}
+.sport-breakdown{display:grid;gap:8px}.sport-breakdown > div{display:flex;justify-content:space-between;gap:18px;padding:14px;border-radius:14px;background:var(--surface-soft)}
+.sport-breakdown strong{font-size:12px}.intensity-toggle{width:auto;margin-top:24px}
+.intensity-breakdown{display:grid;gap:12px}.intensity-breakdown > div{display:grid;grid-template-columns:100px 1fr 55px;align-items:center;gap:12px;font-size:12px}
+.intensity-breakdown i{height:8px;overflow:hidden;border-radius:999px;background:var(--surface-muted)}
+.intensity-breakdown b{display:block;height:100%;border-radius:inherit;background:var(--ink)}.intensity-breakdown strong{text-align:right}
+.wellness-detail-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:26px 0}
+.wellness-detail-grid > div{min-height:120px;padding:18px;border-radius:18px;background:var(--surface-soft)}
+.wellness-detail-grid span,.wellness-detail-grid strong,.wellness-detail-grid small{display:block}
+.wellness-detail-grid span{color:var(--muted);font-size:11px;font-weight:850;text-transform:uppercase}
+.wellness-detail-grid strong{margin-top:14px;font-size:22px}.wellness-detail-grid small{margin-top:4px;color:var(--muted)}
+.wellness-note-detail{margin-top:24px;padding:20px;border-left:4px solid var(--ink);background:var(--surface-soft)}
+.wellness-note-detail p{margin-bottom:6px}.wellness-note-detail small{color:var(--muted)}
+
+@media(max-width:900px){
+  .progression-hero{min-height:auto;grid-template-columns:1fr;padding:110px 0 72px}.progression-hero-mark{max-width:540px;margin-top:0}
+  .dashboard-intro{grid-template-columns:1fr;gap:28px}.kpi-strip{grid-template-columns:repeat(2,1fr)}
+  .kpi-strip > *:nth-child(2){border-right:0}.kpi-strip > *:nth-child(-n+2){border-bottom:1px solid rgba(255,255,255,.12)}
+}
+@media(max-width:640px){
+  .progression-hero,.progression-dashboard{width:calc(100% - 28px)}.progression-hero-copy h1{font-size:clamp(52px,17vw,76px)}
+  .progression-dashboard{padding:72px 0 92px}.period-selector{align-items:stretch}.period-selector select{width:100%}
+  .period-custom{display:grid;grid-template-columns:1fr 1fr;width:100%}.period-custom input{width:100%}.period-custom button{grid-column:1/-1;width:100%}
+  .kpi-strip{grid-template-columns:1fr}.kpi-strip > *{border-right:0;border-bottom:1px solid rgba(255,255,255,.12)}.kpi-strip > *:last-child{border-bottom:0}
+  .chart-card{min-height:510px;padding:26px 20px;border-radius:22px}.chart-heading{flex-direction:column;padding-right:0}.chart-index{top:18px;right:20px;font-size:68px}
+  .chart-canvas-wrap{height:290px}.wellness-mode{max-width:100%;justify-content:flex-start}
+  .progression-dialog{width:100%;height:100svh;max-height:100svh;margin:0;border-radius:0;padding:70px 20px 28px}
+  .progression-detail-kpis,.wellness-detail-grid{grid-template-columns:1fr}.progression-subdisciplines p,.load-day-activities article,.sport-breakdown > div{flex-direction:column;gap:5px}
+  .intensity-breakdown > div{grid-template-columns:85px 1fr 46px}
+}
+@media(prefers-reduced-motion:reduce){.progression-path,.progression-hero-mark circle{animation:none;stroke-dashoffset:0;opacity:1}}

@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const files = await Promise.all(["index.html", "you.html", "together.html"].map((file) => readFile(new URL(`../${file}`, import.meta.url), "utf8")));
+const files = await Promise.all(["index.html", "progression.html", "you.html", "together.html"].map((file) => readFile(new URL(`../${file}`, import.meta.url), "utf8")));
 const navigation = await readFile(new URL("../js/navigation.js", import.meta.url), "utf8");
 const navigationStyles = await readFile(new URL("../css/navigation.css", import.meta.url), "utf8");
 const together = await readFile(new URL("../js/together.js", import.meta.url), "utf8");
-const togetherPage = files[2];
+const togetherPage = files[3];
 
 test("every authenticated area uses the shared contextual rail", () => {
   for (const page of files) {
@@ -15,7 +15,7 @@ test("every authenticated area uses the shared contextual rail", () => {
     assert.match(page, /js\/navigation\.js/);
     assert.doesNotMatch(page, /<header class="topbar">/);
   }
-  for (const label of ["Home", "You", "Together", "Paramètres", "Déconnexion"]) {
+  for (const label of ["Home", "Progression", "You", "Together", "Paramètres", "Déconnexion"]) {
     assert.match(navigation, new RegExp(label));
   }
 });
