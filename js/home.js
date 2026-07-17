@@ -126,6 +126,17 @@ function bindHome() {
       return;
     }
 
+    if (action === "flow-moment") {
+      const activityId = actionButton.dataset.activityId;
+      if (activityId && window.MomentumFlow) {
+        closeHomeDialog($("#dayDialog"));
+        await window.MomentumFlow.openAssessment(activityId, {
+          returnToDay:date
+        });
+      }
+      return;
+    }
+
     if (action === "delete-moment") {
       const activityId = actionButton.dataset.activityId;
       if (activityId && date) {

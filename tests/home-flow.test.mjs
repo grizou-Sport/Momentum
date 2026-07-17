@@ -3,10 +3,12 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import vm from "node:vm";
 
-const [flowSource, homePage, activitySource, importSource, migration] = await Promise.all([
+const [flowSource, homePage, activitySource, calendarSource, homeSource, importSource, migration] = await Promise.all([
   readFile(new URL("../js/home-flow.js", import.meta.url), "utf8"),
   readFile(new URL("../index.html", import.meta.url), "utf8"),
   readFile(new URL("../js/home-activities.js", import.meta.url), "utf8"),
+  readFile(new URL("../js/home-calendar.js", import.meta.url), "utf8"),
+  readFile(new URL("../js/home.js", import.meta.url), "utf8"),
   readFile(new URL("../js/home-import.js", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20260718000100_flow_module_v1.sql", import.meta.url), "utf8")
 ]);
@@ -66,6 +68,18 @@ test("the three-question assessment is offered after a completed activity", () =
   assert.match(activitySource, /payload\.status === "done"/);
   assert.match(activitySource, /\.select\("id"\)\s*\.single\(\)/);
   assert.doesNotMatch(homePage, />RPE</);
+});
+
+test("pending and historical activities can open the FLOW assessment", () => {
+  assert.match(homePage, /id="flowPendingSummary"[^>]*type="button"/);
+  assert.match(homePage, /id="flowPendingDialog"/);
+  assert.match(flowSource, /data-flow-pending-activity/);
+  assert.match(flowSource, /flowPendingSummary[\s\S]*addEventListener\("click", openFlowPending\)/);
+  assert.match(flowSource, /ensureFlowAssessment/);
+  assert.match(flowSource, /\.maybeSingle\(\)/);
+  assert.match(calendarSource, /data-action="flow-moment"/);
+  assert.match(calendarSource, />Raconter mon FLOW</);
+  assert.match(homeSource, /MomentumFlow\.openAssessment\(activityId/);
 });
 
 test("FLOW persistence is isolated, constrained and owner-protected", () => {

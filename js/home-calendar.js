@@ -220,6 +220,16 @@ async function openDay(date) {
                   data-date="${date}"
                 >Modifier</button>
 
+                ${session.status === "done" ? `
+                  <button
+                    type="button"
+                    class="day-flow-moment"
+                    data-action="flow-moment"
+                    data-activity-id="${session.id}"
+                    data-date="${date}"
+                  >Raconter mon FLOW</button>
+                ` : ""}
+
                 <button
                   type="button"
                   class="day-delete-moment"

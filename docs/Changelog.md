@@ -20,6 +20,7 @@ Les changements notables du projet sont consignés dans ce fichier.
 
 ### Modifié
 
+- « À raconter » ouvre désormais la liste des activités sans ressenti, et chaque ancienne activité réalisée permet d’ajouter ou modifier son FLOW depuis le Journal.
 - Conversion de `README.md` en fichier de présentation du projet.
 - Archivage des anciennes notes du README dans `Notes version 0.07.md`.
 - Normalisation de `Docs/` en `docs/`.

@@ -124,7 +124,7 @@
         <div class="flow-map-card">
           <div class="flow-map-topline">
             <span id="flowPeriodSummary">Chargement des expériences…</span>
-            <span id="flowPendingSummary"></span>
+            <button id="flowPendingSummary" class="flow-pending-trigger" type="button" hidden></button>
           </div>
           <div class="flow-map-layout">
             <div class="flow-y-axis" aria-hidden="true"><span>Très élevé</span><strong>Défi ressenti</strong><span>Faible</span></div>
@@ -619,6 +619,16 @@
     <p>Il apparaît lorsque le défi rencontré correspond à ton sentiment de maîtrise.</p>
     <p>L'objectif n'est pas de rester en permanence dans le Flow, mais de mieux comprendre quelles expériences te font grandir, progresser ou simplement te ressourcer.</p>
     <p class="flow-dialog-emphasis">Aucune zone n'est mauvaise. Chacune raconte un moment différent de ton parcours.</p>
+  </div>
+</dialog>
+
+<dialog id="flowPendingDialog" class="flow-dialog flow-pending-dialog">
+  <button class="close-btn" id="closeFlowPending" type="button" aria-label="Fermer">×</button>
+  <div class="flow-dialog-content">
+    <span class="section-kicker">À raconter</span>
+    <h2>Choisis une activité</h2>
+    <p>Un clic suffit pour ouvrir les trois questions FLOW.</p>
+    <div id="flowPendingList" class="flow-pending-list"></div>
   </div>
 </dialog>
 

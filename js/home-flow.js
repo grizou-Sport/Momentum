@@ -161,6 +161,10 @@
     }
     if (pendingSummary) {
       pendingSummary.textContent = pendingCount ? `${pendingCount} à raconter` : "";
+      pendingSummary.hidden = !pendingCount;
+      pendingSummary.setAttribute("aria-label", pendingCount
+        ? `Choisir parmi ${pendingCount} activité${pendingCount > 1 ? "s" : ""} à raconter`
+        : "Aucune activité à raconter");
     }
 
     points.innerHTML = assessedActivities.map((activity) => {
@@ -192,6 +196,33 @@
         pendingCount ? `${pendingCount} activité${pendingCount > 1 ? "s" : ""} existe${pendingCount > 1 ? "nt" : ""} déjà sans réponse.` : "Enregistre une activité pour commencer."
       );
     }
+  }
+
+  function flowPendingActivities() {
+    return flowState.activities
+      .filter((activity) => !flowState.assessments.has(activity.id))
+      .sort((a, b) => {
+        const dateOrder = String(b.activity_date || "").localeCompare(String(a.activity_date || ""));
+        return dateOrder || String(b.created_at || "").localeCompare(String(a.created_at || ""));
+      });
+  }
+
+  function openFlowPending() {
+    const dialog = document.getElementById("flowPendingDialog");
+    const list = document.getElementById("flowPendingList");
+    if (!dialog || !list) return;
+    const pendingActivities = flowPendingActivities();
+    list.innerHTML = pendingActivities.length
+      ? pendingActivities.map((activity) => `
+          <button class="flow-pending-activity" type="button" data-flow-pending-activity="${escapeHtml(activity.id)}">
+            <span>
+              <strong>${escapeHtml(flowActivityLabel(activity))}</strong>
+              <small>${escapeHtml(flowSportLabel(activity))} · ${escapeHtml(fmtDate(activity.activity_date))}</small>
+            </span>
+            <b>Raconter</b>
+          </button>`).join("")
+      : '<p class="flow-no-pending">Toutes les activités de cette période sont racontées.</p>';
+    openHomeDialog(dialog);
   }
 
   async function loadFlowPhotos(activityId) {
@@ -350,13 +381,29 @@
     return data;
   }
 
+  async function ensureFlowAssessment(activityId) {
+    if (flowState.assessments.has(activityId)) return flowState.assessments.get(activityId);
+    const user = flowState.user || await getCurrentUser();
+    if (!user) return null;
+    flowState.user = user;
+    const { data, error } = await window.momentumDB
+      .from("activity_flow_assessments")
+      .select("*")
+      .eq("activity_id", activityId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (error) throw error;
+    if (data) flowState.assessments.set(activityId, data);
+    return data || null;
+  }
+
   async function openFlowAssessment(activityId, options = {}) {
     try {
       const activity = await ensureFlowActivity(activityId);
       const dialog = document.getElementById("flowAssessmentDialog");
       const form = document.getElementById("flowAssessmentForm");
       if (!activity || !dialog || !form) return;
-      const existing = flowState.assessments.get(activityId);
+      const existing = await ensureFlowAssessment(activityId);
       form.elements.activityId.value = activityId;
       form.elements.perceivedExertion.value = existing?.perceived_exertion || activity.rpe || 5;
       form.elements.perceivedChallenge.value = existing?.perceived_challenge || 5;
@@ -459,6 +506,14 @@
       if (action.dataset.flowAction === "edit-assessment") openFlowAssessment(activity.id);
     });
 
+    document.getElementById("flowPendingSummary")?.addEventListener("click", openFlowPending);
+    document.getElementById("closeFlowPending")?.addEventListener("click", () => closeHomeDialog(document.getElementById("flowPendingDialog")));
+    document.getElementById("flowPendingList")?.addEventListener("click", async (event) => {
+      const activityButton = event.target.closest("[data-flow-pending-activity]");
+      if (!activityButton) return;
+      closeHomeDialog(document.getElementById("flowPendingDialog"));
+      await openFlowAssessment(activityButton.dataset.flowPendingActivity);
+    });
     document.getElementById("openFlowExplanation")?.addEventListener("click", () => openHomeDialog(document.getElementById("flowExplanationDialog")));
     document.getElementById("closeFlowExplanation")?.addEventListener("click", () => closeHomeDialog(document.getElementById("flowExplanationDialog")));
     document.getElementById("closeFlowAssessment")?.addEventListener("click", closeFlowAssessment);
