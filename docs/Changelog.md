@@ -6,6 +6,10 @@ Les changements notables du projet sont consignés dans ce fichier.
 
 ### Ajouté
 
+- Module FLOW V1 sur HOME : carte Défi × Maîtrise, périodes, sélection et résumé d’activité.
+- Collecte rapide de l’effort physique, du défi et de la maîtrise après une activité réalisée, avec possibilité de répondre plus tard.
+- Table sécurisée `activity_flow_assessments` et couche de contexte interne extensible.
+- Extraction FIT enrichie : fréquence cardiaque, zones, dérive, vitesse, puissance, cadence, température, altitude et métriques de charge disponibles dans le fichier.
 - Connexion des Moments TOGETHER « Aujourd’hui », « À venir » et « Passés » aux calendriers HOME.
 - Accès direct depuis HOME vers le détail du Moment partagé dans TOGETHER.
 - Structure documentaire `docs/`, `specs/` et `backlog/`.

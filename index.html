@@ -98,9 +98,62 @@
     </section>
 
     <section id="flow" class="story-section flow-section" aria-labelledby="flowTitle">
-      <div class="section-kicker">Expérience</div>
-      <h2 id="flowTitle">Flow</h2>
-      <div class="flow-slot" aria-label="Emplacement réservé au futur graphique Flow"></div>
+      <div class="flow-heading">
+        <div>
+          <div class="section-kicker">Expérience</div>
+          <h2 id="flowTitle">Flow</h2>
+        </div>
+        <button class="flow-explain-button" id="openFlowExplanation" type="button">Qu'est-ce que le Flow&nbsp;?</button>
+      </div>
+
+      <div class="flow-intro-row">
+        <p class="flow-intro">Le Flow n'est pas une performance. C'est l'équilibre entre le défi que tu rencontres et la maîtrise que tu ressens. Chaque point raconte cet équilibre.</p>
+        <label class="flow-period-label" for="flowPeriod">
+          Période
+          <select id="flowPeriod">
+            <option value="4-weeks">4 semaines</option>
+            <option value="8-weeks" selected>8 semaines</option>
+            <option value="6-months">6 mois</option>
+            <option value="1-year">1 an</option>
+            <option value="all">Historique complet</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="flow-module" id="flowModule" aria-live="polite">
+        <div class="flow-map-card">
+          <div class="flow-map-topline">
+            <span id="flowPeriodSummary">Chargement des expériences…</span>
+            <span id="flowPendingSummary"></span>
+          </div>
+          <div class="flow-map-layout">
+            <div class="flow-y-axis" aria-hidden="true"><span>Très élevé</span><strong>Défi ressenti</strong><span>Faible</span></div>
+            <div>
+              <div class="flow-plane" id="flowPlane" aria-label="Carte du Flow : défi ressenti selon la maîtrise ressentie">
+                <div class="flow-zone" data-flow-zone="explorer"><span>Explorer</span></div>
+                <div class="flow-zone" data-flow-zone="se-depasser"><span>Se dépasser</span></div>
+                <div class="flow-zone is-flow" data-flow-zone="flow"><span>FLOW</span></div>
+                <div class="flow-zone" data-flow-zone="apprendre"><span>Apprendre</span></div>
+                <div class="flow-zone" data-flow-zone="equilibre"></div>
+                <div class="flow-zone" data-flow-zone="maitriser"><span>Maîtriser</span></div>
+                <div class="flow-zone" data-flow-zone="recuperer"><span>Récupérer</span></div>
+                <div class="flow-zone" data-flow-zone="routine"><span>Routine</span></div>
+                <div class="flow-zone" data-flow-zone="relaxation"><span>Relaxation</span></div>
+                <div id="flowPoints" class="flow-points"></div>
+              </div>
+              <div class="flow-x-axis" aria-hidden="true"><span>Faible</span><strong>Maîtrise ressentie</strong><span>Totale</span></div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="flow-detail-card" id="flowDetail" aria-label="Résumé de l'activité sélectionnée">
+          <div class="flow-detail-empty">
+            <span class="card-label">Une expérience, un point</span>
+            <h3>Sélectionne une activité</h3>
+            <p>Son contexte et ton ressenti apparaîtront ici.</p>
+          </div>
+        </aside>
+      </div>
     </section>
   </main>
 
@@ -139,7 +192,7 @@
       <label>Distance km<input type="number" step="0.01" min="0" name="distance" /></label>
       <label>Durée min<input type="number" step="1" min="0" name="duration" /></label>
       <label>FC moy<input type="number" step="1" min="0" name="hr" /></label>
-      <label>RPE<input type="number" step="1" min="1" max="10" name="rpe" /></label>
+      <label>Effort physique<input type="number" step="1" min="1" max="10" name="rpe" /></label>
       <label>Matériel<input name="gear" /></label>
       <label class="full">Notes<textarea name="comment" rows="3"></textarea></label>
       <label class="full file-line">Importer GPX<input type="file" name="gpx" accept=".gpx,application/gpx+xml" /></label>
@@ -557,6 +610,54 @@
   </div>
 </dialog>
 
+<dialog id="flowExplanationDialog" class="flow-dialog flow-explanation-dialog">
+  <button class="close-btn" id="closeFlowExplanation" type="button" aria-label="Fermer">×</button>
+  <div class="flow-dialog-content">
+    <span class="section-kicker">Comprendre</span>
+    <h2>Qu'est-ce que le Flow&nbsp;?</h2>
+    <p>Le Flow est un état d'engagement profond décrit par le psychologue Mihály Csíkszentmihályi.</p>
+    <p>Il apparaît lorsque le défi rencontré correspond à ton sentiment de maîtrise.</p>
+    <p>L'objectif n'est pas de rester en permanence dans le Flow, mais de mieux comprendre quelles expériences te font grandir, progresser ou simplement te ressourcer.</p>
+    <p class="flow-dialog-emphasis">Aucune zone n'est mauvaise. Chacune raconte un moment différent de ton parcours.</p>
+  </div>
+</dialog>
+
+<dialog id="flowAssessmentDialog" class="flow-dialog flow-assessment-dialog">
+  <button class="close-btn" id="closeFlowAssessment" type="button" aria-label="Remettre à plus tard">×</button>
+  <form id="flowAssessmentForm" class="flow-assessment-form">
+    <input name="activityId" type="hidden" />
+    <div class="flow-assessment-heading">
+      <span class="section-kicker">Ton expérience</span>
+      <h2>Comment l'as-tu vécue&nbsp;?</h2>
+      <p id="flowAssessmentActivity"></p>
+    </div>
+
+    <label class="flow-range-field">
+      <span>Quel effort physique cette activité t'a demandé&nbsp;?</span>
+      <input name="perceivedExertion" type="range" min="1" max="10" step="1" value="5" />
+      <span class="flow-range-scale"><small>Facile</small><output>5</output><small>Maximal</small></span>
+    </label>
+
+    <label class="flow-range-field">
+      <span>Quel niveau de défi as-tu ressenti&nbsp;?</span>
+      <input name="perceivedChallenge" type="range" min="1" max="10" step="1" value="5" />
+      <span class="flow-range-scale"><small>Faible</small><output>5</output><small>Très élevé</small></span>
+    </label>
+
+    <label class="flow-range-field">
+      <span>À quel point t'es-tu senti en maîtrise&nbsp;?</span>
+      <input name="perceivedMastery" type="range" min="1" max="10" step="1" value="5" />
+      <span class="flow-range-scale"><small>Faible</small><output>5</output><small>Totale</small></span>
+    </label>
+
+    <p id="flowAssessmentMessage" class="activity-message" aria-live="polite"></p>
+    <div class="flow-assessment-actions">
+      <button id="flowAssessmentLater" class="secondary" type="button">Plus tard</button>
+      <button class="primary" type="submit">Enregistrer mon ressenti</button>
+    </div>
+  </form>
+</dialog>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -580,6 +681,7 @@
 <script src="js/home-calendar.js"></script>
 <script src="js/home-import.js"></script>
 <script src="js/home-activities.js"></script>
+<script src="js/home-flow.js"></script>
 <script src="js/home.js"></script>
 
 </body>

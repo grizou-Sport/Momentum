@@ -6,7 +6,7 @@ Donner une vue immédiate de la journée vécue et des prochaines actions utiles
 
 HOME réunit le HERO, les informations du jour, la fenêtre vivante, le calendrier et le Journal. Les analyses longitudinales appartiennent désormais à la page `progression.html`.
 
-Une section `Flow` vide est réservée sous le Journal. Elle ne contient encore ni score, ni indicateur, ni interprétation.
+Le module `FLOW` suit le Journal. Il raconte comment les activités ont été vécues à travers l’équilibre entre défi et maîtrise ressentis. Sa position dans HOME est narrative : aucun score de performance n’est produit.
 
 ## À documenter
 

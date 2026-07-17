@@ -831,9 +831,13 @@ async function saveActivity(event) {
         .eq("user_id", user.id)
         .select("id")
         .single();
+    } else {
+      query = query
+        .select("id")
+        .single();
     }
 
-    const { error } = await query;
+    const { data:savedActivity, error } = await query;
 
     if (error) {
       throw error;
@@ -854,7 +858,17 @@ async function saveActivity(event) {
     closeActivityDialog();
     await renderHome();
 
-    if (returnToDay) {
+    const shouldCollectFlow =
+      !editingId &&
+      payload.status === "done" &&
+      savedActivity?.id &&
+      window.MomentumFlow;
+
+    if (shouldCollectFlow) {
+      await window.MomentumFlow.offerAssessment(savedActivity.id, {
+        returnToDay
+      });
+    } else if (returnToDay) {
       openDay(returnToDay);
     }
   } catch (error) {

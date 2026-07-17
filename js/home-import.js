@@ -298,6 +298,93 @@ function fitSemicirclesToDegrees(value) {
   return semicircles * 180 / 2147483648;
 }
 
+function fitAverage(values) {
+  const valid = values.map(Number).filter(Number.isFinite);
+  return valid.length
+    ? valid.reduce((sum, value) => sum + value, 0) / valid.length
+    : null;
+}
+
+function fitHeartRateZones(heartRates, maximumHeartRate) {
+  const maxHr = Number(maximumHeartRate) || Math.max(...heartRates, 0);
+  if (!heartRates.length || maxHr <= 0) return null;
+  const counts = [0, 0, 0, 0, 0];
+  heartRates.forEach((heartRate) => {
+    const ratio = heartRate / maxHr;
+    const index = ratio < .6 ? 0 : ratio < .7 ? 1 : ratio < .8 ? 2 : ratio < .9 ? 3 : 4;
+    counts[index] += 1;
+  });
+  return {
+    basis:"observed_max",
+    maximum_hr:maxHr,
+    distribution_percent:counts.map((count) => Number((count / heartRates.length * 100).toFixed(1)))
+  };
+}
+
+function fitCardiacDrift(records) {
+  const usable = records.filter((record) => Number.isFinite(record.heartRate));
+  if (usable.length < 10) return null;
+  const midpoint = Math.floor(usable.length / 2);
+  const halves = [usable.slice(0, midpoint), usable.slice(midpoint)];
+  const summaries = halves.map((half) => {
+    const heartRate = fitAverage(half.map((record) => record.heartRate));
+    const speed = fitAverage(half.map((record) => record.speed).filter((value) => Number(value) > 0));
+    return { heartRate, speed };
+  });
+  const useEfficiency = summaries.every((summary) => summary.heartRate && summary.speed);
+  const first = useEfficiency ? summaries[0].heartRate / summaries[0].speed : summaries[0].heartRate;
+  const second = useEfficiency ? summaries[1].heartRate / summaries[1].speed : summaries[1].heartRate;
+  if (!first || !second) return null;
+  return {
+    percent:Number(((second - first) / first * 100).toFixed(1)),
+    method:useEfficiency ? "heart_rate_to_speed_ratio" : "heart_rate_change"
+  };
+}
+
+function summarizeFitAnalysis(records, session) {
+  const heartRates = records.map((record) => record.heartRate).filter(Number.isFinite);
+  const temperatures = records.map((record) => record.temperature).filter(Number.isFinite);
+  const altitudes = records.map((record) => record.altitude).filter(Number.isFinite);
+  return {
+    version:1,
+    samples:records.length,
+    heart_rate:{
+      average:session.avgHeartRate ?? (fitAverage(heartRates) == null ? null : Math.round(fitAverage(heartRates))),
+      maximum:session.maxHeartRate ?? (heartRates.length ? Math.max(...heartRates) : null),
+      zones:fitHeartRateZones(heartRates, session.maxHeartRate),
+      drift:fitCardiacDrift(records)
+    },
+    speed_mps:{
+      average:session.avgSpeed ?? fitAverage(records.map((record) => record.speed)),
+      maximum:session.maxSpeed ?? (records.some((record) => Number.isFinite(record.speed)) ? Math.max(...records.map((record) => record.speed).filter(Number.isFinite)) : null)
+    },
+    power_watts:{
+      average:session.avgPower ?? fitAverage(records.map((record) => record.power)),
+      normalized:session.normalizedPower ?? null,
+      maximum:session.maxPower ?? null
+    },
+    cadence_rpm:{
+      average:session.avgCadence ?? fitAverage(records.map((record) => record.cadence)),
+      maximum:session.maxCadence ?? null
+    },
+    temperature_celsius:{
+      average:session.avgTemperature ?? fitAverage(temperatures),
+      maximum:session.maxTemperature ?? (temperatures.length ? Math.max(...temperatures) : null)
+    },
+    altitude_meters:{
+      minimum:altitudes.length ? Math.min(...altitudes) : null,
+      maximum:altitudes.length ? Math.max(...altitudes) : null,
+      ascent:session.totalAscent ?? null,
+      descent:session.totalDescent ?? null
+    },
+    training:{
+      training_effect:session.trainingEffect ?? null,
+      training_stress_score:session.trainingStressScore ?? null,
+      intensity_factor:session.intensityFactor ?? null
+    }
+  };
+}
+
 async function parseFit(file) {
   const buffer = await file.arrayBuffer();
   const view = new DataView(buffer);
@@ -322,6 +409,7 @@ async function parseFit(file) {
   let offset = headerSize;
   let session = null;
   const fitPoints = [];
+  const fitRecords = [];
 
   while (offset < dataEnd) {
     const header = view.getUint8(offset);
@@ -494,8 +582,30 @@ async function parseFit(file) {
         avgHeartRate:
           values[16] ?? null,
 
+        maxHeartRate:
+          values[17] ?? null,
+
+        avgSpeed:
+          values[14] != null ? values[14] / 1000 : null,
+
+        maxSpeed:
+          values[15] != null ? values[15] / 1000 : null,
+
+        avgCadence:values[18] ?? null,
+        maxCadence:values[19] ?? null,
+        avgPower:values[20] ?? null,
+        maxPower:values[21] ?? null,
+
         totalAscent:
-          values[22] ?? null
+          values[22] ?? null,
+
+        totalDescent:values[23] ?? null,
+        trainingEffect:values[24] != null ? values[24] / 10 : null,
+        normalizedPower:values[34] ?? null,
+        trainingStressScore:values[35] != null ? values[35] / 10 : null,
+        intensityFactor:values[36] != null ? values[36] / 1000 : null,
+        avgTemperature:values[57] ?? null,
+        maxTemperature:values[58] ?? null
       };
     }
 
@@ -504,6 +614,21 @@ async function parseFit(file) {
     if (definition.globalMessageNumber === 20) {
       const latitude = fitSemicirclesToDegrees(values[0]);
       const longitude = fitSemicirclesToDegrees(values[1]);
+      const enhancedAltitude = values[78] != null ? values[78] / 5 - 500 : null;
+      const altitude = enhancedAltitude ?? (values[2] != null ? values[2] / 5 - 500 : null);
+      const enhancedSpeed = values[73] != null ? values[73] / 1000 : null;
+      const speed = enhancedSpeed ?? (values[6] != null ? values[6] / 1000 : null);
+
+      fitRecords.push({
+        timestamp:values[253] != null ? fitEpochToDate(values[253]).toISOString() : null,
+        heartRate:values[3] ?? null,
+        cadence:values[4] ?? null,
+        distance:values[5] != null ? values[5] / 100 : null,
+        speed,
+        power:values[7] ?? null,
+        temperature:values[13] ?? null,
+        altitude
+      });
 
       if (
         Number.isFinite(latitude) &&
@@ -525,10 +650,13 @@ async function parseFit(file) {
     );
   }
 
-  const routeSummary = createRouteSummary(
-    file.name,
-    fitPoints
-  );
+  const fitAnalysis = summarizeFitAnalysis(fitRecords, session);
+  const routeSummary = createRouteSummary(file.name, fitPoints, { fit_analysis:fitAnalysis }) || {
+    file_name:file.name,
+    point_count:0,
+    map_points:[],
+    fit_analysis:fitAnalysis
+  };
 
   let locationName = "";
 
