@@ -82,7 +82,9 @@ function sessionIconHtml(session, className = "session-icon") {
 
   const category = session?.category || session?.activity_category || "sport";
   if (category === "wellbeing") {
-    return window.MomentumIcons?.render("mobility", { collection:"sports", size:22, className }) || "";
+    const type = session?.type || session?.activity_type;
+    const icon = window.MomentumWellbeing?.getIcon(type) || "wellbeing";
+    return window.MomentumIcons?.render(icon, { collection:"wellbeing", size:22, className }) || "";
   }
   if (category === "adventure") {
     return window.MomentumIcons?.render("mountain", { collection:"sports", size:22, className }) || "";

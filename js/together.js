@@ -204,11 +204,17 @@ function renderMoments() {
     ["upcoming", "À venir", "Les prochaines histoires déjà confirmées."],
     ["past", "Passés", "Quelques traces de ce qui a été vécu."],
   ];
-  elements.momentsView.innerHTML = sections.map(([bucket, title, subtitle]) => {
+  const content = sections.map(([bucket, title, subtitle]) => {
     const moments = TOGETHER.moments.filter((moment) => momentBucket(moment) === bucket);
     if (!moments.length) return "";
     return `<section class="together-section"><div class="together-section-head"><div><div class="together-section-title"><h2>${title}</h2><span class="section-count" aria-label="${moments.length} Moment${moments.length > 1 ? "s" : ""}">${moments.length}</span></div><p>${subtitle}</p></div></div><div class="moment-grid">${moments.map(momentCard).join("")}</div></section>`;
   }).join("");
+  elements.momentsView.innerHTML = content || (window.MomentumEmptyState?.render({
+    title:"Aucun Moment partagé pour l’instant.",
+    text:"Les prochaines aventures trouveront leur place ici.",
+    action:"Créer un Moment",
+    actionAttributes:'data-empty-create-moment'
+  }) || emptyCard("Aucun Moment partagé pour l’instant.", "Les prochaines aventures trouveront leur place ici."));
   elements.momentsView.querySelectorAll("[data-open-moment]").forEach((button) => button.addEventListener("click", () => openMomentDetail(button.dataset.openMoment)));
 }
 
@@ -216,7 +222,7 @@ function clubCard(club) {
   const count = club.club_members?.[0]?.count || 0;
   const next = TOGETHER.moments.filter((moment) => moment.club_id === club.id && ["PLANNING", "CONFIRMED"].includes(moment.status)).sort((a, b) => new Date(a.start_at || 8640000000000000) - new Date(b.start_at || 8640000000000000))[0];
   const logo = TOGETHER.logoUrls.get(club.id);
-  return `<article class="club-card"><div class="club-card-head"><div class="club-symbol">${logo ? `<img src="${escapeHTML(logo)}" alt="Logo ${escapeHTML(club.name)}" />` : "△"}</div><div><h3>${escapeHTML(club.name)}</h3><div class="club-meta"><span>${escapeHTML(sportLabel(club.category))}</span><span>·</span><span>${escapeHTML(club.location_name)}</span><span>·</span><span>${count} membre${count > 1 ? "s" : ""}</span></div></div></div><div class="club-next">${next ? `<strong>Prochain Moment</strong><span>${escapeHTML(next.title)} · ${escapeHTML(formatDate(next.start_at))}</span>` : `<strong>Prochain Moment</strong><span>Aucun Moment prévu</span>`}</div><button class="club-open" data-open-club="${club.id}" type="button">Ouvrir le Club</button></article>`;
+  return `<article class="club-card"><div class="club-card-head"><div class="club-symbol">${logo ? `<img src="${escapeHTML(logo)}" alt="Logo ${escapeHTML(club.name)}" />` : "△"}</div><div><h3>${escapeHTML(club.name)}</h3><div class="club-meta"><span>${escapeHTML(sportLabel(club.category))}</span><span>·</span><span>${escapeHTML(club.location_name)}</span><span>·</span><span>${count} membre${count > 1 ? "s" : ""}</span></div></div></div><div class="club-next">${next ? `<strong>Prochain Moment</strong><span>${escapeHTML(next.title)} · ${escapeHTML(formatDate(next.start_at))}</span>` : `<strong>Prochain Moment</strong><span>Rien n’est encore prévu.</span>`}</div><button class="club-open" data-open-club="${club.id}" type="button">Ouvrir le Club</button></article>`;
 }
 
 function circleIdentity(person, size = "portrait") {
@@ -258,9 +264,9 @@ function renderCircle() {
 
   if (!hasCircleContent) {
     elements.circleView.innerHTML = `<div class="together-empty-state">
-      <div><span class="card-label">Ton espace partagé</span><h2>Commence par créer ton Cercle</h2><p>Invite une personne ou réunis un groupe dans un Club pour préparer vos premiers Moments.</p></div>
+      <div><span class="card-label">Ton espace partagé</span><h2>Ton Cercle est encore vide.</h2><p>Ajoute les personnes avec qui tu souhaites partager tes Moments.</p></div>
       <div class="together-empty-actions">
-        <button class="together-primary" id="openEmptyCircleInvite" type="button">Inviter dans mon Cercle</button>
+        <button class="together-primary" id="openEmptyCircleInvite" type="button">Ajouter une personne</button>
         <button class="together-secondary" id="openEmptyCreateClub" type="button">Créer un Club</button>
       </div>
     </div>`;
@@ -308,7 +314,7 @@ async function openClubDetail(clubId) {
     <section class="detail-section"><div class="detail-title"><h3>Membres</h3>${canManage && acceptedFriends.length ? `<select id="clubInviteUser"><option value="">Inviter un proche…</option>${acceptedFriends.map((id) => `<option value="${id}">${escapeHTML(TOGETHER.passports.get(id)?.display_name || "Membre du Cercle")}</option>`).join("")}</select>` : ""}</div>
       <div class="member-list">${(members || []).map((member) => { const profile = profiles.get(member.user_id) || {}; const roleControl = canManage && member.role !== "OWNER" && member.membership_status === "ACCEPTED" ? `<select class="member-role-select" data-member-role="${member.id}">${[["MEMBER","Membre"],["ORGANIZER","Organisateur"],["ADMIN","Administrateur"]].map(([value,label]) => `<option value="${value}" ${member.role === value ? "selected" : ""}>${label}</option>`).join("")}</select>` : `<small>${escapeHTML(memberRoleLabel(member.role))} · ${escapeHTML(membershipStatusLabel(member.membership_status))}</small>`; return `<div class="member-row"><span class="mini-avatar">${profile.avatar_url ? `<img src="${escapeHTML(profile.avatar_url)}" alt="" />` : initials(profile.display_name || "?")}</span><span><strong>${escapeHTML(profile.display_name || (member.user_id === TOGETHER.user.id ? "Toi" : "Membre"))}</strong>${roleControl}</span></div>`; }).join("")}</div>
     </section>
-    <section class="detail-section"><div class="detail-title"><h3>Moments du Club</h3><button class="together-secondary" id="clubCreateMoment" type="button">Créer un Moment</button></div><div class="detail-moments">${TOGETHER.moments.filter((moment) => moment.club_id === club.id).slice(0, 5).map((moment) => `<button data-detail-moment="${moment.id}"><strong>${escapeHTML(moment.title)}</strong><span>${escapeHTML(formatDate(moment.start_at))}</span></button>`).join("") || "Aucun Moment pour l’instant."}</div></section>
+    <section class="detail-section"><div class="detail-title"><h3>Moments du Club</h3><button class="together-secondary" id="clubCreateMoment" type="button">Créer un Moment</button></div><div class="detail-moments">${TOGETHER.moments.filter((moment) => moment.club_id === club.id).slice(0, 5).map((moment) => `<button data-detail-moment="${moment.id}"><strong>${escapeHTML(moment.title)}</strong><span>${escapeHTML(formatDate(moment.start_at))}</span></button>`).join("") || "Les Moments du Club apparaîtront ici."}</div></section>
   </div>`;
   elements.clubDetail.querySelector(".detail-close")?.addEventListener("click", () => elements.clubDetailDialog.close());
   document.getElementById("editClub")?.addEventListener("click", () => { elements.clubDetailDialog.close(); openClubForm(club); });
@@ -503,7 +509,9 @@ async function loadTogether() {
   const firstError = momentsResult.error || clubsResult.error || circleResult.error || membershipsResult.error;
   if (firstError) {
     console.error("TOGETHER:", firstError);
-    setStatus(firstError.code === "42P01" || firstError.code === "PGRST205" ? "Le module est prêt. La migration Supabase TOGETHER doit encore être appliquée pour activer les données." : `Impossible de charger TOGETHER : ${firstError.message}`, true);
+    setStatus(firstError.code === "42P01" || firstError.code === "PGRST205" ? "Le module est prêt. La migration Supabase TOGETHER doit encore être appliquée pour activer les données." : "TOGETHER n’a pas pu être chargé.", true);
+    elements.status.insertAdjacentHTML("beforeend", ' <button type="button" data-together-retry>Réessayer</button>');
+    return;
   } else setStatus("");
 
   TOGETHER.moments = momentsResult.data || [];
@@ -758,6 +766,10 @@ elements.primaryAction?.addEventListener("click", () => {
   if (TOGETHER.section === "moments") return openMomentForm();
   if (TOGETHER.section === "clubs") return openClubForm();
   openCircleInviteForm();
+});
+document.addEventListener("click", (event) => {
+  if (event.target.closest("[data-together-retry]")) loadTogether();
+  if (event.target.closest("[data-empty-create-moment]")) openMomentForm();
 });
 document.getElementById("addDateOption")?.addEventListener("click", () => {
   const row = document.createElement("div");

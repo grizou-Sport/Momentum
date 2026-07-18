@@ -25,8 +25,8 @@ function renderSports() {
         `
         : `
           <div class="you-note-box">
-            <span>Momentum observe</span>
-            <p>Choisis tes premiers terrains dans le questionnaire. Ils évolueront ensuite naturellement avec tes activités.</p>
+            <span>Tes pratiques</span>
+            <p>Tes pratiques apparaîtront ici au fil de ton parcours.</p>
           </div>
         `
     }

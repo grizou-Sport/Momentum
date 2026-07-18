@@ -158,6 +158,9 @@ async function loadActivitiesForHome(
     );
   }
 
+  const firstError = activitiesResult.error || momentsResult.error;
+  if (firstError) throw firstError;
+
   const activities = (activitiesResult.data || [])
     .filter((row) => row.activity_date)
     .map(mapActivityRow);

@@ -13,7 +13,7 @@ function renderToday(date, sessions) {
   if (narrative) {
     narrative.textContent = sessions.length
       ? `${sessions.length} moment${sessions.length > 1 ? "s" : ""} inscrit${sessions.length > 1 ? "s" : ""} aujourd'hui.`
-      : "La journée est libre ou encore à écrire.";
+      : "Aucun Moment inscrit aujourd’hui. Une journée calme fait aussi partie du chemin.";
   }
 }
 
@@ -31,7 +31,7 @@ function renderLivingWeek(centerDate = new Date()) {
 
     const summary = sessions.length
       ? sessions.map((session) => sessionLabel(session)).join(" · ")
-      : "Aucun moment";
+      : "Rien n’est encore prévu";
 
     return `
       <button
@@ -89,7 +89,7 @@ function renderMonth() {
         <div class="month-day-moments">
           <div class="calendar-session-icons">${sessionIconsHtml(sessions, "calendar-session-icon")}</div>
           <strong>${sessions.length || "—"}</strong>
-          <p>${sessions.length ? `${sessions.length} moment${sessions.length > 1 ? "s" : ""}` : "Aucun moment"}</p>
+          <p>${sessions.length ? `${sessions.length} Moment${sessions.length > 1 ? "s" : ""}` : "Rien d’inscrit"}</p>
         </div>
       </button>
     `;
@@ -130,7 +130,7 @@ async function openDay(date) {
         <p class="muted">
           ${sessions.length
             ? `${sessions.length} moment${sessions.length > 1 ? "s" : ""} inscrit${sessions.length > 1 ? "s" : ""}.`
-            : "La page est encore blanche."}
+            : "Rien n’est encore prévu pour cette journée."}
         </p>
       </div>
 
@@ -233,13 +233,13 @@ async function openDay(date) {
           `).join("")
         : `
             <div class="day-empty">
-              <p>Aucun moment pour cette journée.</p>
+              <p>Rien n’est encore prévu pour cette journée.</p>
               <button
                 type="button"
                 class="secondary"
                 data-action="add-moment"
                 data-date="${date}"
-              >Écrire le premier moment</button>
+              >Ajouter un Moment</button>
             </div>
           `}
     </div>

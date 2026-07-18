@@ -61,7 +61,7 @@ function renderMenuPreviews() {
     .slice(0, 3)
     .join(" · ");
 
-  setText("sportsMenuSummary", activeSports || "Apparaîtra avec tes activités");
+  setText("sportsMenuSummary", activeSports || "Tes pratiques apparaîtront ici");
   setText(
     "wellbeingMenuSummary",
     `${YOU.passport?.weight_kg || "—"} kg · VO₂ ${YOU.wellbeingProfile?.vo2max || "—"}`

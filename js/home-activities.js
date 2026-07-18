@@ -105,19 +105,14 @@ function durationMinutesFromForm(values) {
   return raw === null || raw === "" ? null : Number(raw);
 }
 
-function updateExperienceOutputs(form) {
-  form.querySelectorAll('[data-activity-experience] input[type="range"]').forEach((input) => {
-    input.closest("label")?.querySelector("output")?.replaceChildren(document.createTextNode(input.value));
-  });
-}
-
 function updateExperienceVisibility(form) {
   const experience = form.querySelector("[data-activity-experience]");
   if (!experience) return;
   const completed = form.elements.status?.value === "done";
   experience.hidden = !completed;
-  experience.querySelectorAll("input,textarea,select").forEach((control) => {
+  experience.querySelectorAll("input,textarea,select,momentum-slider").forEach((control) => {
     control.disabled = !completed;
+    if (control.matches("momentum-slider")) control.toggleAttribute("disabled", !completed);
   });
 }
 
@@ -131,10 +126,9 @@ async function loadActivityExperience(form, activityId) {
     .eq("user_id", user.id)
     .maybeSingle();
   if (error) throw error;
-  setFormValue(form, "perceived_challenge", data?.perceived_challenge ?? 5);
-  setFormValue(form, "perceived_mastery", data?.perceived_mastery ?? 5);
+  setFormValue(form, "perceived_challenge", data?.perceived_challenge ?? "");
+  setFormValue(form, "perceived_mastery", data?.perceived_mastery ?? "");
   setFormValue(form, "retained_memory", data?.retained_memory ?? "");
-  updateExperienceOutputs(form);
 }
 
 function renderActivityList(date, sessions) {
@@ -143,15 +137,11 @@ function renderActivityList(date, sessions) {
   if (!element) return;
 
   if (!sessions.length) {
-    element.innerHTML = `
-      <div class="day-feed-empty">
-        <h4>Aucun moment</h4>
-        <p>
-          Ajoute un sport, un moment de bien-être
-          ou une aventure.
-        </p>
-      </div>
-    `;
+    element.innerHTML = window.MomentumEmptyState?.render({
+      title:"Aucun Moment inscrit aujourd’hui.",
+      text:"Une journée calme fait aussi partie du chemin.",
+      compact:true
+    }) || '<div class="day-feed-empty"><h4>Aucun Moment inscrit aujourd’hui.</h4><p>Une journée calme fait aussi partie du chemin.</p></div>';
 
     return;
   }
@@ -302,6 +292,7 @@ function initialiseActivityForm() {
   if (!form) return;
 
   populateActivitySportOptions(form);
+  populateWellbeingOptions(form);
 
   if (form.dataset.initialised === "true") return;
 
@@ -317,11 +308,30 @@ function initialiseActivityForm() {
     });
 
   form.elements.status?.addEventListener("change", () => updateExperienceVisibility(form));
-  form.querySelectorAll('[data-activity-experience] input[type="range"]').forEach((input) => {
-    input.addEventListener("input", () => updateExperienceOutputs(form));
-  });
-
+  form.elements.wellbeing_activity_type?.addEventListener("change", () => updateWellbeingPreview(form));
   form.dataset.initialised = "true";
+}
+
+function populateWellbeingOptions(form) {
+  const field = form.elements.wellbeing_activity_type;
+  if (!field || field.dataset.populated === "true" || !window.MomentumWellbeing) return;
+  field.replaceChildren(new Option("Choisir", ""));
+  window.MomentumWellbeing.getOptions().forEach((activity) => field.add(new Option(activity.label, activity.id)));
+  field.dataset.populated = "true";
+  updateWellbeingPreview(form);
+}
+
+function updateWellbeingPreview(form) {
+  const preview = form.querySelector("[data-wellbeing-icon-preview]");
+  const value = form.elements.wellbeing_activity_type?.value;
+  if (!preview || !window.MomentumIcons) return;
+  const activity = window.MomentumWellbeing?.resolve(value);
+  preview.innerHTML = window.MomentumIcons.render(activity?.icon || "wellbeing", {
+    collection:"wellbeing",
+    size:24,
+    decorative:true
+  });
+  preview.title = activity?.label || "Bien-être";
 }
 
 function populateActivitySportOptions(form) {
@@ -368,6 +378,8 @@ function setSelectValue(form, name, value) {
   const normalizedValue =
     name === "sport"
       ? (window.MomentumSports?.resolveId(value) || String(value))
+      : name === "wellbeing_activity_type"
+        ? (window.MomentumWellbeing?.resolveId(value) || String(value))
       : String(value);
 
   const hasOption = [...field.options]
@@ -385,6 +397,7 @@ function setSelectValue(form, name, value) {
   }
 
   field.value = normalizedValue;
+  if (name === "wellbeing_activity_type") updateWellbeingPreview(form);
 }
 
 function resetActivityDialogMode(form) {
@@ -430,10 +443,9 @@ function openActivityDialog(date = null, returnToDay = false) {
 
   form.elements.status.value = "done";
   setDurationFormValues(form, null);
-  setFormValue(form, "rpe", 5);
-  setFormValue(form, "perceived_challenge", 5);
-  setFormValue(form, "perceived_mastery", 5);
-  updateExperienceOutputs(form);
+  setFormValue(form, "rpe", "");
+  setFormValue(form, "perceived_challenge", "");
+  setFormValue(form, "perceived_mastery", "");
   updateExperienceVisibility(form);
   form.dataset.returnToDay = returnToDay ? selectedDate : "";
 
@@ -653,9 +665,12 @@ function getActivityType(values, category) {
     adventure: "adventure_activity_type"
   };
 
-  return String(
+  const value = String(
     values.get(fieldNames[category]) || ""
   ).trim();
+  return category === "wellbeing"
+    ? (window.MomentumWellbeing?.getLabel(value, value) || value)
+    : value;
 }
 
 function getActivitySport(values, category) {

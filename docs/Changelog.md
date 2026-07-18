@@ -6,6 +6,8 @@ Les changements notables du projet sont consignés dans ce fichier.
 
 ### Ajouté
 
+- Famille SVG Bien-être dédiée et référentiel centralisé, avec lotus pour Massage et fallback neutre traçable en développement.
+- Composants partagés `MomentumSlider` et `EmptyState` pour les ressentis et les absences de données.
 - Module FLOW V1 sur HOME : carte Défi × Maîtrise, périodes, sélection et résumé d’activité.
 - Collecte rapide de l’effort physique, du défi et de la maîtrise après une activité réalisée, avec possibilité de répondre plus tard.
 - Table sécurisée `activity_flow_assessments` et couche de contexte interne extensible.
@@ -20,6 +22,10 @@ Les changements notables du projet sont consignés dans ce fichier.
 
 ### Modifié
 
+- Regroupement des évaluations FLOW aux coordonnées identiques avec compteur et accès à chaque Moment, sans modifier les valeurs enregistrées.
+- Protection des changements rapides de période FLOW contre les réponses obsolètes et conservation des dernières données valides en cas d’erreur.
+- Effort physique, Défi et Maîtrise démarrent désormais dans un état non renseigné et partagent la même interaction accessible de 1 à 10.
+- Réécriture des principaux états vides de HOME, FLOW, Progression, YOU et TOGETHER avec des erreurs et actions de reprise distinctes.
 - « À raconter » ouvre désormais la liste des activités sans ressenti, et chaque ancienne activité réalisée permet d’ajouter ou modifier son FLOW depuis le Journal.
 - Conversion de `README.md` en fichier de présentation du projet.
 - Archivage des anciennes notes du README dans `Notes version 0.07.md`.

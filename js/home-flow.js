@@ -21,7 +21,10 @@
     analysisActivities:[],
     assessments:new Map(),
     wellbeing:new Map(),
-    selectedActivityId:null
+    selectedActivityId:null,
+    selectedGroupKey:null,
+    requestVersion:0,
+    hasValidData:false
   };
 
   function flowPeriodStart(period = flowState.period) {
@@ -135,7 +138,7 @@
     return values.length ? values.join(" · ") : "Non renseigné";
   }
 
-  function renderFlowEmpty(message, detail = "") {
+  function renderFlowEmpty(message, detail = "", action = "") {
     const points = document.getElementById("flowPoints");
     const detailCard = document.getElementById("flowDetail");
     if (points) points.innerHTML = "";
@@ -144,6 +147,57 @@
         <span class="card-label">FLOW</span>
         <h3>${escapeHtml(message)}</h3>
         ${detail ? `<p>${escapeHtml(detail)}</p>` : ""}
+        ${action ? `<button class="secondary flow-retry" type="button" data-flow-action="change-period">${escapeHtml(action)}</button>` : ""}
+      </div>`;
+  }
+
+  function groupActivitiesByCoordinates(activities, assessments = flowState.assessments) {
+    const groups = new Map();
+    activities.forEach((activity) => {
+      const assessment = assessments.get(activity.id);
+      if (!assessment) return;
+      const key = `${assessment.perceived_challenge}:${assessment.perceived_mastery}`;
+      if (!groups.has(key)) groups.set(key, { key, assessment, activities:[] });
+      groups.get(key).activities.push(activity);
+    });
+    groups.forEach((group) => group.activities.sort((a, b) =>
+      String(b.activity_date).localeCompare(String(a.activity_date)) ||
+      flowActivityLabel(a).localeCompare(flowActivityLabel(b), "fr")
+    ));
+    return [...groups.values()];
+  }
+
+  function flowGroups(activities) {
+    return groupActivitiesByCoordinates(activities);
+  }
+
+  function renderFlowError() {
+    const detailCard = document.getElementById("flowDetail");
+    const periodSummary = document.getElementById("flowPeriodSummary");
+    if (periodSummary) periodSummary.textContent = flowState.hasValidData
+      ? "Mise à jour impossible · dernières données conservées"
+      : "FLOW momentanément indisponible";
+    if (detailCard) detailCard.innerHTML = `
+      <div class="flow-detail-empty" role="alert">
+        <span class="card-label">FLOW</span>
+        <h3>La carte n’a pas pu être chargée.</h3>
+        <p>${flowState.hasValidData ? "Les dernières données visibles sont conservées." : "Réessaie dans un instant."}</p>
+        <button class="secondary flow-retry" type="button" data-flow-action="retry">Réessayer</button>
+      </div>`;
+  }
+
+  function renderFlowGroup(group) {
+    const detail = document.getElementById("flowDetail");
+    if (!detail) return;
+    const zone = flowZoneKey(group.assessment.perceived_challenge, group.assessment.perceived_mastery);
+    detail.innerHTML = `
+      <div class="flow-group-detail">
+        <span class="card-label">${escapeHtml(flowZoneLabel(zone))}</span>
+        <h3>${group.activities.length} Moments au même endroit</h3>
+        <p>Défi ${group.assessment.perceived_challenge} / 10 · Maîtrise ${group.assessment.perceived_mastery} / 10</p>
+        <div class="flow-group-list" role="group" aria-label="Moments regroupés">
+          ${group.activities.map((activity) => `<button type="button" data-flow-group-activity="${escapeHtml(activity.id)}"><span>${escapeHtml(flowActivityLabel(activity))}</span><small>${escapeHtml(fmtDate(activity.activity_date))}</small></button>`).join("")}
+        </div>
       </div>`;
   }
 
@@ -160,24 +214,27 @@
       periodSummary.textContent = `${assessedActivities.length} expérience${assessedActivities.length > 1 ? "s" : ""} · ${periodLabel}`;
     }
 
-    points.innerHTML = assessedActivities.map((activity) => {
-      const assessment = flowState.assessments.get(activity.id);
+    const groups = flowGroups(assessedActivities);
+    points.innerHTML = groups.map((group) => {
+      const assessment = group.assessment;
       const zone = flowZoneKey(assessment.perceived_challenge, assessment.perceived_mastery);
+      const activity = group.activities[0];
       const color = window.MomentumSportVisuals?.getColor(activity.sport, activity.activity_category) || "#273c31";
-      const selected = activity.id === flowState.selectedActivityId;
+      const selected = group.key === flowState.selectedGroupKey || group.activities.some((item) => item.id === flowState.selectedActivityId);
+      const grouped = group.activities.length > 1;
       return `
         <button
-          class="flow-point${selected ? " is-selected" : ""}"
+          class="flow-point${selected ? " is-selected" : ""}${grouped ? " is-group" : ""}"
           type="button"
           style="--flow-x:${flowCoordinate(assessment.perceived_mastery)}%;--flow-y:${100 - flowCoordinate(assessment.perceived_challenge)}%;--flow-color:${color}"
-          data-flow-activity="${escapeHtml(activity.id)}"
+          ${grouped ? `data-flow-group="${escapeHtml(group.key)}"` : `data-flow-activity="${escapeHtml(activity.id)}"`}
           data-flow-zone="${zone}"
-          aria-label="${escapeHtml(flowActivityLabel(activity))}, ${escapeHtml(fmtDate(activity.activity_date))}, zone ${escapeHtml(flowZoneLabel(zone))}"
+          aria-label="${grouped ? `${group.activities.length} Moments, ` : `${escapeHtml(flowActivityLabel(activity))}, ${escapeHtml(fmtDate(activity.activity_date))}, `}défi ${assessment.perceived_challenge} sur 10, maîtrise ${assessment.perceived_mastery} sur 10, zone ${escapeHtml(flowZoneLabel(zone))}"
           aria-pressed="${selected ? "true" : "false"}"
-        ><span></span></button>`;
+        ><span></span>${grouped ? `<b aria-hidden="true">${group.activities.length}</b>` : ""}</button>`;
     }).join("");
 
-    const hasSelection = Boolean(flowState.selectedActivityId);
+    const hasSelection = Boolean(flowState.selectedActivityId || flowState.selectedGroupKey);
     points.classList.toggle("has-selection", hasSelection);
     document.querySelectorAll(".flow-zone").forEach((zone) => {
       zone.classList.toggle("is-active", hasSelection && zone.dataset.flowZone === points.querySelector(".flow-point.is-selected")?.dataset.flowZone);
@@ -185,8 +242,9 @@
 
     if (!assessedActivities.length) {
       renderFlowEmpty(
-        "La carte attend ton premier ressenti.",
-        pendingCount ? "Modifie un ancien Moment pour compléter son expérience." : "Enregistre un Moment pour commencer."
+        pendingCount ? "Ta carte FLOW prendra forme au fil de tes Moments." : "Aucun Moment évalué sur cette période.",
+        pendingCount ? "Après une activité, indique simplement comment tu l’as vécue." : "Ta carte reste disponible sur une autre période.",
+        pendingCount ? "" : "Modifier la période"
       );
     }
   }
@@ -260,15 +318,28 @@
     const activity = flowState.activities.find((item) => item.id === activityId);
     if (!activity || !flowState.assessments.has(activityId)) return;
     flowState.selectedActivityId = activityId;
+    const assessment = flowState.assessments.get(activityId);
+    flowState.selectedGroupKey = assessment ? `${assessment.perceived_challenge}:${assessment.perceived_mastery}` : null;
     renderFlowPoints();
     renderFlowDetail(activity);
   }
 
+  function selectFlowGroup(groupKey) {
+    const assessedActivities = flowState.activities.filter((activity) => flowState.assessments.has(activity.id));
+    const group = flowGroups(assessedActivities).find((item) => item.key === groupKey);
+    if (!group) return;
+    flowState.selectedActivityId = null;
+    flowState.selectedGroupKey = groupKey;
+    renderFlowPoints();
+    renderFlowGroup(group);
+  }
+
   async function loadFlowData(options = {}) {
+    const requestVersion = ++flowState.requestVersion;
+    const requestedPeriod = flowState.period;
     const user = window.momentumPageReady ? await window.momentumPageReady : await getCurrentUser();
-    if (!user) return;
-    flowState.user = user;
-    const periodStart = flowPeriodStart();
+    if (!user || requestVersion !== flowState.requestVersion) return;
+    const periodStart = flowPeriodStart(requestedPeriod);
     const analysisStart = iso(addDays(new Date(), -365));
     let query = window.momentumDB
       .from("activities")
@@ -276,29 +347,36 @@
       .eq("user_id", user.id)
       .eq("status", "done")
       .order("activity_date", { ascending:true });
-    if (flowState.period !== "all") query = query.gte("activity_date", analysisStart);
+    if (requestedPeriod !== "all") query = query.gte("activity_date", analysisStart);
 
     const { data:analysisActivities, error:activitiesError } = await query;
     if (activitiesError) throw activitiesError;
-    flowState.analysisActivities = analysisActivities || [];
-    flowState.activities = periodStart
-      ? flowState.analysisActivities.filter((activity) => activity.activity_date >= periodStart)
-      : flowState.analysisActivities;
+    const nextAnalysisActivities = analysisActivities || [];
+    const nextActivities = periodStart
+      ? nextAnalysisActivities.filter((activity) => activity.activity_date >= periodStart)
+      : nextAnalysisActivities;
 
-    const activityIds = flowState.activities.map((activity) => activity.id);
+    const activityIds = nextActivities.map((activity) => activity.id);
     const assessmentPromise = activityIds.length
       ? window.momentumDB.from("activity_flow_assessments").select("*").eq("user_id", user.id).in("activity_id", activityIds)
       : Promise.resolve({ data:[], error:null });
-    const wellbeingPromise = flowState.activities.length
-      ? window.momentumDB.from("daily_wellbeing").select("recorded_date,sleep_hours,motivation").eq("user_id", user.id).gte("recorded_date", flowState.activities[0].activity_date).lte("recorded_date", iso(new Date()))
+    const wellbeingPromise = nextActivities.length
+      ? window.momentumDB.from("daily_wellbeing").select("recorded_date,sleep_hours,motivation").eq("user_id", user.id).gte("recorded_date", nextActivities[0].activity_date).lte("recorded_date", iso(new Date()))
       : Promise.resolve({ data:[], error:null });
     const [assessmentResult, wellbeingResult] = await Promise.all([assessmentPromise, wellbeingPromise]);
     if (assessmentResult.error) throw assessmentResult.error;
+    if (wellbeingResult.error) throw wellbeingResult.error;
+    if (requestVersion !== flowState.requestVersion || requestedPeriod !== flowState.period) return;
 
+    flowState.user = user;
+    flowState.analysisActivities = nextAnalysisActivities;
+    flowState.activities = nextActivities;
     flowState.assessments = new Map((assessmentResult.data || []).map((assessment) => [assessment.activity_id, assessment]));
     flowState.wellbeing = new Map((wellbeingResult.data || []).map((day) => [day.recorded_date, day]));
+    flowState.hasValidData = true;
     if (flowState.selectedActivityId && !flowState.activities.some((activity) => activity.id === flowState.selectedActivityId)) {
       flowState.selectedActivityId = null;
+      flowState.selectedGroupKey = null;
     }
     renderFlowPoints();
     if (flowState.selectedActivityId) selectFlowActivity(flowState.selectedActivityId);
@@ -309,24 +387,48 @@
   function bindFlow() {
     document.getElementById("flowPeriod")?.addEventListener("change", async (event) => {
       flowState.period = event.currentTarget.value;
+      const requestedPeriod = flowState.period;
       flowState.selectedActivityId = null;
-      renderFlowEmpty("Chargement des expériences…");
+      flowState.selectedGroupKey = null;
+      const summary = document.getElementById("flowPeriodSummary");
+      if (summary) summary.textContent = "Chargement des expériences…";
+      const expectedRequestVersion = flowState.requestVersion + 1;
       try {
         await loadFlowData();
       } catch (error) {
+        if (requestedPeriod !== flowState.period || expectedRequestVersion !== flowState.requestVersion) return;
         console.error("FLOW : données indisponibles.", error);
-        renderFlowEmpty("FLOW est momentanément indisponible.", "Réessaie dans un instant.");
+        renderFlowError();
       }
     });
 
     document.getElementById("flowPoints")?.addEventListener("click", (event) => {
       const point = event.target.closest("[data-flow-activity]");
       if (point) selectFlowActivity(point.dataset.flowActivity);
+      const group = event.target.closest("[data-flow-group]");
+      if (group) selectFlowGroup(group.dataset.flowGroup);
     });
 
     document.getElementById("flowDetail")?.addEventListener("click", (event) => {
       const action = event.target.closest("[data-flow-action]");
+      const groupedActivity = event.target.closest("[data-flow-group-activity]");
+      if (groupedActivity) return selectFlowActivity(groupedActivity.dataset.flowGroupActivity);
       if (!action) return;
+      if (action.dataset.flowAction === "retry") {
+        const summary = document.getElementById("flowPeriodSummary");
+        if (summary) summary.textContent = "Chargement des expériences…";
+        const expectedRequestVersion = flowState.requestVersion + 1;
+        loadFlowData().catch((error) => {
+          if (expectedRequestVersion !== flowState.requestVersion) return;
+          console.error("FLOW : nouvel essai impossible.", error);
+          renderFlowError();
+        });
+        return;
+      }
+      if (action.dataset.flowAction === "change-period") {
+        document.getElementById("flowPeriod")?.focus();
+        return;
+      }
       const activity = flowState.activities.find((item) => item.id === action.dataset.flowActivity);
       if (!activity) return;
       if (action.dataset.flowAction === "open-activity") openDay(activity.activity_date);
@@ -338,17 +440,20 @@
 
   document.addEventListener("DOMContentLoaded", async () => {
     bindFlow();
+    const expectedRequestVersion = flowState.requestVersion + 1;
     try {
       await loadFlowData();
     } catch (error) {
+      if (expectedRequestVersion !== flowState.requestVersion) return;
       console.error("FLOW : données indisponibles.", error);
-      renderFlowEmpty("FLOW est momentanément indisponible.", "Réessaie dans un instant.");
+      renderFlowError();
     }
   });
 
   window.MomentumFlow = Object.freeze({
     analysisContext:buildFlowAnalysisContext,
     reload:loadFlowData,
-    zone:flowZoneKey
+    zone:flowZoneKey,
+    groupByCoordinates:groupActivitiesByCoordinates
   });
 })();

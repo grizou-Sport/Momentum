@@ -39,8 +39,13 @@
     return momentDate > todayDate ? "upcoming" : "past";
   }
 
+  function isCompletedActivity(activity) {
+    return String(activity?.status || "").toLowerCase() === "done";
+  }
+
   window.MomentumMoments = Object.freeze({
     calendarStatus,
-    localDateKey
+    localDateKey,
+    isCompletedActivity
   });
 })();

@@ -117,7 +117,7 @@ function setMissionMenuTitle(title) {
   const menuTitle = document.getElementById("missionMenuTitle");
   if (!menuTitle) return;
 
-  menuTitle.textContent = title?.trim() || "Aucun horizon";
+  menuTitle.textContent = title?.trim() || "Horizon non défini";
 }
 
 // =====================================================
@@ -188,7 +188,14 @@ async function loadMission() {
 
   if (error) {
     console.error("Erreur chargement horizon:", error);
-    renderMissionEmpty();
+    youDetail.innerHTML = `
+      <section class="you-panel" role="alert">
+        <p class="section-kicker">Mon Horizon</p>
+        <h2>Ton Horizon n’a pas pu être chargé.</h2>
+        <p class="you-panel-text">Réessaie dans un instant.</p>
+        <button class="you-primary-btn" id="retryMission" type="button">Réessayer</button>
+      </section>`;
+    document.getElementById("retryMission")?.addEventListener("click", loadMission);
     return;
   }
 
@@ -356,7 +363,7 @@ async function renderMissionEmpty() {
     <section class="you-panel mission-card">
       <div class="mission-cover">
         <p class="section-kicker">Mon Horizon</p>
-        <h2>Aucun horizon défini</h2>
+        <h2>Ton Horizon n’est pas encore défini.</h2>
       </div>
 
       <div class="mission-separator"></div>
@@ -367,7 +374,7 @@ async function renderMissionEmpty() {
 
       <div class="mission-actions">
         <button class="you-primary-btn" id="openMissionFormBtn" type="button">
-          Créer mon horizon
+          Définir mon Horizon
         </button>
 
         ${

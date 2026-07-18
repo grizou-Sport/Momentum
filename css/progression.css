@@ -124,3 +124,6 @@
   .intensity-breakdown > div{grid-template-columns:85px 1fr 46px}
 }
 @media(prefers-reduced-motion:reduce){.progression-path,.progression-hero-mark circle{animation:none;stroke-dashoffset:0;opacity:1}}
+.progression-chart-empty{height:100%;display:grid;align-items:center}
+.progression-chart-empty[hidden]{display:none}
+[data-period-message] button{width:auto;padding:0;border:0;border-bottom:1px solid currentColor;border-radius:0;background:transparent;color:inherit;font:inherit;font-weight:800;cursor:pointer}

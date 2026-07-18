@@ -1039,6 +1039,8 @@ main{
 .flow-point:hover,.flow-point:focus-visible{z-index:3;transform:translate(-50%,-50%) scale(1.25)}
 .flow-points.has-selection .flow-point:not(.is-selected){opacity:.28}
 .flow-point.is-selected{z-index:4;transform:translate(-50%,-50%) scale(1.38);box-shadow:0 0 0 5px rgba(255,255,255,.9),0 0 0 7px var(--flow-color),0 8px 22px rgba(20,25,22,.24)}
+.flow-point.is-group{width:30px;height:30px;border-width:2px}
+.flow-point.is-group b{position:absolute;right:-8px;top:-9px;display:grid;place-items:center;min-width:19px;height:19px;padding:0 4px;border:2px solid #fff;border-radius:999px;background:var(--ink);color:#fff;font-size:10px;line-height:1}
 
 .flow-x-axis{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;padding:12px 4px 0;color:var(--muted);font-size:9px;font-weight:750}
 .flow-x-axis strong{color:var(--ink-soft);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
@@ -1062,6 +1064,12 @@ main{
 .flow-photo-grid figure{aspect-ratio:1;margin:0;overflow:hidden;border-radius:8px;background:var(--surface-soft)}
 .flow-photo-grid img{width:100%;height:100%;object-fit:cover}.flow-no-photos{grid-column:1/-1;margin:0;color:var(--muted);font-size:12px}
 .flow-detail-actions{display:grid;grid-template-columns:1fr;gap:8px;margin-top:24px}.flow-detail-actions button{width:100%}
+.flow-group-detail h3{margin:8px 0;font-size:30px}.flow-group-detail>p{margin:0;color:var(--muted)}
+.flow-group-list{display:grid;gap:8px;margin-top:24px}
+.flow-group-list button{display:grid;gap:3px;width:100%;padding:15px;border:1px solid var(--line);border-radius:12px;background:var(--surface-soft);color:var(--ink);text-align:left}
+.flow-group-list button:hover,.flow-group-list button:focus-visible{border-color:var(--line-strong);background:var(--surface)}
+.flow-group-list span{font-weight:800}.flow-group-list small{color:var(--muted)}
+.flow-retry{width:auto;margin-top:20px}
 
 .flow-dialog{position:relative;width:min(720px,calc(100% - 32px));max-height:calc(100svh - 40px);overflow:auto;border:0;border-radius:var(--radius-xl);padding:0;background:var(--surface);color:var(--ink);box-shadow:var(--shadow-lg)}
 .flow-dialog::backdrop{background:rgba(0,0,0,.46);backdrop-filter:blur(8px)}
@@ -1077,11 +1085,18 @@ main{
 
 .flow-assessment-form{display:grid;gap:24px}
 .flow-assessment-heading p{margin:0;color:var(--muted)}
-.flow-range-field{display:grid;gap:12px;padding:18px 0;border-top:1px solid var(--line)}
-.flow-range-field > span:first-child{font-size:17px;font-weight:780}
-.flow-range-field input{width:100%;padding:0;accent-color:#273c31}
-.flow-range-scale{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;color:var(--muted)}
-.flow-range-scale small:last-child{text-align:right}.flow-range-scale output{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;font-weight:900}
+momentum-slider{display:grid;gap:12px;min-width:0;padding:18px 0;border-top:1px solid var(--line)}
+.momentum-slider-label{font-size:17px;font-weight:780;color:var(--ink)}
+.momentum-slider-input{width:100%;min-height:44px;padding:0;accent-color:#273c31;cursor:pointer}
+.momentum-slider-input:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 35%,transparent);outline-offset:4px}
+.momentum-slider-scale{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;color:var(--muted)}
+.momentum-slider-scale small:last-child{text-align:right}
+.momentum-slider-scale output{display:grid;place-items:center;min-width:34px;min-height:34px;padding:0 9px;border-radius:999px;background:var(--ink);color:#fff;font-size:12px;font-weight:900}
+momentum-slider.is-unset .momentum-slider-input{opacity:.48}
+momentum-slider.is-unset .momentum-slider-scale output{background:var(--surface-soft);color:var(--muted);font-weight:750}
+momentum-slider[disabled]{opacity:.55}
+.wellbeing-type-preview{display:flex;align-items:center;gap:8px;min-height:28px;margin-top:4px;color:var(--muted)}
+.wellbeing-type-preview img{width:24px;height:24px}
 .flow-assessment-actions{display:flex;justify-content:flex-end;gap:10px}.flow-assessment-actions button{width:auto}
 
 @media(max-width:1050px){

@@ -126,21 +126,21 @@
             <span id="flowPeriodSummary">Chargement des expériences…</span>
           </div>
           <div class="flow-map-layout">
-            <div class="flow-y-axis" aria-hidden="true"><span>Très élevé</span><strong>Défi ressenti</strong><span>Faible</span></div>
+            <div class="flow-y-axis" aria-hidden="true"><span>10 · Extrême</span><strong>Défi</strong><span>1 · Très faible</span></div>
             <div>
-              <div class="flow-plane" id="flowPlane" aria-label="Carte du Flow : défi ressenti selon la maîtrise ressentie">
+              <div class="flow-plane" id="flowPlane" aria-label="Carte FLOW : Défi de 1 à 10 selon Maîtrise de 1 à 10">
                 <div class="flow-zone" data-flow-zone="explorer"><span>Explorer</span></div>
                 <div class="flow-zone" data-flow-zone="se-depasser"><span>Se dépasser</span></div>
                 <div class="flow-zone is-flow" data-flow-zone="flow"><span>FLOW</span></div>
                 <div class="flow-zone" data-flow-zone="apprendre"><span>Apprendre</span></div>
-                <div class="flow-zone" data-flow-zone="equilibre"></div>
+                <div class="flow-zone" data-flow-zone="equilibre"><span>Expérience</span></div>
                 <div class="flow-zone" data-flow-zone="maitriser"><span>Maîtriser</span></div>
                 <div class="flow-zone" data-flow-zone="recuperer"><span>Récupérer</span></div>
                 <div class="flow-zone" data-flow-zone="routine"><span>Routine</span></div>
                 <div class="flow-zone" data-flow-zone="relaxation"><span>Relaxation</span></div>
                 <div id="flowPoints" class="flow-points"></div>
               </div>
-              <div class="flow-x-axis" aria-hidden="true"><span>Faible</span><strong>Maîtrise ressentie</strong><span>Totale</span></div>
+              <div class="flow-x-axis" aria-hidden="true"><span>1 · Très faible</span><strong>Maîtrise</strong><span>10 · Totale</span></div>
             </div>
           </div>
         </div>
@@ -258,7 +258,7 @@
             name="activity_category"
             value="wellbeing"
           />
-          <span><img src="Assets/icons/sports/mobility.svg" alt="" aria-hidden="true" />Bien-être</span>
+          <span><img src="Assets/icons/wellbeing/wellbeing.svg" alt="" aria-hidden="true" />Bien-être</span>
         </label>
 
         <label>
@@ -435,50 +435,9 @@
         Moment de bien-être
 
         <select name="wellbeing_activity_type">
-          <option value="">
-            Choisir
-          </option>
-
-          <option value="Méditation">
-            Méditation
-          </option>
-
-          <option value="Respiration">
-            Respiration
-          </option>
-
-          <option value="Mobilité">
-            Mobilité
-          </option>
-
-          <option value="Étirements">
-            Étirements
-          </option>
-
-          <option value="Massage">
-            Massage
-          </option>
-
-          <option value="Sauna">
-            Sauna
-          </option>
-
-          <option value="Bain froid">
-            Bain froid
-          </option>
-
-          <option value="Repos">
-            Repos
-          </option>
-
-          <option value="Sommeil">
-            Sommeil
-          </option>
-
-          <option value="Autre">
-            Autre
-          </option>
+          <option value="">Choisir</option>
         </select>
+        <span class="wellbeing-type-preview" data-wellbeing-icon-preview aria-hidden="true"></span>
       </label>
 
       <!-- AVENTURE -->
@@ -551,23 +510,11 @@
         <legend>Comment as-tu vécu ce moment&nbsp;?</legend>
         <p>Trois réponses simples pour nourrir tes analyses, sans formulaire FLOW séparé.</p>
 
-        <label class="flow-range-field">
-          <span>Effort physique</span>
-          <input name="rpe" type="range" min="1" max="10" step="1" value="5" />
-          <span class="flow-range-scale"><small>Très facile</small><output>5</output><small>Maximal</small></span>
-        </label>
+        <momentum-slider name="rpe" title="Effort physique" min="1" max="10" min-label="Facile" max-label="Maximal" required></momentum-slider>
 
-        <label class="flow-range-field">
-          <span>Défi</span>
-          <input name="perceived_challenge" type="range" min="1" max="10" step="1" value="5" />
-          <span class="flow-range-scale"><small>Très faible</small><output>5</output><small>Extrême</small></span>
-        </label>
+        <momentum-slider name="perceived_challenge" title="Défi" min="1" max="10" min-label="Très faible" max-label="Extrême" required></momentum-slider>
 
-        <label class="flow-range-field">
-          <span>Maîtrise</span>
-          <input name="perceived_mastery" type="range" min="1" max="10" step="1" value="5" />
-          <span class="flow-range-scale"><small>Très faible</small><output>5</output><small>Totale</small></span>
-        </label>
+        <momentum-slider name="perceived_mastery" title="Maîtrise" min="1" max="10" min-label="Très faible" max-label="Totale" required></momentum-slider>
 
         <label>
           <span>Ce que tu souhaites garder</span>
@@ -656,6 +603,8 @@
 <script src="js/momentum-map.js"></script>
 <script src="js/momentum-moments.js"></script>
 <script src="js/momentum-duration-picker.js"></script>
+<script src="js/momentum-slider.js"></script>
+<script src="js/momentum-empty-state.js"></script>
 
 <script src="js/home-core.js"></script>
 <script src="js/home-data.js"></script>

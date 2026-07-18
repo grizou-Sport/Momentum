@@ -12,7 +12,7 @@ const progressionState = {
   activities:[], weeks:[], chart:null, loadChart:null, sportChart:null,
   wellnessChart:null, mode:"time", wellnessMode:"summary", passport:null,
   physiological:null, loadSeries:[], sportGroups:[], wellbeingDays:[],
-  periodPreset:"current-week", periodStart:null, periodEnd:null
+  periodPreset:"current-week", periodStart:null, periodEnd:null, requestVersion:0
 };
 
 function progressionPeriodRange(preset = progressionState.periodPreset, customStart = null, customEnd = null) {
@@ -67,6 +67,8 @@ function progressionWeeks(startValue, endValue) {
 
 async function loadProgressionData() {
   const message = document.querySelector("[data-period-message]");
+  const requestVersion = ++progressionState.requestVersion;
+  if (message) message.textContent = "Chargement des indicateurs…";
 
   try {
     const user = window.momentumPageReady
@@ -84,13 +86,15 @@ async function loadProgressionData() {
     progressionState.periodStart = start;
     progressionState.periodEnd = end;
     const [activitiesResult, passportResult, dailyResult, daysResult, physiologicalResult] = await Promise.all([
-      window.momentumDB.from("activities").select("id,sport,activity_type,activity_category,activity_date,duration_min,distance_km,elevation_m,rpe,avg_hr,status").eq("user_id", user.id).gte("activity_date", start).lte("activity_date", end).order("activity_date"),
+      window.momentumDB.from("activities").select("id,sport,activity_type,activity_category,activity_date,duration_min,distance_km,elevation_m,rpe,avg_hr,status").eq("user_id", user.id).in("status", ["done", "planned"]).gte("activity_date", start).lte("activity_date", end).order("activity_date"),
       window.momentumDB.from("passports").select("sport_level,habits,personalization").eq("user_id", user.id).maybeSingle(),
       window.momentumDB.from("daily_wellbeing").select("recorded_date,sleep_hours,motivation,resting_hr,hrv_ms,sleep_quality_value,sleep_quality_unit,source_label").eq("user_id",user.id).gte("recorded_date",start).lte("recorded_date",end).order("recorded_date"),
       window.momentumDB.from("days").select("day_date,note,mood,energy,sleep_hours,stress,rest_hr,hrv").eq("user_id",user.id).gte("day_date",start).lte("day_date",end).order("day_date"),
       window.momentumDB.from("wellbeing_profile").select("resting_hr,preferred_sleep_hours").eq("user_id",user.id).maybeSingle(),
     ]);
-    if (activitiesResult.error) throw activitiesResult.error;
+    const firstError = activitiesResult.error || passportResult.error || dailyResult.error || daysResult.error || physiologicalResult.error;
+    if (firstError) throw firstError;
+    if (requestVersion !== progressionState.requestVersion) return;
     progressionState.activities = activitiesResult.data || [];
     progressionState.passport = passportResult.data || null;
     progressionState.physiological = physiologicalResult.data || null;
@@ -107,14 +111,15 @@ async function loadProgressionData() {
     renderSportChart();
     renderWellnessChart();
   } catch (error) {
+    if (requestVersion !== progressionState.requestVersion) return;
     console.error("PROGRESSION : impossible de charger les indicateurs.", error);
-    if (message) message.textContent = "Les indicateurs n’ont pas pu être chargés. Réessaie dans un instant.";
+    if (message) message.innerHTML = 'Les indicateurs n’ont pas pu être chargés. <button type="button" data-progression-retry>Réessayer</button>';
     document.querySelectorAll(".progression-reveal").forEach((card) => card.classList.add("is-visible"));
   }
 }
 
 function completedActivities(activities = progressionState.activities) {
-  return activities.filter((activity) => activity.status !== "planned");
+  return activities.filter((activity) => window.MomentumMoments?.isCompletedActivity(activity) ?? activity.status === "done");
 }
 
 function plannedActivities(activities = progressionState.activities) {
@@ -123,6 +128,29 @@ function plannedActivities(activities = progressionState.activities) {
 
 function colorWithAlpha(color, alphaHex = "55") {
   return /^#[0-9a-f]{6}$/i.test(color) ? `${color}${alphaHex}` : color;
+}
+
+function setProgressionChartEmpty(canvas, isEmpty, title = "Aucune donnée ne correspond à cette période.", text = "Tes premières activités feront apparaître ta progression ici.") {
+  const wrapper = canvas?.parentElement;
+  if (!wrapper) return;
+  let empty = wrapper.querySelector(".progression-chart-empty");
+  if (!empty) {
+    empty = document.createElement("div");
+    empty.className = "progression-chart-empty";
+    wrapper.append(empty);
+  }
+  empty.hidden = !isEmpty;
+  canvas.hidden = isEmpty;
+  if (isEmpty) {
+    const hasCustomFilter = progressionState.periodPreset !== "current-week";
+    empty.innerHTML = window.MomentumEmptyState?.render({
+      title:hasCustomFilter ? title : "Tes premières activités feront apparaître ta progression ici.",
+      text:hasCustomFilter ? "Aucune activité réalisée ne correspond à la période choisie." : text,
+      action:hasCustomFilter ? "Réinitialiser les filtres" : "",
+      actionAttributes:hasCustomFilter ? "data-progression-reset" : "",
+      compact:true
+    }) || `<strong>${escapeHtml(title)}</strong>`;
+  }
 }
 
 function progressionGroups() {
@@ -153,6 +181,9 @@ function renderVolumeChart() {
   const canvas = document.getElementById("volumeChart");
   if (!canvas || !window.Chart) return;
   progressionState.chart?.destroy();
+  const hasCompleted = completedActivities().length > 0;
+  setProgressionChartEmpty(canvas, !hasCompleted);
+  if (!hasCompleted) { renderVolumeInsight(); requestAnimationFrame(() => document.getElementById("volumeChartCard")?.classList.add("is-visible")); return; }
   const groups = progressionGroups();
   const datasets = groups.flatMap((group) => [
     { label:group.label, stack:"volume", backgroundColor:group.color, borderRadius:5, borderSkipped:false, data:progressionState.weeks.map((week) => completedActivities(week.activities).filter((activity) => window.MomentumSportVisuals.getGroup(activity.sport, activity.activity_category).id === group.id).reduce((sum, activity) => sum + activityValue(activity, progressionState.mode), 0)) },
@@ -171,7 +202,7 @@ function renderVolumeInsight() {
   const element = document.getElementById("volumeInsight");
   if (!element) return;
   const recent = completedActivities(progressionState.weeks.at(-1)?.activities || []);
-  if (!recent.length) { element.textContent = "Cette semaine est encore une page blanche."; return; }
+  if (!recent.length) { element.textContent = "Aucune activité réalisée cette semaine."; return; }
   const totals = new Map();
   recent.forEach((activity) => { const group = window.MomentumSportVisuals.getGroup(activity.sport, activity.activity_category); totals.set(group.label, (totals.get(group.label) || 0) + activityValue(activity, "time")); });
   const dominant = [...totals.entries()].sort((a,b) => b[1] - a[1])[0]?.[0];
@@ -239,6 +270,15 @@ function loadInterpretation(current) {
 function renderLoadChart() {
   const canvas = document.getElementById("fitnessChart");
   if (!canvas || !window.Chart) return;
+  const hasCompleted = completedActivities().length > 0;
+  setProgressionChartEmpty(canvas, !hasCompleted);
+  if (!hasCompleted) {
+    progressionState.loadChart?.destroy();
+    document.getElementById("loadStatus").innerHTML = "";
+    document.getElementById("loadInsight").textContent = "Tes premières activités feront apparaître ta progression ici.";
+    requestAnimationFrame(()=>document.getElementById("loadChartCard")?.classList.add("is-visible"));
+    return;
+  }
   const series = buildLoadSeries();
   const phase = loadPhase(series);
   const current = series.at(-1);
@@ -269,7 +309,7 @@ function buildSportDistribution() {
     group.activities.push(activity);
     if (activity.status === "planned") {
       group.plannedHours += activityValue(activity,"time");
-    } else {
+    } else if (completedActivities([activity]).length) {
       group.hours += activityValue(activity,"time");
       group.distance += activityValue(activity,"distance");
     }
@@ -282,6 +322,9 @@ function renderSportChart() {
   const canvas=document.getElementById("sportChart");
   if(!canvas||!window.Chart)return;
   const groups=buildSportDistribution();
+  const hasCompleted = groups.some((group) => group.hours > 0);
+  setProgressionChartEmpty(canvas, !hasCompleted);
+  if (!hasCompleted) { progressionState.sportChart?.destroy(); document.getElementById("sportInsight").textContent="Tes premières activités feront apparaître ta progression ici."; requestAnimationFrame(()=>document.getElementById("sportChartCard")?.classList.add("is-visible")); return; }
   canvas.parentElement.style.height=`${Math.max(300,groups.length*48)}px`;
   progressionState.sportChart?.destroy();
   progressionState.sportChart=new Chart(canvas,{type:"bar",data:{labels:groups.map((group)=>group.label),datasets:[{label:"Réalisé",stack:"time",data:groups.map((group)=>group.hours),backgroundColor:groups.map((group)=>group.color),borderRadius:8,borderSkipped:false,barThickness:22},{label:"Prévu",stack:"time",data:groups.map((group)=>group.plannedHours),backgroundColor:groups.map((group)=>colorWithAlpha(group.color)),borderColor:groups.map((group)=>group.color),borderWidth:1,borderRadius:8,borderSkipped:false,barThickness:22}]},options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,animation:{duration:850,easing:"easeOutQuart"},onClick:(_event,elements)=>{if(elements[0])openSportDetail(elements[0].index);},plugins:{legend:{position:"bottom",align:"start",labels:{usePointStyle:true,pointStyle:"circle",boxWidth:8,padding:16}},tooltip:{callbacks:{label:(context)=>`${context.dataset.label} : ${context.parsed.x.toFixed(1)} h`}}},scales:{x:{stacked:true,beginAtZero:true,grid:{color:"rgba(20,20,20,.07)"},ticks:{color:"#858178",callback:(value)=>`${value} h`}},y:{stacked:true,grid:{display:false},ticks:{color:"#2f2f2f",font:{weight:"700"}}}}}});
@@ -396,6 +439,8 @@ function renderWellnessChart() {
   const definition=wellnessDefinition(progressionState.wellnessMode);
   const days=progressionState.wellbeingDays;
   const availableCount=days.filter((day)=>day[definition.dataKey]!=null).length;
+  setProgressionChartEmpty(canvas, availableCount === 0, "Aucune donnée ne correspond à cette période.", "Le bien-être apparaîtra après une saisie ou une source connectée.");
+  if (availableCount === 0) { progressionState.wellnessChart?.destroy(); document.getElementById("wellnessInsight").textContent=""; requestAnimationFrame(()=>document.getElementById("wellnessChartCard")?.classList.add("is-visible")); return; }
   progressionState.wellnessChart?.destroy();
   progressionState.wellnessChart=new Chart(canvas,{type:"line",data:{labels:days.map((day)=>new Intl.DateTimeFormat("fr-CH",{day:"numeric",month:"short"}).format(dateFromIso(day.date))),datasets:[{label:definition.label,data:days.map((day)=>day[definition.dataKey]),borderColor:definition.color,backgroundColor:`${definition.color}18`,fill:true,tension:.35,pointRadius:days.length>45?0:2,pointHoverRadius:5,spanGaps:true,borderWidth:2.5}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:850,easing:"easeOutQuart"},interaction:{mode:"index",intersect:false},onClick:(_event,elements)=>{if(elements[0])openWellnessDay(elements[0].index);},plugins:{legend:{display:false},tooltip:{callbacks:{label:(context)=>`${definition.label} : ${wellnessChartValue(progressionState.wellnessMode,context.parsed.y)}`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,maxRotation:0,color:"#858178"}},y:{...definition.scale,grid:{color:"rgba(20,20,20,.07)"},ticks:{color:"#858178",stepSize:definition.stepSize,callback:(value)=>wellnessAxisValue(progressionState.wellnessMode,value)}}}}});
   if(availableCount<5){progressionState.wellnessChart.data.datasets[0].pointRadius=4;progressionState.wellnessChart.update("none");}
@@ -449,6 +494,16 @@ async function applyProgressionPeriod(preset, customStart = null, customEnd = nu
 }
 
 function bindProgression() {
+  document.addEventListener("click", async (event) => {
+    if (event.target.closest("[data-progression-retry]")) await loadProgressionData();
+    if (event.target.closest("[data-progression-reset]")) {
+      const preset = document.querySelector("[data-period-preset]");
+      if (preset) preset.value = "current-week";
+      const custom = document.querySelector("[data-period-custom]");
+      if (custom) custom.hidden = true;
+      await applyProgressionPeriod("current-week");
+    }
+  });
   document.querySelectorAll("[data-volume-mode]").forEach((button) => button.addEventListener("click", () => { progressionState.mode=button.dataset.volumeMode; document.querySelectorAll("[data-volume-mode]").forEach((item)=>item.classList.toggle("active",item===button)); renderVolumeChart(); }));
   document.querySelectorAll("[data-wellness-mode]").forEach((button) => button.addEventListener("click",()=>{progressionState.wellnessMode=button.dataset.wellnessMode;document.querySelectorAll("[data-wellness-mode]").forEach((item)=>item.classList.toggle("active",item===button));renderWellnessChart();}));
   const preset = document.querySelector("[data-period-preset]");

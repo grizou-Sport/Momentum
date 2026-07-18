@@ -8,12 +8,26 @@ async function renderHome() {
   const todayDate = new Date();
   const today = iso(todayDate);
 
-  await Promise.all([
-    renderHero(),
-    loadPassportLocation(),
-    loadActivitiesForHome(todayDate, visibleMonth),
-    loadDailyWellbeing(today)
-  ]);
+  const activityList = $("#activityList");
+  if (activityList && !(state.sessions || []).length) activityList.innerHTML = '<div class="day-feed-empty" role="status"><h4>Chargement des Moments…</h4></div>';
+
+  try {
+    await Promise.all([
+      renderHero(),
+      loadPassportLocation(),
+      loadActivitiesForHome(todayDate, visibleMonth),
+      loadDailyWellbeing(today)
+    ]);
+  } catch (error) {
+    console.error("HOME : données momentanément indisponibles.", error);
+    if (activityList && !(state.sessions || []).length) activityList.innerHTML = `
+      <div class="day-feed-empty" role="alert">
+        <h4>Les Moments n’ont pas pu être chargés.</h4>
+        <p>Réessaie dans un instant.</p>
+        <button class="secondary" type="button" data-home-retry>Réessayer</button>
+      </div>`;
+    return;
+  }
 
   const sessions = sessionsOn(today);
 
@@ -41,6 +55,9 @@ async function renderHome() {
 }
 
 function bindHome() {
+  document.addEventListener("click", (event) => {
+    if (event.target.closest("[data-home-retry]")) renderHome();
+  });
   document.getElementById("homeLogoutBtn")?.addEventListener("click", async () => {
     await window.momentumDB.auth.signOut();
     window.location.href = "login.html";

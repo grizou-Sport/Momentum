@@ -93,7 +93,7 @@ function wellbeingHasData(wellbeing) {
 
 function wellbeingSummaryHtml(wellbeing) {
   if (!wellbeingHasData(wellbeing)) {
-    return `<p class="day-wellbeing-empty">Aucune donnée de bien-être pour cette journée.</p>`;
+    return `<p class="day-wellbeing-empty">Le bien-être n’est pas renseigné pour cette journée.</p>`;
   }
 
   return `
