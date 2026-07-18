@@ -124,7 +124,6 @@
         <div class="flow-map-card">
           <div class="flow-map-topline">
             <span id="flowPeriodSummary">Chargement des expériences…</span>
-            <button id="flowPendingSummary" class="flow-pending-trigger" type="button" hidden></button>
           </div>
           <div class="flow-map-layout">
             <div class="flow-y-axis" aria-hidden="true"><span>Très élevé</span><strong>Défi ressenti</strong><span>Faible</span></div>
@@ -190,7 +189,7 @@
       <label>Sport<select name="sport"></select></label>
       <label>Type<select name="type"><option>Endurance</option><option>Allure marathon</option><option>Seuil</option><option>VMA</option><option>Fractionné</option><option>Sortie longue</option><option>Renforcement</option><option>Récupération</option><option>Technique</option><option>Compétition</option></select></label>
       <label>Distance km<input type="number" step="0.01" min="0" name="distance" /></label>
-      <label>Durée min<input type="number" step="1" min="0" name="duration" /></label>
+      <label>Durée<duration-picker name="duration" aria-label="Durée de la séance"></duration-picker></label>
       <label>FC moy<input type="number" step="1" min="0" name="hr" /></label>
       <label>Effort physique<input type="number" step="1" min="1" max="10" name="rpe" /></label>
       <label>Matériel<input name="gear" /></label>
@@ -205,7 +204,7 @@
 
   <template id="wellnessFormTemplate">
     <form class="mini-form wellness-form">
-      <label>Sommeil h<input type="number" min="0" max="14" step="0.1" name="sleep" /></label>
+      <label>Sommeil<duration-picker name="sleep" aria-label="Durée du sommeil"></duration-picker></label>
       <label>FC repos<input type="number" min="0" name="restHr" /></label>
       <label>VFC ms<input type="number" min="0" name="hrv" /></label>
       <label>Poids kg<input type="number" min="0" step="0.1" name="weight" /></label>
@@ -304,6 +303,11 @@
       </label>
 
       <label>
+        Heure
+        <input name="activity_time" type="time" />
+      </label>
+
+      <label>
         Statut
         <select name="status">
           <option value="done">
@@ -386,13 +390,8 @@
       </label>
 
       <label>
-        Durée — heures
-        <input name="duration_hours" type="number" min="0" step="1" />
-      </label>
-
-      <label>
-        Durée — minutes
-        <input name="duration_minutes" type="number" min="0" max="59" step="1" />
+        Durée
+        <duration-picker name="duration_min" aria-label="Durée du Moment"></duration-picker>
       </label>
 
       <label data-activity-category="sport">
@@ -413,18 +412,6 @@
           name="avg_hr"
           type="number"
           min="0"
-          step="1"
-        />
-      </label>
-
-      <label>
-        Effort ressenti /10
-
-        <input
-          name="rpe"
-          type="number"
-          min="1"
-          max="10"
           step="1"
         />
       </label>
@@ -560,6 +547,39 @@
         ></textarea>
       </label>
 
+      <fieldset class="activity-experience full" data-activity-experience>
+        <legend>Comment as-tu vécu ce moment&nbsp;?</legend>
+        <p>Trois réponses simples pour nourrir tes analyses, sans formulaire FLOW séparé.</p>
+
+        <label class="flow-range-field">
+          <span>Effort physique</span>
+          <input name="rpe" type="range" min="1" max="10" step="1" value="5" />
+          <span class="flow-range-scale"><small>Très facile</small><output>5</output><small>Maximal</small></span>
+        </label>
+
+        <label class="flow-range-field">
+          <span>Défi</span>
+          <input name="perceived_challenge" type="range" min="1" max="10" step="1" value="5" />
+          <span class="flow-range-scale"><small>Très faible</small><output>5</output><small>Extrême</small></span>
+        </label>
+
+        <label class="flow-range-field">
+          <span>Maîtrise</span>
+          <input name="perceived_mastery" type="range" min="1" max="10" step="1" value="5" />
+          <span class="flow-range-scale"><small>Très faible</small><output>5</output><small>Totale</small></span>
+        </label>
+
+        <label>
+          <span>Ce que tu souhaites garder</span>
+          <textarea name="retained_memory" rows="3" placeholder="Une sensation, un apprentissage, une image…"></textarea>
+        </label>
+
+        <label class="activity-photo-picker">
+          <span>Photo <small>Facultatif · JPG, PNG ou WebP</small></span>
+          <input name="activity_photo" type="file" accept="image/jpeg,image/png,image/webp" />
+        </label>
+      </fieldset>
+
       <p
         id="activityMessage"
         class="activity-message full"
@@ -579,7 +599,7 @@
           class="primary"
           type="submit"
         >
-          Enregistrer
+          Enregistrer le Moment
         </button>
       </div>
     </form>
@@ -593,8 +613,7 @@
     <h2 id="wellbeingDialogTitle">Ajouter le bien-être</h2>
     <form id="wellbeingDialogForm" class="wellbeing-dialog-form">
       <input name="recordedDate" type="hidden" />
-      <label>Sommeil — heures<input name="sleepHours" type="number" min="0" max="24" step="1"></label>
-      <label>Sommeil — minutes<input name="sleepMinutes" type="number" min="0" max="59" step="1"></label>
+      <label>Sommeil<duration-picker name="sleepDuration" aria-label="Durée du sommeil"></duration-picker></label>
       <label>Motivation au réveil (/10)<input name="motivation" type="number" min="1" max="10" step="1"></label>
       <label>FC au repos (bpm)<input name="restHr" type="number" min="20" max="220" step="1"></label>
       <label>VFC (ms)<input name="hrv" type="number" min="0" step="1"></label>
@@ -622,52 +641,6 @@
   </div>
 </dialog>
 
-<dialog id="flowPendingDialog" class="flow-dialog flow-pending-dialog">
-  <button class="close-btn" id="closeFlowPending" type="button" aria-label="Fermer">×</button>
-  <div class="flow-dialog-content">
-    <span class="section-kicker">À raconter</span>
-    <h2>Choisis une activité</h2>
-    <p>Un clic suffit pour ouvrir les trois questions FLOW.</p>
-    <div id="flowPendingList" class="flow-pending-list"></div>
-  </div>
-</dialog>
-
-<dialog id="flowAssessmentDialog" class="flow-dialog flow-assessment-dialog">
-  <button class="close-btn" id="closeFlowAssessment" type="button" aria-label="Remettre à plus tard">×</button>
-  <form id="flowAssessmentForm" class="flow-assessment-form">
-    <input name="activityId" type="hidden" />
-    <div class="flow-assessment-heading">
-      <span class="section-kicker">Ton expérience</span>
-      <h2>Comment l'as-tu vécue&nbsp;?</h2>
-      <p id="flowAssessmentActivity"></p>
-    </div>
-
-    <label class="flow-range-field">
-      <span>Quel effort physique cette activité t'a demandé&nbsp;?</span>
-      <input name="perceivedExertion" type="range" min="1" max="10" step="1" value="5" />
-      <span class="flow-range-scale"><small>Facile</small><output>5</output><small>Maximal</small></span>
-    </label>
-
-    <label class="flow-range-field">
-      <span>Quel niveau de défi as-tu ressenti&nbsp;?</span>
-      <input name="perceivedChallenge" type="range" min="1" max="10" step="1" value="5" />
-      <span class="flow-range-scale"><small>Faible</small><output>5</output><small>Très élevé</small></span>
-    </label>
-
-    <label class="flow-range-field">
-      <span>À quel point t'es-tu senti en maîtrise&nbsp;?</span>
-      <input name="perceivedMastery" type="range" min="1" max="10" step="1" value="5" />
-      <span class="flow-range-scale"><small>Faible</small><output>5</output><small>Totale</small></span>
-    </label>
-
-    <p id="flowAssessmentMessage" class="activity-message" aria-live="polite"></p>
-    <div class="flow-assessment-actions">
-      <button id="flowAssessmentLater" class="secondary" type="button">Plus tard</button>
-      <button class="primary" type="submit">Enregistrer mon ressenti</button>
-    </div>
-  </form>
-</dialog>
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -682,6 +655,7 @@
 <script src="js/momentum-icons.js"></script>
 <script src="js/momentum-map.js"></script>
 <script src="js/momentum-moments.js"></script>
+<script src="js/momentum-duration-picker.js"></script>
 
 <script src="js/home-core.js"></script>
 <script src="js/home-data.js"></script>

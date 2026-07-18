@@ -6,13 +6,14 @@ FLOW raconte comment une expérience est vécue. Il ne mesure pas la performance
 
 La position d’une activité sur la carte dépend exclusivement de deux réponses utilisateur : le défi ressenti et la maîtrise ressentie. Les données FIT, la charge, la météo et le contexte constituent une couche interne séparée qui ne déplace jamais le point en V1.
 
-## Parcours
+## Parcours depuis l’implémentation 1.09
 
-1. Une activité réalisée est enregistrée normalement.
-2. MOMENTUM propose trois curseurs rapides : effort physique, défi et maîtrise.
-3. L’utilisateur peut répondre ou choisir « Plus tard ».
-4. Une réponse crée ou actualise `activity_flow_assessments` et place l’activité sur la carte.
-5. La sélection d’un point affiche le contexte, les mesures disponibles, les notes et les photos éventuellement liées à un Moment.
+1. Le formulaire du Moment contient directement les trois questions d’expérience : effort physique, défi et maîtrise.
+2. « Enregistrer le Moment » sauvegarde le Moment et son expérience dans le même parcours, sans popup FLOW.
+3. `activities.rpe` reçoit l’effort physique et constitue l’unique RPE officiel.
+4. `activity_flow_assessments` reçoit le défi, la maîtrise, le souvenir facultatif et le contexte d’analyse.
+5. FLOW utilise ces données pour la carte et les analyses, sans jamais devenir un formulaire visible pour l’utilisateur.
+6. Pour modifier une expérience, l’utilisateur modifie le Moment correspondant.
 
 ## Périodes
 

@@ -41,11 +41,8 @@ function formatDuration(seconds) {
   const value = Number(seconds);
   if (!Number.isFinite(value) || value <= 0) return null;
 
-  const hours = Math.floor(value / 3600);
-  const minutes = Math.floor((value % 3600) / 60);
-
-  if (hours > 0) return `${hours} h ${String(minutes).padStart(2, "0")}`;
-  return `${minutes} min`;
+  const totalMinutes = Math.round(value / 60);
+  return window.MomentumDuration?.format(totalMinutes) || `${Math.floor(totalMinutes / 60)}:${String(totalMinutes % 60).padStart(2, "0")}`;
 }
 
 function heroIntentionLabel(value) {

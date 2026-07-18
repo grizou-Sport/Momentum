@@ -10,16 +10,7 @@ function formatSleepDuration(hours) {
   if (!Number.isFinite(value)) return "—";
 
   const totalMinutes = Math.round(value * 60);
-  const wholeHours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  return `${wholeHours}h ${String(minutes).padStart(2, "0")}min`;
-}
-
-function splitSleepDuration(hours) {
-  const value = Number(hours);
-  if (!Number.isFinite(value)) return { hours:"", minutes:"" };
-  const totalMinutes = Math.round(value * 60);
-  return { hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60 };
+  return window.MomentumDuration?.format(totalMinutes) || `${Math.floor(totalMinutes / 60)}:${String(totalMinutes % 60).padStart(2, "0")}`;
 }
 
 function wellbeingMetric(label, value, unit = "") {
@@ -286,7 +277,7 @@ async function openWellbeingDialog(date, returnToDay = false) {
   if (!dialog || !form) return;
 
   const wellbeing = await loadDailyWellbeing(date) || {};
-  const sleepDuration = splitSleepDuration(wellbeing.sleep);
+  const sleepDuration = wellbeing.sleep == null ? null : Math.round(Number(wellbeing.sleep) * 60);
   const qualityLevel = sleepQualityLevel(
     wellbeing.sleepQuality ?? wellbeing.sleep_quality,
     wellbeing.sleepQualityUnit || wellbeing.sleep_quality_unit
@@ -294,8 +285,8 @@ async function openWellbeingDialog(date, returnToDay = false) {
 
   form.reset();
   form.elements.recordedDate.value = date;
-  form.elements.sleepHours.value = sleepDuration.hours;
-  form.elements.sleepMinutes.value = sleepDuration.minutes;
+  const sleepPicker = form.querySelector('duration-picker[name="sleepDuration"]');
+  if (sleepPicker) sleepPicker.value = sleepDuration;
   form.elements.motivation.value = wellbeing.motivation ?? "";
   form.elements.restHr.value = wellbeing.restHr ?? wellbeing.rest_hr ?? "";
   form.elements.hrv.value = wellbeing.hrv ?? "";
@@ -336,7 +327,7 @@ async function saveWellbeing(event) {
     const wellbeing = {
       source: "Ajout manuel",
       sourceKey: "manual",
-      sleep: entries.sleepHours === "" && entries.sleepMinutes === "" ? null : (value("sleepHours") || 0) + (value("sleepMinutes") || 0) / 60,
+      sleep: entries.sleepDuration === "" ? null : value("sleepDuration") / 60,
       motivation: value("motivation"),
       energy: value("motivation"),
       mood: null,

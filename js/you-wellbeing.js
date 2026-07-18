@@ -40,7 +40,7 @@ function renderWellbeingForm() {
       </label>
 
       <label>Sommeil cible
-        <input name="preferred_sleep_hours" type="number" step="0.1" value="${YOU.wellbeingProfile?.preferred_sleep_hours || ""}" />
+        <duration-picker name="preferred_sleep_minutes" value="${YOU.wellbeingProfile?.preferred_sleep_hours == null ? "" : Math.round(YOU.wellbeingProfile.preferred_sleep_hours * 60)}" aria-label="Durée de sommeil cible"></duration-picker>
       </label>
 
       <label class="full">Notes
@@ -68,8 +68,8 @@ async function saveWellbeing(event) {
     max_hr: form.get("max_hr") ? Number(form.get("max_hr")) : null,
     resting_hr: form.get("resting_hr") ? Number(form.get("resting_hr")) : null,
     vo2max: form.get("vo2max") ? Number(form.get("vo2max")) : null,
-    preferred_sleep_hours: form.get("preferred_sleep_hours")
-      ? Number(form.get("preferred_sleep_hours"))
+    preferred_sleep_hours: form.get("preferred_sleep_minutes")
+      ? Number(form.get("preferred_sleep_minutes")) / 60
       : null,
     notes: form.get("notes")?.trim(),
     updated_at: new Date().toISOString(),

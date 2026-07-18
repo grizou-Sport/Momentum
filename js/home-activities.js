@@ -45,6 +45,8 @@ function sessionMeta(session) {
 
   const parts = [];
 
+  if (session.time) parts.push(String(session.time).slice(0, 5));
+
   if (session.sport) {
     parts.push(activitySportLabel(session.sport));
   }
@@ -65,7 +67,7 @@ function sessionMeta(session) {
 
   if (Number(duration) > 0) {
     parts.push(
-      `${Math.round(duration)} min`
+      window.MomentumDuration?.format(duration) || `${Math.round(duration)} min`
     );
   }
 
@@ -93,15 +95,46 @@ function activityCategoryLabel(category) {
 }
 
 function setDurationFormValues(form, durationMinutes) {
-  const total = Number(durationMinutes);
-  setFormValue(form, "duration_hours", Number.isFinite(total) ? Math.floor(total / 60) : "");
-  setFormValue(form, "duration_minutes", Number.isFinite(total) ? Math.round(total % 60) : "");
+  const picker = form.querySelector('duration-picker[name="duration_min"]');
+  const hasDuration = durationMinutes !== null && durationMinutes !== undefined && durationMinutes !== "" && Number.isFinite(Number(durationMinutes));
+  if (picker) picker.value = hasDuration ? Number(durationMinutes) : null;
 }
 
 function durationMinutesFromForm(values) {
-  const hours = Number(values.get("duration_hours") || 0);
-  const minutes = Number(values.get("duration_minutes") || 0);
-  return hours || minutes ? hours * 60 + minutes : null;
+  const raw = values.get("duration_min");
+  return raw === null || raw === "" ? null : Number(raw);
+}
+
+function updateExperienceOutputs(form) {
+  form.querySelectorAll('[data-activity-experience] input[type="range"]').forEach((input) => {
+    input.closest("label")?.querySelector("output")?.replaceChildren(document.createTextNode(input.value));
+  });
+}
+
+function updateExperienceVisibility(form) {
+  const experience = form.querySelector("[data-activity-experience]");
+  if (!experience) return;
+  const completed = form.elements.status?.value === "done";
+  experience.hidden = !completed;
+  experience.querySelectorAll("input,textarea,select").forEach((control) => {
+    control.disabled = !completed;
+  });
+}
+
+async function loadActivityExperience(form, activityId) {
+  const user = await getCurrentUser();
+  if (!user) return;
+  const { data, error } = await window.momentumDB
+    .from("activity_flow_assessments")
+    .select("perceived_challenge,perceived_mastery,retained_memory")
+    .eq("activity_id", activityId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (error) throw error;
+  setFormValue(form, "perceived_challenge", data?.perceived_challenge ?? 5);
+  setFormValue(form, "perceived_mastery", data?.perceived_mastery ?? 5);
+  setFormValue(form, "retained_memory", data?.retained_memory ?? "");
+  updateExperienceOutputs(form);
 }
 
 function renderActivityList(date, sessions) {
@@ -283,6 +316,11 @@ function initialiseActivityForm() {
       );
     });
 
+  form.elements.status?.addEventListener("change", () => updateExperienceVisibility(form));
+  form.querySelectorAll('[data-activity-experience] input[type="range"]').forEach((input) => {
+    input.addEventListener("input", () => updateExperienceOutputs(form));
+  });
+
   form.dataset.initialised = "true";
 }
 
@@ -363,7 +401,7 @@ function resetActivityDialogMode(form) {
   const existingFile = $("#existingActivityFile");
 
   if (title) title.textContent = "Ajouter un moment";
-  if (saveButton) saveButton.textContent = "Enregistrer";
+  if (saveButton) saveButton.textContent = "Enregistrer le Moment";
   if (existingFile) {
     existingFile.hidden = true;
     existingFile.textContent = "";
@@ -391,6 +429,12 @@ function openActivityDialog(date = null, returnToDay = false) {
   form.elements.activity_date.value = selectedDate;
 
   form.elements.status.value = "done";
+  setDurationFormValues(form, null);
+  setFormValue(form, "rpe", 5);
+  setFormValue(form, "perceived_challenge", 5);
+  setFormValue(form, "perceived_mastery", 5);
+  updateExperienceOutputs(form);
+  updateExperienceVisibility(form);
   form.dataset.returnToDay = returnToDay ? selectedDate : "";
 
   const defaultCategory =
@@ -408,14 +452,25 @@ function openActivityDialog(date = null, returnToDay = false) {
   openHomeDialog(dialog);
 }
 
-function openEditActivityDialog(activityId) {
-  const session = (state.sessions || []).find(
+async function openEditActivityDialog(activityId) {
+  let session = (state.sessions || []).find(
     (item) => item.id === activityId
   );
 
   if (!session) {
-    window.alert("Ce moment n'est plus disponible.");
-    return;
+    const user = await getCurrentUser();
+    const { data, error } = await window.momentumDB
+      .from("activities")
+      .select("id,user_id,sport,activity_type,status,distance_km,duration_min,elevation_m,avg_hr,rpe,gear,notes,created_at,activity_date,activity_time,weather,location_name,route_summary,activity_category,source_file_url,source_file_type,gpx_url")
+      .eq("id", activityId)
+      .eq("user_id", user?.id || "")
+      .maybeSingle();
+    if (error) console.error("HOME : Moment historique indisponible.", error);
+    session = data ? mapActivityRow(data) : null;
+    if (!session) {
+      window.alert("Ce moment n'est plus disponible.");
+      return;
+    }
   }
 
   openActivityDialog(session.date, true);
@@ -440,6 +495,7 @@ function openEditActivityDialog(activityId) {
   updateActivityFormCategory();
 
   setFormValue(form, "activity_date", session.date);
+  setFormValue(form, "activity_time", session.time);
   setFormValue(form, "status", session.status);
   setSelectValue(form, "sport", session.sport);
   setFormValue(form, "distance_km", session.distance);
@@ -450,6 +506,13 @@ function openEditActivityDialog(activityId) {
   setFormValue(form, "gear", session.gear);
   setFormValue(form, "location_name", session.locationName);
   setFormValue(form, "notes", session.comment);
+  updateExperienceVisibility(form);
+
+  try {
+    await loadActivityExperience(form, session.id);
+  } catch (error) {
+    console.warn("HOME : ressenti du Moment indisponible.", error);
+  }
 
   const typeFields = {
     sport: "sport_activity_type",
@@ -464,7 +527,7 @@ function openEditActivityDialog(activityId) {
   const existingFile = $("#existingActivityFile");
 
   if (title) title.textContent = "Modifier le moment";
-  if (saveButton) saveButton.textContent = "Enregistrer les modifications";
+  if (saveButton) saveButton.textContent = "Enregistrer le Moment";
 
   if (existingFile && session.sourceFileType) {
     existingFile.hidden = false;
@@ -634,6 +697,8 @@ async function saveActivity(event) {
       "sport"
     ).trim();
 
+  const completed = String(values.get("status") || "done") === "done";
+
   const sport =
     getActivitySport(values, category);
 
@@ -701,6 +766,7 @@ async function saveActivity(event) {
 
   let uploadedFile = null;
   const editingId = form.dataset.editActivityId || "";
+  let persistedActivityId = editingId;
   const existingSourceFileUrl =
     form.dataset.existingSourceFileUrl || "";
   const existingSourceFileType =
@@ -736,6 +802,7 @@ async function saveActivity(event) {
     const payload = {
       user_id: user.id,
       activity_date: activityDate,
+      activity_time:String(values.get("activity_time") || "").trim() || null,
       activity_category: category,
       sport,
       activity_type: activityType,
@@ -773,10 +840,7 @@ async function saveActivity(event) {
           : null,
 
       rpe:
-        numberOrNull(
-          values,
-          "rpe"
-        ),
+        completed ? numberOrNull(values, "rpe") : null,
 
       gear:
         hasActivityMetrics
@@ -842,6 +906,37 @@ async function saveActivity(event) {
     if (error) {
       throw error;
     }
+    persistedActivityId = savedActivity?.id || editingId;
+    if (persistedActivityId) form.dataset.editActivityId = persistedActivityId;
+
+    if (completed && savedActivity?.id) {
+      const assessmentPayload = {
+        activity_id:savedActivity.id,
+        user_id:user.id,
+        perceived_challenge:numberOrNull(values, "perceived_challenge"),
+        perceived_mastery:numberOrNull(values, "perceived_mastery"),
+        retained_memory:String(values.get("retained_memory") || "").trim() || null,
+        analysis_context:window.MomentumFlow?.analysisContext({
+          ...payload,
+          id:savedActivity.id
+        }) || { version:2, source:"moment-form" },
+        assessment_version:2
+      };
+      const { error:assessmentError } = await window.momentumDB
+        .from("activity_flow_assessments")
+        .upsert(assessmentPayload, { onConflict:"activity_id,user_id" });
+      if (assessmentError) throw assessmentError;
+    } else if (editingId && savedActivity?.id) {
+      const { error:assessmentError } = await window.momentumDB
+        .from("activity_flow_assessments")
+        .delete()
+        .eq("activity_id", savedActivity.id)
+        .eq("user_id", user.id);
+      if (assessmentError) throw assessmentError;
+    }
+
+    const photo = completed ? (form.elements.activity_photo?.files?.[0] || null) : null;
+    if (photo && savedActivity?.id) await uploadActivityPhoto(photo, savedActivity.id, user.id);
 
     if (
       editingId &&
@@ -858,17 +953,7 @@ async function saveActivity(event) {
     closeActivityDialog();
     await renderHome();
 
-    const shouldCollectFlow =
-      !editingId &&
-      payload.status === "done" &&
-      savedActivity?.id &&
-      window.MomentumFlow;
-
-    if (shouldCollectFlow) {
-      await window.MomentumFlow.offerAssessment(savedActivity.id, {
-        returnToDay
-      });
-    } else if (returnToDay) {
+    if (returnToDay) {
       openDay(returnToDay);
     }
   } catch (error) {
@@ -877,7 +962,7 @@ async function saveActivity(event) {
       error
     );
 
-    if (uploadedFile?.path) {
+    if (uploadedFile?.path && !persistedActivityId) {
       await removeUploadedActivityFile(
         uploadedFile.path
       );
@@ -888,6 +973,27 @@ async function saveActivity(event) {
       "Impossible d’enregistrer le moment.",
       true
     );
+  }
+}
+
+async function uploadActivityPhoto(file, activityId, userId) {
+  const supported = { "image/jpeg":"jpg", "image/png":"png", "image/webp":"webp" };
+  const extension = supported[file.type];
+  if (!extension) throw new Error("Choisis une photo JPG, PNG ou WebP.");
+  if (file.size > 10 * 1024 * 1024) throw new Error("La photo dépasse 10 Mo.");
+
+  const path = `${userId}/${activityId}/${crypto.randomUUID()}.${extension}`;
+  const { error:uploadError } = await window.momentumDB.storage
+    .from("activity-media")
+    .upload(path, file, { contentType:file.type, cacheControl:"3600", upsert:false });
+  if (uploadError) throw uploadError;
+
+  const { error:mediaError } = await window.momentumDB
+    .from("activity_media")
+    .insert({ activity_id:activityId, user_id:userId, file_path:path });
+  if (mediaError) {
+    await window.momentumDB.storage.from("activity-media").remove([path]);
+    throw mediaError;
   }
 }
 
@@ -903,7 +1009,7 @@ async function deleteActivity(activityId, activityDate) {
 
   const confirmed = window.confirm(
     "Supprimer ce moment ?\n\n" +
-    "Le moment et son éventuel fichier FIT ou GPX seront définitivement supprimés."
+    "Le Moment, ses photos et son éventuel fichier FIT ou GPX seront définitivement supprimés."
   );
 
   if (!confirmed) return;
@@ -912,6 +1018,11 @@ async function deleteActivity(activityId, activityDate) {
   dialog?.classList.add("is-busy");
 
   try {
+    const { data:media } = await window.momentumDB
+      .from("activity_media")
+      .select("file_path")
+      .eq("activity_id", activityId);
+
     const { error } = await window.momentumDB
       .from("activities")
       .delete()
@@ -921,6 +1032,11 @@ async function deleteActivity(activityId, activityDate) {
 
     if (session.sourceFileUrl) {
       await removeUploadedActivityFile(session.sourceFileUrl);
+    }
+    const photoPaths = (media || []).map((item) => item.file_path).filter(Boolean);
+    if (photoPaths.length) {
+      const { error:photoError } = await window.momentumDB.storage.from("activity-media").remove(photoPaths);
+      if (photoError) console.warn("HOME : photos du Moment non supprimées du stockage.", photoError);
     }
 
     await renderHome();

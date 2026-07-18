@@ -1553,6 +1553,23 @@ main{
   gap:8px;
 }
 
+.activity-experience{
+  display:grid;
+  gap:4px;
+  margin:18px 0 0;
+  padding:28px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  background:var(--surface-soft);
+}
+.activity-experience legend{padding:0 8px;font-size:20px;font-weight:850}
+.activity-experience > p{margin:0 0 12px;color:var(--muted);font-size:13px}
+.activity-experience .flow-range-field{padding:18px 0}
+.activity-experience textarea{background:var(--surface)}
+.activity-photo-picker{margin-top:16px;padding:18px;border:1px dashed var(--line-strong);border-radius:14px;background:var(--surface);cursor:pointer}
+.activity-photo-picker span{display:flex;justify-content:space-between;gap:12px;font-weight:800}
+.activity-photo-picker small{color:var(--muted);font-weight:600}
+
 .activity-category{
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
@@ -1663,6 +1680,8 @@ main{
   .activity-actions{
     flex-direction:column-reverse;
   }
+
+  .activity-experience{padding:20px 16px}
 
   .chart-heading{flex-direction:column}.chart-canvas-wrap{height:290px}.progression-dialog{width:100%;height:100svh;max-height:100svh;margin:0;border-radius:0;padding:70px 20px 28px}.progression-detail-kpis{grid-template-columns:1fr}.progression-subdisciplines p{flex-direction:column;gap:3px}
   .load-day-activities article{flex-direction:column;gap:5px}

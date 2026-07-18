@@ -745,3 +745,13 @@ label{
     width:calc(100% - 24px);
   }
 }
+/* Shared duration input: one minute-based value, one HH:MM display. */
+duration-picker{display:grid;gap:7px}
+.duration-picker-shell{display:grid;grid-template-columns:52px minmax(0,1fr) 52px;align-items:stretch;min-height:58px;overflow:hidden;border:1px solid var(--line-strong);border-radius:16px;background:var(--surface-soft)}
+.duration-display{min-width:0;border:0!important;border-radius:0!important;padding:8px!important;background:transparent!important;color:var(--ink);font-variant-numeric:tabular-nums;font-size:clamp(24px,4vw,34px)!important;font-weight:850;letter-spacing:.08em;text-align:center}
+.duration-display:focus{outline:0;box-shadow:inset 0 0 0 2px var(--ink)}
+.duration-step{width:auto;border:0;border-radius:0;padding:0;background:transparent;color:var(--ink);font-size:25px}
+.duration-step:first-child{border-right:1px solid var(--line)}
+.duration-step:last-of-type{border-left:1px solid var(--line)}
+.duration-step:hover,.duration-step:focus-visible{background:var(--ink);color:#fff}
+.duration-hint{color:var(--muted);font-size:11px;font-weight:600}

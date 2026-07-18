@@ -104,27 +104,13 @@ function formatMissionDate(dateValue) {
 
 function formatTime(seconds) {
   if (!seconds) return "";
-
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-
-  return h > 0 ? `${h} h ${String(m).padStart(2, "0")}` : `${m} min`;
+  const minutes = Math.round(Number(seconds) / 60);
+  return window.MomentumDuration?.format(minutes) || `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, "0")}`;
 }
 
 function timeToSeconds(value) {
   if (!value) return null;
-
-  const [hours, minutes] = value.split(":").map(Number);
-  return hours * 3600 + minutes * 60;
-}
-
-function secondsToTime(seconds) {
-  if (!seconds) return "";
-
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  return Number(value) * 60;
 }
 
 function setMissionMenuTitle(title) {
@@ -802,11 +788,12 @@ function openMissionModal(mission = null) {
 
           <label>
             Temps visé
-            <input
+            <duration-picker
               id="missionTimeInput"
-              type="time"
-              value="${secondsToTime(mission?.target_time_seconds)}"
-            >
+              name="mission_target_minutes"
+              value="${mission?.target_time_seconds ? Math.round(mission.target_time_seconds / 60) : ""}"
+              aria-label="Temps visé"
+            ></duration-picker>
           </label>
         </div>
 

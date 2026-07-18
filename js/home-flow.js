@@ -82,7 +82,8 @@
   }
 
   function flowLoadContext(targetActivity) {
-    const datedActivities = flowState.analysisActivities
+    const includesTarget = flowState.analysisActivities.some((activity) => activity.id === targetActivity.id);
+    const datedActivities = (includesTarget ? flowState.analysisActivities : [...flowState.analysisActivities, targetActivity])
       .filter((activity) => activity.activity_date && activity.activity_date <= targetActivity.activity_date)
       .sort((a, b) => a.activity_date.localeCompare(b.activity_date));
     if (!datedActivities.length) return { acute_load:0, chronic_load:0, tsb:0 };
@@ -149,7 +150,6 @@
   function renderFlowPoints() {
     const points = document.getElementById("flowPoints");
     const periodSummary = document.getElementById("flowPeriodSummary");
-    const pendingSummary = document.getElementById("flowPendingSummary");
     if (!points) return;
 
     const assessedActivities = flowState.activities.filter((activity) => flowState.assessments.has(activity.id));
@@ -158,13 +158,6 @@
 
     if (periodSummary) {
       periodSummary.textContent = `${assessedActivities.length} expérience${assessedActivities.length > 1 ? "s" : ""} · ${periodLabel}`;
-    }
-    if (pendingSummary) {
-      pendingSummary.textContent = pendingCount ? `${pendingCount} à raconter` : "";
-      pendingSummary.hidden = !pendingCount;
-      pendingSummary.setAttribute("aria-label", pendingCount
-        ? `Choisir parmi ${pendingCount} activité${pendingCount > 1 ? "s" : ""} à raconter`
-        : "Aucune activité à raconter");
     }
 
     points.innerHTML = assessedActivities.map((activity) => {
@@ -193,61 +186,24 @@
     if (!assessedActivities.length) {
       renderFlowEmpty(
         "La carte attend ton premier ressenti.",
-        pendingCount ? `${pendingCount} activité${pendingCount > 1 ? "s" : ""} existe${pendingCount > 1 ? "nt" : ""} déjà sans réponse.` : "Enregistre une activité pour commencer."
+        pendingCount ? "Modifie un ancien Moment pour compléter son expérience." : "Enregistre un Moment pour commencer."
       );
     }
-  }
-
-  function flowPendingActivities() {
-    return flowState.activities
-      .filter((activity) => !flowState.assessments.has(activity.id))
-      .sort((a, b) => {
-        const dateOrder = String(b.activity_date || "").localeCompare(String(a.activity_date || ""));
-        return dateOrder || String(b.created_at || "").localeCompare(String(a.created_at || ""));
-      });
-  }
-
-  function openFlowPending() {
-    const dialog = document.getElementById("flowPendingDialog");
-    const list = document.getElementById("flowPendingList");
-    if (!dialog || !list) return;
-    const pendingActivities = flowPendingActivities();
-    list.innerHTML = pendingActivities.length
-      ? pendingActivities.map((activity) => `
-          <button class="flow-pending-activity" type="button" data-flow-pending-activity="${escapeHtml(activity.id)}">
-            <span>
-              <strong>${escapeHtml(flowActivityLabel(activity))}</strong>
-              <small>${escapeHtml(flowSportLabel(activity))} · ${escapeHtml(fmtDate(activity.activity_date))}</small>
-            </span>
-            <b>Raconter</b>
-          </button>`).join("")
-      : '<p class="flow-no-pending">Toutes les activités de cette période sont racontées.</p>';
-    openHomeDialog(dialog);
   }
 
   async function loadFlowPhotos(activityId) {
     const host = document.querySelector(`[data-flow-photos="${activityId}"]`);
     if (!host) return;
-    const { data:links, error:linksError } = await window.momentumDB
-      .from("moment_activities")
-      .select("moment_id")
-      .eq("activity_id", activityId);
-    if (linksError || !links?.length) {
-      host.innerHTML = '<p class="flow-no-photos">Aucune photo liée à cette activité.</p>';
-      return;
-    }
-    const momentIds = [...new Set(links.map((link) => link.moment_id).filter(Boolean))];
     const { data:media, error:mediaError } = await window.momentumDB
-      .from("moment_media")
+      .from("activity_media")
       .select("id,file_path,caption")
-      .in("moment_id", momentIds)
-      .order("created_at", { ascending:false });
+      .eq("activity_id", activityId);
     if (mediaError || !media?.length) {
       host.innerHTML = '<p class="flow-no-photos">Aucune photo liée à cette activité.</p>';
       return;
     }
     const photos = await Promise.all(media.slice(0, 6).map(async (item) => {
-      const { data } = await window.momentumDB.storage.from("moment-media").createSignedUrl(item.file_path, 3600);
+      const { data } = await window.momentumDB.storage.from("activity-media").createSignedUrl(item.file_path, 3600);
       return { ...item, url:data?.signedUrl || null };
     }));
     if (!host.isConnected || flowState.selectedActivityId !== activityId) return;
@@ -274,20 +230,20 @@
       </div>
       <dl class="flow-detail-metrics">
         <div><dt>Sport</dt><dd>${escapeHtml(flowSportLabel(activity))}</dd></div>
-        <div><dt>Durée</dt><dd>${activity.duration_min == null ? "—" : `${Math.round(activity.duration_min)} min`}</dd></div>
+        <div><dt>Durée</dt><dd>${activity.duration_min == null ? "—" : escapeHtml(window.MomentumDuration?.format(activity.duration_min) || `${Math.round(activity.duration_min)} min`)}</dd></div>
         <div><dt>Distance</dt><dd>${activity.distance_km == null ? "—" : `${Number(activity.distance_km).toLocaleString("fr-CH", { maximumFractionDigits:1 })} km`}</dd></div>
         <div><dt>D+</dt><dd>${activity.elevation_m == null ? "—" : `${Math.round(activity.elevation_m)} m`}</dd></div>
         <div><dt>Charge</dt><dd>${charge || "—"}</dd></div>
         <div><dt>Bien-être</dt><dd>${escapeHtml(flowWellbeingText(activity))}</dd></div>
       </dl>
       <div class="flow-feeling-metrics">
-        <div><span>Effort physique</span><strong>${assessment.perceived_exertion} / 10</strong></div>
+        <div><span>Effort physique</span><strong>${activity.rpe ?? "—"} / 10</strong></div>
         <div><span>Défi</span><strong>${assessment.perceived_challenge} / 10</strong></div>
         <div><span>Maîtrise</span><strong>${assessment.perceived_mastery} / 10</strong></div>
       </div>
       <section class="flow-detail-notes">
-        <span class="card-label">Notes</span>
-        <p>${escapeHtml(activity.notes || "Aucune note pour cette activité.")}</p>
+        <span class="card-label">Ce que tu souhaites garder</span>
+        <p>${escapeHtml(assessment.retained_memory || activity.notes || "Aucun souvenir noté pour ce Moment.")}</p>
       </section>
       <section class="flow-detail-photos">
         <span class="card-label">Photos</span>
@@ -295,7 +251,7 @@
       </section>
       <div class="flow-detail-actions">
         <button class="secondary" type="button" data-flow-action="open-activity" data-flow-activity="${escapeHtml(activity.id)}">Voir l'activité</button>
-        <button class="primary" type="button" data-flow-action="edit-assessment" data-flow-activity="${escapeHtml(activity.id)}">Modifier mon ressenti</button>
+        <button class="primary" type="button" data-flow-action="edit-moment" data-flow-activity="${escapeHtml(activity.id)}">Modifier le Moment</button>
       </div>`;
     loadFlowPhotos(activity.id);
   }
@@ -349,135 +305,6 @@
     if (options.selectActivityId && flowState.assessments.has(options.selectActivityId)) selectFlowActivity(options.selectActivityId);
   }
 
-  function setAssessmentMessage(message, isError = false) {
-    const element = document.getElementById("flowAssessmentMessage");
-    if (!element) return;
-    element.textContent = message || "";
-    element.classList.toggle("is-error", isError);
-  }
-
-  function closeFlowAssessment() {
-    const dialog = document.getElementById("flowAssessmentDialog");
-    const returnToDay = dialog?.dataset.returnToDay || "";
-    closeHomeDialog(dialog);
-    if (dialog) dialog.dataset.returnToDay = "";
-    if (returnToDay) openDay(returnToDay);
-  }
-
-  async function ensureFlowActivity(activityId) {
-    const local = flowState.analysisActivities.find((activity) => activity.id === activityId);
-    if (local) return local;
-    const user = flowState.user || await getCurrentUser();
-    if (!user) return null;
-    flowState.user = user;
-    const { data, error } = await window.momentumDB
-      .from("activities")
-      .select("id,activity_date,activity_category,sport,activity_type,status,duration_min,distance_km,elevation_m,avg_hr,rpe,notes,weather,route_summary,created_at")
-      .eq("id", activityId)
-      .eq("user_id", user.id)
-      .single();
-    if (error) throw error;
-    flowState.analysisActivities.push(data);
-    return data;
-  }
-
-  async function ensureFlowAssessment(activityId) {
-    if (flowState.assessments.has(activityId)) return flowState.assessments.get(activityId);
-    const user = flowState.user || await getCurrentUser();
-    if (!user) return null;
-    flowState.user = user;
-    const { data, error } = await window.momentumDB
-      .from("activity_flow_assessments")
-      .select("*")
-      .eq("activity_id", activityId)
-      .eq("user_id", user.id)
-      .maybeSingle();
-    if (error) throw error;
-    if (data) flowState.assessments.set(activityId, data);
-    return data || null;
-  }
-
-  async function openFlowAssessment(activityId, options = {}) {
-    try {
-      const activity = await ensureFlowActivity(activityId);
-      const dialog = document.getElementById("flowAssessmentDialog");
-      const form = document.getElementById("flowAssessmentForm");
-      if (!activity || !dialog || !form) return;
-      const existing = await ensureFlowAssessment(activityId);
-      form.elements.activityId.value = activityId;
-      form.elements.perceivedExertion.value = existing?.perceived_exertion || activity.rpe || 5;
-      form.elements.perceivedChallenge.value = existing?.perceived_challenge || 5;
-      form.elements.perceivedMastery.value = existing?.perceived_mastery || 5;
-      form.querySelectorAll('input[type="range"]').forEach((input) => {
-        input.closest("label")?.querySelector("output")?.replaceChildren(document.createTextNode(input.value));
-      });
-      document.getElementById("flowAssessmentActivity").textContent = `${flowActivityLabel(activity)} · ${fmtDate(activity.activity_date)}`;
-      dialog.dataset.returnToDay = options.returnToDay || "";
-      setAssessmentMessage("");
-      openHomeDialog(dialog);
-    } catch (error) {
-      console.error("FLOW : impossible d'ouvrir le ressenti.", error);
-    }
-  }
-
-  async function saveFlowAssessment(event) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const activityId = form.elements.activityId.value;
-    const activity = await ensureFlowActivity(activityId);
-    const user = flowState.user || await getCurrentUser();
-    if (!activity || !user) return;
-    const submit = form.querySelector('button[type="submit"]');
-    if (submit) submit.disabled = true;
-    setAssessmentMessage("Enregistrement…");
-
-    const payload = {
-      activity_id:activityId,
-      user_id:user.id,
-      perceived_exertion:Number(form.elements.perceivedExertion.value),
-      perceived_challenge:Number(form.elements.perceivedChallenge.value),
-      perceived_mastery:Number(form.elements.perceivedMastery.value),
-      analysis_context:buildFlowAnalysisContext({
-        ...activity,
-        rpe:Number(form.elements.perceivedExertion.value)
-      }),
-      assessment_version:1
-    };
-
-    try {
-      const { data, error } = await window.momentumDB
-        .from("activity_flow_assessments")
-        .upsert(payload, { onConflict:"activity_id,user_id" })
-        .select()
-        .single();
-      if (error) throw error;
-
-      const { error:rpeError } = await window.momentumDB
-        .from("activities")
-        .update({ rpe:payload.perceived_exertion })
-        .eq("id", activityId)
-        .eq("user_id", user.id);
-      if (rpeError) console.warn("FLOW : effort physique non synchronisé avec l'activité.", rpeError);
-
-      flowState.assessments.set(activityId, data);
-      closeFlowAssessment();
-      await loadFlowData({ selectActivityId:activityId });
-    } catch (error) {
-      console.error("FLOW : ressenti non enregistré.", error);
-      setAssessmentMessage(error.message || "Impossible d'enregistrer ton ressenti.", true);
-    } finally {
-      if (submit) submit.disabled = false;
-    }
-  }
-
-  async function offerAssessment(activityId, options = {}) {
-    try {
-      await loadFlowData();
-      await openFlowAssessment(activityId, options);
-    } catch (error) {
-      console.error("FLOW : invitation au ressenti indisponible.", error);
-    }
-  }
 
   function bindFlow() {
     document.getElementById("flowPeriod")?.addEventListener("change", async (event) => {
@@ -503,27 +330,10 @@
       const activity = flowState.activities.find((item) => item.id === action.dataset.flowActivity);
       if (!activity) return;
       if (action.dataset.flowAction === "open-activity") openDay(activity.activity_date);
-      if (action.dataset.flowAction === "edit-assessment") openFlowAssessment(activity.id);
-    });
-
-    document.getElementById("flowPendingSummary")?.addEventListener("click", openFlowPending);
-    document.getElementById("closeFlowPending")?.addEventListener("click", () => closeHomeDialog(document.getElementById("flowPendingDialog")));
-    document.getElementById("flowPendingList")?.addEventListener("click", async (event) => {
-      const activityButton = event.target.closest("[data-flow-pending-activity]");
-      if (!activityButton) return;
-      closeHomeDialog(document.getElementById("flowPendingDialog"));
-      await openFlowAssessment(activityButton.dataset.flowPendingActivity);
+      if (action.dataset.flowAction === "edit-moment") openEditActivityDialog(activity.id);
     });
     document.getElementById("openFlowExplanation")?.addEventListener("click", () => openHomeDialog(document.getElementById("flowExplanationDialog")));
     document.getElementById("closeFlowExplanation")?.addEventListener("click", () => closeHomeDialog(document.getElementById("flowExplanationDialog")));
-    document.getElementById("closeFlowAssessment")?.addEventListener("click", closeFlowAssessment);
-    document.getElementById("flowAssessmentLater")?.addEventListener("click", closeFlowAssessment);
-    document.getElementById("flowAssessmentForm")?.addEventListener("submit", saveFlowAssessment);
-    document.getElementById("flowAssessmentForm")?.querySelectorAll('input[type="range"]').forEach((input) => {
-      input.addEventListener("input", () => {
-        input.closest("label")?.querySelector("output")?.replaceChildren(document.createTextNode(input.value));
-      });
-    });
   }
 
   document.addEventListener("DOMContentLoaded", async () => {
@@ -537,8 +347,7 @@
   });
 
   window.MomentumFlow = Object.freeze({
-    offerAssessment,
-    openAssessment:openFlowAssessment,
+    analysisContext:buildFlowAnalysisContext,
     reload:loadFlowData,
     zone:flowZoneKey
   });

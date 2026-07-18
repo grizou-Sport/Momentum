@@ -398,7 +398,7 @@ async function openMomentDetail(momentId) {
 }
 
 function activityMemoryCard(activity = {}) {
-  const details = [activity.distance_km ? `${Number(activity.distance_km).toFixed(1)} km` : null, activity.duration_min ? `${Math.round(activity.duration_min)} min` : null, activity.elevation_m ? `${Math.round(activity.elevation_m)} m D+` : null].filter(Boolean).join(" · ");
+  const details = [activity.distance_km ? `${Number(activity.distance_km).toFixed(1)} km` : null, activity.duration_min ? (window.MomentumDuration?.format(activity.duration_min) || `${Math.round(activity.duration_min)} min`) : null, activity.elevation_m ? `${Math.round(activity.elevation_m)} m D+` : null].filter(Boolean).join(" · ");
   return `<article><strong>${escapeHTML(sportLabel(activity.sport) || activity.activity_type || "Activité")}</strong><span>${escapeHTML(activity.activity_date || "Sans date")}${details ? ` · ${escapeHTML(details)}` : ""}</span></article>`;
 }
 
