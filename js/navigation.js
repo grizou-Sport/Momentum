@@ -74,19 +74,105 @@
   mount.className = "momentum-navigation";
   mount.innerHTML = `
     <aside class="momentum-rail" aria-label="Navigation principale">
-      <a class="momentum-nav-brand" href="index.html" aria-label="Momentum, accueil">M</a>
+      <a class="momentum-nav-brand" href="index.html" aria-label="MOMENTUM, accueil">△</a>
       ${railLink("home", "index.html", "Home")}
       ${railLink("progression", "progression.html", "Progression")}
       ${railLink("you", "you.html", "You")}
       ${railLink("together", "together.html", "Together")}
       <span class="momentum-rail-spacer"></span>
       <button id="${page === "home" ? "homeLogoutBtn" : "logoutBtn"}" class="momentum-rail-link momentum-nav-logout" type="button" aria-label="Déconnexion" title="Déconnexion">${icons.logout}</button>
-      <span class="momentum-rail-link" aria-label="Paramètres, bientôt disponible" aria-disabled="true">${icons.settings}</span>
+      <button class="momentum-rail-link" type="button" aria-label="Paramètres, bientôt disponible" disabled title="Paramètres bientôt disponibles">${icons.settings}</button>
     </aside>
     ${Object.entries(sections).map(contextPanel).join("")}
     <button class="momentum-mobile-scrim" type="button" aria-label="Fermer le menu"></button>`;
 
   body.classList.add("has-momentum-navigation");
+
+  const rail = mount.querySelector(".momentum-rail");
+  let sampledPhotoTheme = null;
+  let themeFrame = 0;
+  let photoResizeTimer = 0;
+
+  function declaredThemeAtViewportCenter() {
+    const x = Math.min(36, window.innerWidth / 2);
+    const y = Math.max(1, Math.min(window.innerHeight - 1, window.innerHeight / 2));
+    const section = document.elementsFromPoint(x, y)
+      .filter((element) => !mount.contains(element))
+      .map((element) => element.closest("[data-nav-theme]"))
+      .find(Boolean);
+    if (!section) return "dark";
+    if (section.hasAttribute("data-nav-luminance") && sampledPhotoTheme) return sampledPhotoTheme;
+    return section.dataset.navTheme === "light" ? "light" : "dark";
+  }
+
+  function updateNavigationTheme() {
+    themeFrame = 0;
+    const theme = declaredThemeAtViewportCenter();
+    mount.dataset.theme = theme;
+    rail?.setAttribute("data-theme", theme);
+  }
+
+  function scheduleThemeUpdate() {
+    if (!themeFrame) themeFrame = window.requestAnimationFrame(updateNavigationTheme);
+  }
+
+  function analysePhotographicSection(section, force = false) {
+    const rect = section.getBoundingClientRect();
+    const previousWidth = Number(section.dataset.navSampleWidth || 0);
+    const previousHeight = Number(section.dataset.navSampleHeight || 0);
+    if (!force && previousWidth && Math.abs(rect.width - previousWidth) < 48 && Math.abs(rect.height - previousHeight) < 48) return;
+    section.dataset.navSampleWidth = String(Math.round(rect.width));
+    section.dataset.navSampleHeight = String(Math.round(rect.height));
+    const imageUrl = getComputedStyle(section).backgroundImage.match(/url\(["']?(.+?)["']?\)/)?.[1];
+    if (!imageUrl) return;
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => {
+      try {
+        const sampleWidth = Math.max(1, Math.min(72, Math.round(rect.width)));
+        const sampleHeight = Math.max(1, Math.min(360, Math.round(rect.height)));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.min(24, sampleWidth);
+        canvas.height = Math.min(120, sampleHeight);
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+        const scale = Math.max(rect.width / image.naturalWidth, rect.height / image.naturalHeight);
+        const renderedWidth = image.naturalWidth * scale;
+        const renderedHeight = image.naturalHeight * scale;
+        const cropX = Math.max(0, (renderedWidth - rect.width) / (2 * scale));
+        const cropY = Math.max(0, (renderedHeight - rect.height) / (2 * scale));
+        context.drawImage(image, cropX, cropY, sampleWidth / scale, sampleHeight / scale, 0, 0, canvas.width, canvas.height);
+        const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+        let luminance = 0;
+        for (let index = 0; index < pixels.length; index += 4) {
+          const red = pixels[index] / 255;
+          const green = pixels[index + 1] / 255;
+          const blue = pixels[index + 2] / 255;
+          luminance += .2126 * red + .7152 * green + .0722 * blue;
+        }
+        sampledPhotoTheme = luminance / (pixels.length / 4) < .52 ? "light" : "dark";
+      } catch (_error) {
+        sampledPhotoTheme = section.dataset.navTheme === "light" ? "light" : "dark";
+      }
+      scheduleThemeUpdate();
+    };
+    image.onerror = () => {
+      sampledPhotoTheme = section.dataset.navTheme === "light" ? "light" : "dark";
+      scheduleThemeUpdate();
+    };
+    image.src = new URL(imageUrl, window.location.href).href;
+  }
+
+  document.querySelectorAll("[data-nav-luminance]").forEach(analysePhotographicSection);
+  document.querySelectorAll("[data-nav-luminance]").forEach((section) => {
+    new MutationObserver(() => analysePhotographicSection(section, true)).observe(section, { attributes:true, attributeFilter:["class","style"] });
+  });
+  window.addEventListener("scroll", scheduleThemeUpdate, { passive: true });
+  window.addEventListener("resize", () => {
+    scheduleThemeUpdate();
+    window.clearTimeout(photoResizeTimer);
+    photoResizeTimer = window.setTimeout(() => document.querySelectorAll("[data-nav-luminance]").forEach(analysePhotographicSection), 180);
+  });
+  updateNavigationTheme();
 
   const closeButtons = mount.querySelectorAll(".momentum-panel-close,.momentum-mobile-scrim");
   const closeMenu = () => {

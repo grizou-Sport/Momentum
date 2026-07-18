@@ -26,22 +26,6 @@
   color:var(--you-ink);
 }
 
-.you-logout{
-  border:0;
-  border-radius:999px;
-  padding:10px 15px;
-  color:var(--you-soft);
-  background:transparent;
-  font-weight:800;
-  font-size:13px;
-  cursor:pointer;
-}
-
-.you-logout:hover{
-  background:#111;
-  color:#fff;
-}
-
 /* Page */
 .you-page{
   width:min(1180px, calc(100% - 48px));
@@ -534,38 +518,6 @@ button.you-small-card{
 }
 
 @media(max-width:760px){
-  .you-body .topbar{
-    top:10px;
-    gap:4px;
-    padding:8px;
-  }
-
-  .you-body .brand{
-    padding:0 4px;
-  }
-
-  .you-body .brand strong,
-  .you-body .brand em{
-    display:none;
-  }
-
-  .you-body .topbar nav{
-    gap:2px;
-    margin-left:auto;
-  }
-
-  .you-body .topbar nav a{
-    min-height:36px;
-    padding:0 9px;
-    font-size:11px;
-  }
-
-  .you-body .you-logout{
-    min-height:36px;
-    padding:0 9px;
-    font-size:11px;
-  }
-
   .you-page{
     width:calc(100% - 24px);
     padding-top:150px;

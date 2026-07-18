@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Momentum — TOGETHER</title>
+  <link rel="icon" href="Assets/icons/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/navigation.css" />
   <link rel="stylesheet" href="css/together.css" />
@@ -11,7 +12,7 @@
 <body class="together-body" data-momentum-page="together">
   <div data-momentum-navigation></div>
 
-  <main class="together-page">
+  <main class="together-page" data-nav-theme="dark">
     <section class="together-hero">
       <div>
         <p class="section-kicker">Les aventures que l’on partage</p>
@@ -22,13 +23,13 @@
     </section>
 
     <div class="together-tabs" role="tablist" aria-label="Sections Together">
-      <button class="active" data-view="circle" role="tab" aria-selected="true" aria-controls="circleView" type="button">CERCLE</button>
-      <button data-view="moments" role="tab" aria-selected="false" aria-controls="momentsView" type="button">MOMENTS</button>
+      <button id="circleTab" class="active" data-view="circle" role="tab" aria-selected="true" aria-controls="circleView" tabindex="0" type="button">CERCLE</button>
+      <button id="momentsTab" data-view="moments" role="tab" aria-selected="false" aria-controls="momentsView" tabindex="-1" type="button">MOMENTS</button>
     </div>
 
     <section id="togetherStatus" class="together-status" aria-live="polite"></section>
-    <section id="circleView" class="together-view"></section>
-    <section id="momentsView" class="together-view" hidden></section>
+    <section id="circleView" class="together-view" role="tabpanel" aria-labelledby="circleTab" tabindex="0"></section>
+    <section id="momentsView" class="together-view" role="tabpanel" aria-labelledby="momentsTab" tabindex="0" hidden></section>
   </main>
 
   <dialog id="circleInviteDialog" class="together-dialog circle-invite-dialog">
@@ -107,6 +108,7 @@
   <script src="js/navigation.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
+  <script src="js/momentum-ui.js"></script>
   <script src="js/guard.js"></script>
   <script src="js/momentum-sports.js"></script>
   <script src="js/momentum-moments.js"></script>

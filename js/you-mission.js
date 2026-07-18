@@ -276,7 +276,7 @@ async function saveMission(event) {
   if (error) {
     console.error("Erreur sauvegarde horizon:", error);
     if (status) {
-      status.textContent = error.message || "Erreur lors de l’enregistrement.";
+      status.textContent = window.MomentumUI.errorMessage(error, "save");
     }
     return;
   }
@@ -312,7 +312,7 @@ async function closeCurrentMission() {
   if (error) {
     console.error("Erreur clôture horizon:", error);
     if (status) {
-      status.textContent = error.message || "Erreur lors de la clôture.";
+      status.textContent = window.MomentumUI.errorMessage(error, "save");
     }
     return;
   }
@@ -325,7 +325,7 @@ async function closeCurrentMission() {
 async function deleteHistoryMission(missionId) {
   if (!missionId) return;
 
-  const confirmed = confirm("Supprimer définitivement cet horizon ?");
+  const confirmed = await window.MomentumUI.confirm({ title:"Supprimer cet horizon ?", message:"Cet horizon sera définitivement retiré de ton histoire.", confirmLabel:"Supprimer", danger:true });
   if (!confirmed) return;
 
   const user = await getCurrentUser();

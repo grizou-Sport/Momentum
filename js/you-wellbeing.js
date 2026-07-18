@@ -5,7 +5,7 @@ function renderWellbeing() {
     <p class="you-detail-lead">Sommeil, récupération, poids, sensations et énergie.</p>
 
     <div class="you-detail-stats">
-      <div><span>Âge</span><strong>${calculateAge(YOU.passport?.birth_year)}</strong></div>
+      <div><span>Âge</span><strong>${calculateAge(YOU.passport?.birth_date, YOU.passport?.birth_year)}</strong></div>
       <div><span>Taille</span><strong>${YOU.passport?.height_cm ? YOU.passport.height_cm + " cm" : "—"}</strong></div>
       <div><span>Poids</span><strong>${YOU.passport?.weight_kg ? YOU.passport.weight_kg + " kg" : "—"}</strong></div>
       <div><span>FC max</span><strong>${YOU.wellbeingProfile?.max_hr ? YOU.wellbeingProfile.max_hr + " bpm" : "—"}</strong></div>
@@ -90,7 +90,7 @@ async function saveWellbeing(event) {
 
   if (result.error) {
     console.error(result.error);
-    message.textContent = result.error.message;
+    message.textContent = window.MomentumUI.errorMessage(result.error, "save");
     return;
   }
 

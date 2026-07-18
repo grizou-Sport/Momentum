@@ -135,3 +135,24 @@
 .progression-chart-empty{height:100%;display:grid;align-items:center}
 .progression-chart-empty[hidden]{display:none}
 [data-period-message] button{width:auto;padding:0;border:0;border-bottom:1px solid currentColor;border-radius:0;background:transparent;color:inherit;font:inherit;font-weight:800;cursor:pointer}
+.chart-data-toggle{
+  margin-top:14px;
+  padding:8px 12px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:transparent;
+  color:var(--ink);
+  font:inherit;
+  font-size:12px;
+  font-weight:800;
+  cursor:pointer;
+}
+.chart-data-table{margin-top:14px;overflow:auto}
+.chart-data-table table{width:100%;border-collapse:collapse;font-size:13px}
+.chart-data-table th,.chart-data-table td{padding:10px;text-align:left;border-bottom:1px solid var(--line)}
+.chart-data-table th{color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+.chart-data-table button{border:0;background:none;color:var(--ink);font:inherit;font-weight:800;text-decoration:underline;cursor:pointer}
+.metric-definitions{margin:34px 0 0;padding:18px 20px;border:1px solid var(--line);border-radius:18px;background:var(--surface)}
+.metric-definitions summary{font-weight:850;cursor:pointer}
+.metric-definitions dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:18px;margin:20px 0 0}
+.metric-definitions dl div{display:grid;gap:5px}.metric-definitions dt{font-weight:850}.metric-definitions dd{margin:0;color:var(--muted);font-size:13px;line-height:1.5}

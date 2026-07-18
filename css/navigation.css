@@ -31,10 +31,11 @@ body.has-momentum-navigation{
   height:100%;
   gap:8px;
   padding:18px 10px 14px;
-  border-right:0;
-  background:transparent;
-  -webkit-backdrop-filter:none;
-  backdrop-filter:none;
+  border-right:1px solid rgba(17,17,17,.08);
+  background:rgba(247,247,245,.64);
+  -webkit-backdrop-filter:blur(20px) saturate(118%);
+  backdrop-filter:blur(20px) saturate(118%);
+  transition:background .24s ease,border-color .24s ease,color .24s ease;
 }
 
 .momentum-nav-brand,
@@ -58,7 +59,7 @@ body.has-momentum-navigation{
   margin-bottom:20px;
   background:var(--ink);
   color:var(--surface);
-  font-size:17px;
+  font-size:22px;
   font-weight:900;
 }
 
@@ -83,6 +84,35 @@ body.has-momentum-navigation{
 .momentum-rail-link[aria-disabled="true"]{
   opacity:.38;
   cursor:not-allowed;
+}
+
+.momentum-rail-link:disabled{
+  opacity:.38;
+  cursor:not-allowed;
+}
+
+.momentum-navigation[data-theme="light"] .momentum-rail{
+  color:#fff;
+  border-color:rgba(255,255,255,.18);
+  background:rgba(10,15,13,.30);
+}
+
+.momentum-navigation[data-theme="light"] .momentum-rail-link,
+.momentum-navigation[data-theme="light"] .momentum-nav-logout{
+  color:rgba(255,255,255,.92);
+}
+
+.momentum-navigation[data-theme="light"] .momentum-nav-brand{
+  background:rgba(255,255,255,.94);
+  color:#111;
+}
+
+.momentum-navigation[data-theme="light"] .momentum-rail-link:hover,
+.momentum-navigation[data-theme="light"] .momentum-rail-link.active,
+.momentum-navigation[data-theme="light"] .momentum-nav-logout:hover{
+  background:rgba(255,255,255,.18);
+  color:#fff;
+  box-shadow:none;
 }
 
 .momentum-rail-spacer{flex:1}

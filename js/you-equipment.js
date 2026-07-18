@@ -197,7 +197,7 @@ async function saveEquipment(event, item = null) {
 
   if (result.error) {
     console.error(result.error);
-    message.textContent = result.error.message;
+    message.textContent = window.MomentumUI.errorMessage(result.error, "save");
     return;
   }
 
@@ -215,7 +215,7 @@ async function saveEquipment(event, item = null) {
 async function deleteEquipment(item) {
   if (!item?.id) return;
 
-  if (!confirm("Supprimer ce compagnon de route ?")) return;
+  if (!await window.MomentumUI.confirm({ title:"Supprimer ce matériel ?", message:"Ce compagnon de route sera retiré de ton profil.", confirmLabel:"Supprimer", danger:true })) return;
 
   const { error } = await window.momentumDB
     .from("user_equipment")
@@ -224,7 +224,7 @@ async function deleteEquipment(item) {
 
   if (error) {
     console.error(error);
-    alert(error.message);
+    renderYouSectionError("equipment");
     return;
   }
 

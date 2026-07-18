@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Suivre l'évolution de son entraînement, de sa charge et de son bien-être dans MOMENTUM." />
   <title>Momentum — Progression</title>
+  <link rel="icon" href="Assets/icons/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/navigation.css" />
   <link rel="stylesheet" href="css/progression.css" />
@@ -13,7 +14,7 @@
 <body class="progression-body" data-momentum-page="progression">
   <div data-momentum-navigation></div>
 
-  <main>
+  <main data-nav-theme="dark">
     <header class="progression-hero">
       <div class="progression-hero-copy">
         <span class="section-kicker">Progression</span>
@@ -63,7 +64,10 @@
           <div class="chart-index">01</div>
           <div class="chart-heading"><div><span class="card-label" id="activityDistributionQuestion">Où ai-je passé mon temps ?</span><h3 id="sports">Répartition des activités</h3><p>Le temps ou la distance réellement consacrés à chaque discipline.</p></div><div class="chart-mode" aria-label="Mesure de la répartition"><button type="button" class="active" data-volume-mode="time">Temps</button><button type="button" data-volume-mode="distance">Distance</button></div></div>
           <p class="chart-summary" id="activityDistributionSummary" aria-live="polite"></p>
-          <div class="sport-chart-wrap"><canvas id="sportChart"></canvas></div>
+          <div class="sport-chart-wrap"><canvas id="sportChart" role="img" tabindex="0" aria-labelledby="sports" aria-describedby="activityDistributionSummary sportChartDescription"></canvas></div>
+          <p id="sportChartDescription" class="sr-only">Graphique comparant le temps ou la distance par discipline. Le tableau suivant reprend toutes les valeurs.</p>
+          <button class="chart-data-toggle" type="button" data-chart-table-toggle="sportChartTable" aria-expanded="false">Afficher les données</button>
+          <div id="sportChartTable" class="chart-data-table" hidden></div>
           <p class="chart-insight" id="sportInsight"></p>
         </article>
 
@@ -71,17 +75,27 @@
           <div class="chart-index">02</div>
           <div class="chart-heading"><div><span class="card-label">Comment évolue ma charge d’entraînement ?</span><h3 id="charge">Charge &amp; Forme</h3><p>Charge chronique, fatigue récente et forme actuelle.</p></div><span class="model-phase" id="loadModelPhase">Estimation</span></div>
           <div class="load-status" id="loadStatus"></div>
-          <div class="chart-canvas-wrap"><canvas id="fitnessChart"></canvas></div>
+          <div class="chart-canvas-wrap"><canvas id="fitnessChart" role="img" tabindex="0" aria-labelledby="charge" aria-describedby="loadInsight fitnessChartDescription"></canvas></div>
+          <p id="fitnessChartDescription" class="sr-only">Évolution de la charge chronique, de la fatigue récente et de la forme. Le tableau permet d’ouvrir chaque période au clavier.</p>
+          <button class="chart-data-toggle" type="button" data-chart-table-toggle="fitnessChartTable" aria-expanded="false">Afficher les données</button>
+          <div id="fitnessChartTable" class="chart-data-table" hidden></div>
           <p class="chart-insight" id="loadInsight"></p>
         </article>
 
         <article class="chart-card progression-chart-card progression-reveal" id="wellnessChartCard">
           <div class="chart-index">03</div>
           <div class="chart-heading"><div><span class="card-label">Comment me suis-je senti durant cette période ?</span><h3 id="bien-etre">Bien-être</h3><p>Ressenti et mesures physiologiques au fil du temps.</p></div><div class="wellness-filters"><div><span>Ressenti</span><div class="wellness-mode"><button type="button" class="active" data-wellness-mode="summary">Bien-être</button><button type="button" data-wellness-mode="motivation">Motivation</button><button type="button" data-wellness-mode="sleep">Sommeil</button></div></div><div><span>Mesures physiologiques</span><div class="wellness-mode"><button type="button" data-wellness-mode="restingHr">FC au repos</button><button type="button" data-wellness-mode="hrv">VFC</button></div></div></div></div>
-          <div class="chart-canvas-wrap"><canvas id="wellnessChart"></canvas></div>
+          <div class="chart-canvas-wrap"><canvas id="wellnessChart" role="img" tabindex="0" aria-labelledby="bien-etre" aria-describedby="wellnessInsight wellnessChartDescription"></canvas></div>
+          <p id="wellnessChartDescription" class="sr-only">Évolution de l’indicateur de bien-être sélectionné. Le tableau permet d’ouvrir chaque journée au clavier.</p>
+          <button class="chart-data-toggle" type="button" data-chart-table-toggle="wellnessChartTable" aria-expanded="false">Afficher les données</button>
+          <div id="wellnessChartTable" class="chart-data-table" hidden></div>
           <p class="chart-insight" id="wellnessInsight"></p>
         </article>
       </div>
+      <details class="metric-definitions">
+        <summary>Comprendre les indicateurs</summary>
+        <dl><div><dt>VFC</dt><dd>Variation du temps entre deux battements, utile pour suivre la récupération.</dd></div><div><dt>FC au repos</dt><dd>Fréquence cardiaque mesurée au calme.</dd></div><div><dt>Charge aiguë</dt><dd>Fatigue issue des entraînements récents.</dd></div><div><dt>Charge chronique</dt><dd>Socle construit sur plusieurs semaines.</dd></div><div><dt>Confiance</dt><dd>Qualité de l’estimation selon la quantité de données disponibles.</dd></div></dl>
+      </details>
     </section>
   </main>
 
@@ -93,6 +107,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
+  <script src="js/momentum-ui.js"></script>
   <script src="js/guard.js"></script>
   <script src="js/navigation.js"></script>
   <script src="js/momentum-sports.js"></script>

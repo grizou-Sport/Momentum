@@ -13,15 +13,29 @@ const YOU = {
   equipmentCategories: [],
   userEquipment: [],
   wellbeingProfile: null,
+  loadErrors: {},
+  loading: true,
 };
 
 function safe(value, fallback = "—") {
   return value === null || value === undefined || value === "" ? fallback : value;
 }
 
-function calculateAge(birthYear) {
-  if (!birthYear) return "—";
-  return `${new Date().getFullYear() - Number(birthYear)} ans`;
+function calculateAge(birthDate, legacyBirthYear = null, today = new Date()) {
+  const value = birthDate || (legacyBirthYear ? `${legacyBirthYear}-01-01` : "");
+  const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return "—";
+  const [, year, month, day] = match.map(Number);
+  let age = today.getFullYear() - year;
+  const birthdayPassed = today.getMonth() + 1 > month || (today.getMonth() + 1 === month && today.getDate() >= day);
+  if (!birthdayPassed) age -= 1;
+  return age >= 0 ? `${age} ans` : "—";
+}
+
+function renderYouSectionError(section) {
+  const labels = { sports:"les pratiques", equipment:"le matériel", wellbeing:"le bien-être", about:"le Passeport" };
+  YOU.detail.innerHTML = `<div class="you-note-box" role="alert"><span>Chargement interrompu</span><p>Impossible de charger ${labels[section] || "cette section"} pour le moment.</p><button class="primary" type="button" data-you-retry>Réessayer</button></div>`;
+  YOU.detail.querySelector("[data-you-retry]")?.addEventListener("click", loadYou);
 }
 
 function setText(id, value, fallback = "—") {
@@ -40,6 +54,8 @@ function setActiveSection(section) {
 
 function renderSection(section) {
   setActiveSection(section);
+
+  if (YOU.loadErrors[section]) return renderYouSectionError(section);
 
   if (section === "mission") return loadMission();
   if (section === "sports") return renderSports();
@@ -71,6 +87,8 @@ function renderMenuPreviews() {
 }
 
 async function loadYou() {
+  YOU.loading = true;
+  if (YOU.detail && !YOU.passport) YOU.detail.innerHTML = '<div class="you-note-box" role="status"><span>Chargement</span><p>Ton histoire se prépare…</p></div>';
   const { data, error } = await window.momentumDB.auth.getSession();
 
   if (error) {
@@ -130,38 +148,24 @@ async function loadYou() {
       .maybeSingle(),
   ]);
 
-  if (passportResult.error) {
-    console.error("Erreur passeport:", passportResult.error);
-    return;
-  }
+  YOU.loadErrors = {
+    about: passportResult.error || null,
+    sports: userSportsResult.error || activitiesResult.error || null,
+    equipment: equipmentCategoriesResult.error || userEquipmentResult.error || null,
+    wellbeing: wellbeingResult.error || null,
+  };
+  Object.entries(YOU.loadErrors).forEach(([section, sectionError]) => {
+    if (sectionError) console.error(`YOU : chargement ${section} interrompu.`, sectionError);
+  });
 
-  if (userSportsResult.error) {
-    console.error("Erreur sports:", userSportsResult.error);
-  }
-
-  if (activitiesResult.error) {
-    console.error("Erreur activités pour le profil sportif:", activitiesResult.error);
-  }
-
-  if (equipmentCategoriesResult.error) {
-    console.error("Erreur catégories matériel:", equipmentCategoriesResult.error);
-  }
-
-  if (userEquipmentResult.error) {
-    console.error("Erreur matériel utilisateur:", userEquipmentResult.error);
-  }
-
-  if (wellbeingResult.error) {
-    console.error("Erreur wellbeing:", wellbeingResult.error);
-  }
-
-  YOU.passport = passportResult.data;
-  YOU.userSports = userSportsResult.data || [];
-  YOU.activities = activitiesResult.data || [];
+  if (!passportResult.error) YOU.passport = passportResult.data;
+  if (!userSportsResult.error) YOU.userSports = userSportsResult.data || [];
+  if (!activitiesResult.error) YOU.activities = activitiesResult.data || [];
   YOU.sportProfile = window.MomentumSportProfile?.build(YOU.userSports, YOU.activities) || [];
-  YOU.equipmentCategories = equipmentCategoriesResult.data || [];
-  YOU.userEquipment = userEquipmentResult.data || [];
-  YOU.wellbeingProfile = wellbeingResult.data || null;
+  if (!equipmentCategoriesResult.error) YOU.equipmentCategories = equipmentCategoriesResult.data || [];
+  if (!userEquipmentResult.error) YOU.userEquipment = userEquipmentResult.data || [];
+  if (!wellbeingResult.error) YOU.wellbeingProfile = wellbeingResult.data || null;
+  YOU.loading = false;
 
   renderPassportCard();
   renderMenuPreviews();
@@ -180,25 +184,3 @@ YOU.logoutBtn?.addEventListener("click", async () => {
 });
 
 loadYou();
-
-setTimeout(() => {
-  console.log("===== DEBUG MOMENTUM YOU =====");
-
-  console.log("window.momentumDB =", window.momentumDB);
-  console.log("window.supabaseClient =", window.supabaseClient);
-
-  console.log("YOU =", YOU);
-
-  console.log("Fonctions disponibles :");
-  console.log("loadMission =", typeof loadMission);
-  console.log("renderMission =", typeof renderMission);
-  console.log("renderPassportCard =", typeof renderPassportCard);
-  console.log("renderSports =", typeof renderSports);
-  console.log("renderWellbeing =", typeof renderWellbeing);
-  console.log("renderEquipment =", typeof renderEquipment);
-  console.log("renderAbout =", typeof renderAbout);
-
-  console.log("Éléments HTML :");
-  console.log("youDetail =", document.getElementById("youDetail"));
-  console.log("missionMenuTitle =", document.getElementById("missionMenuTitle"));
-}, 1500);

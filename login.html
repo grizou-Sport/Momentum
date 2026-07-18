@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#16251d" />
   <title>Momentum — Ton aventure commence ici</title>
+  <link rel="icon" href="Assets/icons/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/login.css" />
 </head>
@@ -34,11 +35,11 @@
         </div>
 
         <div class="auth-tabs" id="authTabs" role="tablist" aria-label="Authentification">
-          <button class="active" data-auth-mode="login" type="button" role="tab">Se connecter</button>
-          <button data-auth-mode="signup" type="button" role="tab">Créer un compte</button>
+          <button id="loginTab" class="active" data-auth-mode="login" type="button" role="tab" aria-selected="true" aria-controls="authForm" tabindex="0">Se connecter</button>
+          <button id="signupTab" data-auth-mode="signup" type="button" role="tab" aria-selected="false" aria-controls="authForm" tabindex="-1">Créer un compte</button>
         </div>
 
-        <form id="authForm" class="login-form" novalidate>
+        <form id="authForm" class="login-form" role="tabpanel" aria-labelledby="loginTab" tabindex="0" novalidate>
           <label class="field-label" for="authEmail">Adresse e-mail</label>
           <input id="authEmail" name="email" type="email" inputmode="email" autocomplete="email" placeholder="toi@exemple.com" required />
 
@@ -60,7 +61,7 @@
 
             <label class="consent-line">
               <input name="terms" type="checkbox" />
-              <span>J'accepte les <a href="#" data-legal="terms">Conditions générales</a> et la <a href="#" data-legal="privacy">Politique de confidentialité</a>.</span>
+              <span>J'accepte les <a href="conditions.html" target="_blank" rel="noopener">Conditions générales</a> et la <a href="confidentialite.html" target="_blank" rel="noopener">Politique de confidentialité</a>.</span>
             </label>
           </div>
 

@@ -41,72 +41,6 @@ main{
 }
 
 /* =========================================================
-   Navigation HOME — verre sur photographie
-   ========================================================= */
-
-.home-body .topbar{
-  top:16px;
-  border:1px solid rgba(255,255,255,.20);
-
-  background:rgba(255,255,255,.12);
-
-  -webkit-backdrop-filter:blur(22px) saturate(120%);
-  backdrop-filter:blur(22px) saturate(120%);
-
-  box-shadow:
-    0 1px 1px rgba(255,255,255,.10) inset,
-    0 10px 40px rgba(0,0,0,.08);
-}
-
-.home-body .topbar-logout{
-  border:0;
-  border-radius:var(--radius-pill);
-  padding:11px 15px;
-  background:transparent;
-  color:rgba(255,255,255,.72);
-  font-size:13px;
-  font-weight:800;
-}
-
-.home-body .topbar-logout:hover{background:rgba(255,255,255,.14);color:#fff}
-
-.home-body .brand,
-.home-body .topbar nav a{
-  color:rgba(255,255,255,.72);
-}
-
-.home-body .brand strong{
-  color:#fff;
-}
-
-.home-body .brand em{
-  color:rgba(255,255,255,.52);
-}
-
-.home-body .mark{
-  width:auto;
-  height:auto;
-
-  display:inline-block;
-
-  border-radius:0;
-  background:transparent;
-  color:#fff;
-
-  font-size:18px;
-}
-
-.home-body .topbar nav a:hover,
-.home-body .topbar nav a.active-nav{
-  background:rgba(255,255,255,.14);
-  color:#fff;
-}
-
-.home-body .disabled-link{
-  color:rgba(255,255,255,.32);
-}
-
-/* =========================================================
    Hero — couverture MOMENTUM
    ========================================================= */
 
@@ -1267,39 +1201,6 @@ momentum-slider[disabled]{opacity:.55}
 
 @media(max-width:760px){
 
-  .home-body .topbar{
-    top:10px;
-    gap:6px;
-    padding:8px;
-  }
-
-  .home-body .brand{
-    flex:0 0 auto;
-    padding:0 4px;
-  }
-
-  .home-body .brand strong,
-  .home-body .brand em{
-    display:none;
-  }
-
-  .home-body .topbar nav{
-    min-width:0;
-    display:flex;
-    gap:2px;
-    margin-left:auto;
-  }
-
-  .home-body .topbar nav a{
-    min-height:36px;
-    padding:0 9px;
-    font-size:11px;
-  }
-
-  .home-body .topbar .disabled-link{
-    color:rgba(255,255,255,.62);
-  }
-
   .story-section{
     padding:78px 0;
   }
@@ -1490,11 +1391,6 @@ momentum-slider[disabled]{opacity:.55}
 }
 
 @media(max-width:480px){
-
-  .home-body .topbar nav a{
-    padding:0 7px;
-    font-size:10px;
-  }
 
   .hero{
     min-height:760px;

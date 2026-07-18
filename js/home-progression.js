@@ -7,6 +7,7 @@ const PROGRESSION_PERIODS = {
   "1-year": { label:"1 année", kind:"rolling-months", amount:12 },
   custom: { label:"Période personnalisée", kind:"custom" }
 };
+const PROGRESSION_PREFERENCES_KEY = "momentum_progression_preferences_v1";
 
 const progressionState = {
   activities:[], historyActivities:[], weeks:[], loadChart:null, sportChart:null,
@@ -14,6 +15,23 @@ const progressionState = {
   physiological:null, loadSeries:[], loadDisplaySeries:[], sportGroups:[], wellbeingDays:[], wellbeingDisplayDays:[], dayRows:[], eventsByDate:new Map(),
   periodPreset:"current-week", periodStart:null, periodEnd:null, requestVersion:0
 };
+
+function readProgressionPreferences() {
+  try { return JSON.parse(localStorage.getItem(PROGRESSION_PREFERENCES_KEY)) || {}; }
+  catch (_error) { return {}; }
+}
+
+function saveProgressionPreferences() {
+  try {
+    localStorage.setItem(PROGRESSION_PREFERENCES_KEY, JSON.stringify({ periodPreset:progressionState.periodPreset, periodStart:progressionState.periodStart, periodEnd:progressionState.periodEnd, mode:progressionState.mode, wellnessMode:progressionState.wellnessMode }));
+  } catch (_error) { /* Une préférence locale ne doit jamais bloquer la page. */ }
+}
+
+function renderAccessibleChartTable(id, headers, rows, detailType = "") {
+  const host = document.getElementById(id);
+  if (!host) return;
+  host.innerHTML = rows.length ? `<table><thead><tr>${headers.map((header)=>`<th scope="col">${escapeHtml(header)}</th>`).join("")}</tr></thead><tbody>${rows.map((row,index)=>`<tr>${row.map((cell,column)=>`<td>${column===0&&detailType?`<button type="button" data-progression-detail="${detailType}:${index}">${escapeHtml(cell)}</button>`:escapeHtml(cell)}</td>`).join("")}</tr>`).join("")}</tbody></table>` : '<p>Aucune donnée disponible pour cette période.</p>';
+}
 
 function progressionPeriodRange(preset = progressionState.periodPreset, customStart = null, customEnd = null) {
   const definition = PROGRESSION_PERIODS[preset] || PROGRESSION_PERIODS["current-week"];
@@ -299,6 +317,7 @@ function renderLoadChart() {
     progressionState.loadChart?.destroy();
     document.getElementById("loadStatus").innerHTML = "";
     document.getElementById("loadInsight").textContent = "Tes premières activités feront apparaître ta progression ici.";
+    renderAccessibleChartTable("fitnessChartTable", ["Période","Charge chronique","Charge aiguë","Forme"], []);
     requestAnimationFrame(()=>document.getElementById("loadChartCard")?.classList.add("is-visible"));
     return;
   }
@@ -311,6 +330,7 @@ function renderLoadChart() {
   progressionState.loadChart?.destroy();
   const eventLabels = displaySeries.map((day) => day.eventLabels || []);
   progressionState.loadChart = new Chart(canvas,{ type:"line", data:{ labels:displaySeries.map((day) => progressionDateLabel(day.date, granularity)), datasets:[{label:"Charge chronique (CTL)",data:displaySeries.map((day)=>day.chronic),borderColor:"#273c31",backgroundColor:"rgba(39,60,49,.08)",fill:true,tension:.35,pointRadius:displaySeries.length > 45 ? 0 : 2,borderWidth:2.5},{label:"Fatigue (ATL)",data:displaySeries.map((day)=>day.acute),borderColor:"#d9763d",backgroundColor:"transparent",tension:.35,pointRadius:displaySeries.length > 45 ? 0 : 2,borderWidth:2},{label:"Forme (TSB)",data:displaySeries.map((day)=>day.form),borderColor:"#6f63a6",backgroundColor:"transparent",tension:.3,pointRadius:displaySeries.length > 45 ? 0 : 2,borderWidth:2},{label:"Événements",data:displaySeries.map((day,index)=>eventLabels[index].length?Math.max(day.chronic,day.acute)+6:null),borderColor:"#b27d42",backgroundColor:"#b27d42",showLine:false,pointRadius:5,pointHoverRadius:7,pointStyle:"rectRot"}] }, options:{responsive:true,maintainAspectRatio:false,animation:{duration:850,easing:"easeOutQuart"},interaction:{mode:"index",intersect:false},onClick:(_event,elements)=>{if(elements[0])openLoadDay(elements[0].index);},plugins:{legend:{position:"bottom",align:"start",labels:{usePointStyle:true,pointStyle:"circle",boxWidth:8,padding:16}},tooltip:{callbacks:{label:(context)=>context.dataset.label==="Événements"?eventLabels[context.dataIndex].join(" • "):`${context.dataset.label} : ${Math.round(context.parsed.y)}`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,color:"#858178",maxRotation:0}},y:{grid:{color:"rgba(20,20,20,.07)"},ticks:{color:"#858178"}}}} });
+  renderAccessibleChartTable("fitnessChartTable", ["Période","Charge chronique","Charge aiguë","Forme"], displaySeries.map((day)=>[progressionDateLabel(day.date,granularity),Math.round(day.chronic),Math.round(day.acute),`${day.form>=0?"+":""}${Math.round(day.form)}`]), "load");
   document.getElementById("loadModelPhase").textContent=phase.label;
   document.getElementById("loadModelPhase").title=phase.detail;
   document.getElementById("loadStatus").innerHTML=`<p>Aujourd’hui</p><div><strong>${Math.round(today?.chronic||0)}</strong><span>Charge chronique</span></div><div><strong>${Math.round(today?.acute||0)}</strong><span>Fatigue</span></div><div><strong>${today?.form>=0?"+":""}${Math.round(today?.form||0)}</strong><span>Forme</span></div>`;
@@ -356,10 +376,11 @@ function renderSportChart() {
   const hasCompleted = groups.some((group) => group[valueKey] > 0);
   setProgressionChartEmpty(canvas, !hasCompleted);
   const summary=document.getElementById("activityDistributionSummary");
-  if (!hasCompleted) { progressionState.sportChart?.destroy(); if(summary)summary.textContent=progressionState.mode==="distance"?"Aucune activité avec distance sur cette période.":"Tes premières activités feront apparaître ta progression ici."; document.getElementById("sportInsight").textContent=""; requestAnimationFrame(()=>document.getElementById("sportChartCard")?.classList.add("is-visible")); return; }
+  if (!hasCompleted) { progressionState.sportChart?.destroy(); if(summary)summary.textContent=progressionState.mode==="distance"?"Aucune activité avec distance sur cette période.":"Tes premières activités feront apparaître ta progression ici."; document.getElementById("sportInsight").textContent=""; renderAccessibleChartTable("sportChartTable",["Discipline",progressionState.mode==="distance"?"Distance":"Temps"],[]); requestAnimationFrame(()=>document.getElementById("sportChartCard")?.classList.add("is-visible")); return; }
   canvas.parentElement.style.height=`${Math.max(300,groups.length*48)}px`;
   progressionState.sportChart?.destroy();
   progressionState.sportChart=new Chart(canvas,{type:"bar",data:{labels:groups.map((group)=>group.label),datasets:[{label:progressionState.mode==="distance"?"Distance":"Temps",data:groups.map((group)=>group[valueKey]),backgroundColor:groups.map((group)=>group.color),borderRadius:8,borderSkipped:false,barThickness:22}]},options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,animation:{duration:850,easing:"easeOutQuart"},onClick:(_event,elements)=>{if(elements[0])openSportDetail(elements[0].index);},plugins:{legend:{display:false},tooltip:{callbacks:{label:(context)=>`${context.dataset.label} : ${context.parsed.x.toLocaleString("fr-CH",{maximumFractionDigits:1})} ${unit}`}}},scales:{x:{beginAtZero:true,grid:{color:"rgba(20,20,20,.07)"},ticks:{color:"#858178",callback:(value)=>`${value} ${unit}`}},y:{grid:{display:false},ticks:{color:"#2f2f2f",font:{weight:"700"}}}}}});
+  renderAccessibleChartTable("sportChartTable",["Discipline",progressionState.mode==="distance"?"Distance":"Temps"],groups.map((group)=>[group.label,`${group[valueKey].toLocaleString("fr-CH",{maximumFractionDigits:1})} ${unit}`]),"sport");
   const total=groups.reduce((sum,group)=>sum+group[valueKey],0);
   const dominant=groups[0];
   const formattedTotal=total.toLocaleString("fr-CH",{maximumFractionDigits:1});
@@ -488,14 +509,15 @@ function renderWellnessChart() {
   const granularity=progressionGranularity();
   progressionState.wellbeingDisplayDays=days;
   const availableCount=days.filter((day)=>day[definition.dataKey]!=null).length;
-  setProgressionChartEmpty(canvas, availableCount === 0, "Aucune donnée ne correspond à cette période.", "Le bien-être apparaîtra après une saisie ou une source connectée.");
-  if (availableCount === 0) { progressionState.wellnessChart?.destroy(); document.getElementById("wellnessInsight").textContent=""; requestAnimationFrame(()=>document.getElementById("wellnessChartCard")?.classList.add("is-visible")); return; }
+  setProgressionChartEmpty(canvas, availableCount === 0, "Aucune donnée ne correspond à cette période.", "Le bien-être apparaîtra après une saisie ou une source déclarée.");
+  if (availableCount === 0) { progressionState.wellnessChart?.destroy(); document.getElementById("wellnessInsight").textContent=""; renderAccessibleChartTable("wellnessChartTable",["Date",definition.label],[]); requestAnimationFrame(()=>document.getElementById("wellnessChartCard")?.classList.add("is-visible")); return; }
   progressionState.wellnessChart?.destroy();
   progressionState.wellnessChart=new Chart(canvas,{type:"line",data:{labels:days.map((day)=>progressionDateLabel(day.date,granularity)),datasets:[{label:definition.label,data:days.map((day)=>day[definition.dataKey]),borderColor:definition.color,backgroundColor:`${definition.color}18`,fill:true,tension:.35,pointRadius:days.length>45?0:2,pointHoverRadius:5,spanGaps:true,borderWidth:2.5}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:850,easing:"easeOutQuart"},interaction:{mode:"index",intersect:false},onClick:(_event,elements)=>{if(elements[0])openWellnessDay(elements[0].index);},plugins:{legend:{display:false},tooltip:{callbacks:{label:(context)=>`${definition.label} : ${wellnessChartValue(progressionState.wellnessMode,context.parsed.y)}`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,maxRotation:0,color:"#858178"}},y:{...definition.scale,grid:{color:"rgba(20,20,20,.07)"},ticks:{color:"#858178",stepSize:definition.stepSize,callback:(value)=>wellnessAxisValue(progressionState.wellnessMode,value)}}}}});
+  renderAccessibleChartTable("wellnessChartTable",["Date",definition.label],days.map((day)=>[progressionDateLabel(day.date,granularity),day[definition.dataKey]==null?"Non renseigné":wellnessChartValue(progressionState.wellnessMode,day[definition.dataKey])]),"wellness");
   if(availableCount<5){progressionState.wellnessChart.data.datasets[0].pointRadius=4;progressionState.wellnessChart.update("none");}
   const recent=[...days].reverse().find((day)=>day[definition.dataKey]!=null);
   const insight=document.getElementById("wellnessInsight");
-  insight.textContent=recent?`${definition.label} : ${wellnessChartValue(progressionState.wellnessMode,recent[definition.dataKey])} lors de la dernière journée renseignée.`:"Aucune donnée disponible pour cet indicateur. MOMENTUM attend une saisie ou une source connectée.";
+  insight.textContent=recent?`${definition.label} : ${wellnessChartValue(progressionState.wellnessMode,recent[definition.dataKey])} lors de la dernière journée renseignée.`:"Aucune donnée disponible pour cet indicateur. MOMENTUM attend une saisie ou une source déclarée.";
   requestAnimationFrame(()=>document.getElementById("wellnessChartCard")?.classList.add("is-visible"));
 }
 
@@ -521,11 +543,20 @@ async function applyProgressionPeriod(preset, customStart = null, customEnd = nu
   progressionState.periodPreset = preset;
   progressionState.periodStart = range.start;
   progressionState.periodEnd = range.end;
+  saveProgressionPreferences();
   if (message) message.textContent = "";
   await loadProgressionData();
 }
 
 function bindProgression() {
+  const preferences = readProgressionPreferences();
+  if (PROGRESSION_PERIODS[preferences.periodPreset]) progressionState.periodPreset = preferences.periodPreset;
+  if (["time","distance"].includes(preferences.mode)) progressionState.mode = preferences.mode;
+  if (["summary","motivation","sleep","restingHr","hrv"].includes(preferences.wellnessMode)) progressionState.wellnessMode = preferences.wellnessMode;
+  if (progressionState.periodPreset === "custom" && preferences.periodStart && preferences.periodEnd) {
+    progressionState.periodStart = preferences.periodStart;
+    progressionState.periodEnd = preferences.periodEnd;
+  }
   document.addEventListener("click", async (event) => {
     if (event.target.closest("[data-progression-retry]")) await loadProgressionData();
     if (event.target.closest("[data-progression-reset]")) {
@@ -535,13 +566,27 @@ function bindProgression() {
       if (custom) custom.hidden = true;
       await applyProgressionPeriod("current-week");
     }
+    const toggle = event.target.closest("[data-chart-table-toggle]");
+    if (toggle) {
+      const table = document.getElementById(toggle.dataset.chartTableToggle);
+      if (table) { table.hidden = !table.hidden; toggle.setAttribute("aria-expanded", String(!table.hidden)); toggle.textContent = table.hidden ? "Afficher les données" : "Masquer les données"; }
+    }
+    const detail = event.target.closest("[data-progression-detail]")?.dataset.progressionDetail;
+    if (detail) {
+      const [type,index] = detail.split(":");
+      if (type === "sport") openSportDetail(Number(index));
+      if (type === "load") openLoadDay(Number(index));
+      if (type === "wellness") openWellnessDay(Number(index));
+    }
   });
-  document.querySelectorAll("[data-volume-mode]").forEach((button) => button.addEventListener("click", () => { progressionState.mode=button.dataset.volumeMode; document.querySelectorAll("[data-volume-mode]").forEach((item)=>item.classList.toggle("active",item===button)); renderSportChart(); }));
-  document.querySelectorAll("[data-wellness-mode]").forEach((button) => button.addEventListener("click",()=>{progressionState.wellnessMode=button.dataset.wellnessMode;document.querySelectorAll("[data-wellness-mode]").forEach((item)=>item.classList.toggle("active",item===button));renderWellnessChart();}));
+  document.querySelectorAll("[data-volume-mode]").forEach((button) => { button.classList.toggle("active",button.dataset.volumeMode===progressionState.mode); button.setAttribute("aria-pressed",String(button.dataset.volumeMode===progressionState.mode)); button.addEventListener("click", () => { progressionState.mode=button.dataset.volumeMode; document.querySelectorAll("[data-volume-mode]").forEach((item)=>{const active=item===button;item.classList.toggle("active",active);item.setAttribute("aria-pressed",String(active));}); saveProgressionPreferences(); renderSportChart(); }); });
+  document.querySelectorAll("[data-wellness-mode]").forEach((button) => { button.classList.toggle("active",button.dataset.wellnessMode===progressionState.wellnessMode); button.setAttribute("aria-pressed",String(button.dataset.wellnessMode===progressionState.wellnessMode)); button.addEventListener("click",()=>{progressionState.wellnessMode=button.dataset.wellnessMode;document.querySelectorAll("[data-wellness-mode]").forEach((item)=>{const active=item===button;item.classList.toggle("active",active);item.setAttribute("aria-pressed",String(active));});saveProgressionPreferences();renderWellnessChart();}); });
   const preset = document.querySelector("[data-period-preset]");
   const custom = document.querySelector("[data-period-custom]");
   const customStart = document.querySelector("[data-period-start]");
   const customEnd = document.querySelector("[data-period-end]");
+  if (preset) preset.value = progressionState.periodPreset;
+  if (custom) custom.hidden = progressionState.periodPreset !== "custom";
 
   preset?.addEventListener("change", async () => {
     const isCustom = preset.value === "custom";
@@ -553,9 +598,11 @@ function bindProgression() {
     await applyProgressionPeriod("custom", customStart?.value, customEnd?.value);
   });
 
-  const initialRange = progressionPeriodRange("current-week");
-  if (customStart) customStart.value = initialRange.start;
-  if (customEnd) customEnd.value = initialRange.end;
+  const initialRange = progressionPeriodRange(progressionState.periodPreset, progressionState.periodStart, progressionState.periodEnd);
+  if (customStart) customStart.value = initialRange.start || progressionPeriodRange("current-week").start;
+  if (customEnd) customEnd.value = initialRange.end || progressionPeriodRange("current-week").end;
+  progressionState.periodStart = initialRange.start;
+  progressionState.periodEnd = initialRange.end;
 
   document.getElementById("closeProgressionDialog")?.addEventListener("click", () => closeHomeDialog(document.getElementById("progressionDialog")));
 }

@@ -874,10 +874,7 @@ async function uploadActivityFile(
       error
     );
 
-    throw new Error(
-      error.message ||
-      "Impossible d'envoyer le fichier dans Supabase."
-    );
+    throw new Error("UPLOAD_FAILED");
   }
 
   return {
@@ -926,10 +923,6 @@ async function handleActivityFile(event) {
 
     event.target.value = "";
 
-    setActivityMessage(
-      error.message ||
-      "Impossible de lire ce fichier.",
-      true
-    );
+    setActivityMessage("Impossible de lire ce fichier. Vérifie son format puis réessaie.", true);
   }
 }

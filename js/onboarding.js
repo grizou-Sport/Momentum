@@ -342,7 +342,7 @@ async function advance() {
     showStep(onboarding.currentStep + 1);
   } catch (error) {
     console.error("ONBOARDING:", error);
-    setError(error.message || "Impossible de sauvegarder cette étape pour le moment.");
+    setError(window.MomentumUI.errorMessage(error, "save"));
     setStatus("Sauvegarde interrompue", "error");
   } finally {
     nextButton.disabled = false;

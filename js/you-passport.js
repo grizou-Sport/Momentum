@@ -8,7 +8,7 @@ function renderPassportCard() {
     `“${YOU.passport?.quote || "Écris la prochaine ligne."}”`;
 
   document.getElementById("passportAge").textContent =
-    calculateAge(YOU.passport?.birth_year);
+    calculateAge(YOU.passport?.birth_date, YOU.passport?.birth_year);
   document.getElementById("passportHeight").textContent =
     YOU.passport?.height_cm ? `${YOU.passport.height_cm} cm` : "—";
   document.getElementById("passportWeight").textContent =
@@ -72,7 +72,7 @@ function renderAbout() {
 
       <div class="full you-form-divider"><span class="section-kicker">Objectifs & sources</span></div>
       <label>Objectif principal<select name="primary_objective"><option value="">Choisir</option>${["Santé","Performance","Compétition","Aventure","Plaisir"].map((item) => `<option ${YOU.passport?.objectives?.primary === item ? "selected" : ""}>${item}</option>`).join("")}</select></label>
-      <label>Sources connectées<input name="connected_sources" value="${Object.keys(YOU.passport?.connected_sources || {}).filter((key) => YOU.passport.connected_sources[key]).join(", ")}" placeholder="COROS, Garmin, Strava…" /></label>
+      <label>Sources déclarées<input name="connected_sources" value="${Object.keys(YOU.passport?.connected_sources || {}).filter((key) => YOU.passport.connected_sources[key]).join(", ")}" placeholder="COROS, Garmin, Strava…" /></label>
 
       <label class="full">Phrase
         <textarea name="quote" rows="3">${YOU.passport?.quote || ""}</textarea>
@@ -171,7 +171,6 @@ async function savePassport(event) {
     }, 1800);
   } catch (error) {
     console.error(error);
-    message.textContent =
-      error.message || "Impossible de sauvegarder pour le moment.";
+    message.textContent = window.MomentumUI.errorMessage(error, "save");
   }
 }

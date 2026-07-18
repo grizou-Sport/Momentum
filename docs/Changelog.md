@@ -6,6 +6,11 @@ Les changements notables du projet sont consignés dans ce fichier.
 
 ### Ajouté
 
+- Navigation contextuelle claire/sombre avec analyse ponctuelle de la photographie du HERO et surface de protection permanente.
+- Alternatives tabulaires, résumés et accès clavier pour les graphiques Progression, plus définitions courtes des indicateurs.
+- Mapping partagé des erreurs et dialogues MOMENTUM accessibles pour les actions corrigées dans ce lot.
+- Pages structurées pour les Conditions générales et la Politique de confidentialité en préparation de la bêta.
+- Favicon officiel fondé sur le triangle MOMENTUM.
 - Famille SVG Bien-être dédiée et référentiel centralisé, avec lotus pour Massage et fallback neutre traçable en développement.
 - Composants partagés `MomentumSlider` et `EmptyState` pour les ressentis et les absences de données.
 - Module FLOW V1 sur HOME : carte Défi × Maîtrise, périodes, sélection et résumé d’activité.
@@ -22,6 +27,10 @@ Les changements notables du projet sont consignés dans ce fichier.
 
 ### Modifié
 
+- Le triangle devient le symbole principal dans le rail ; l’ancien code CSS de TopBar est supprimé.
+- YOU calcule l’âge depuis la date de naissance complète, distingue les pannes partielles et parle de « Sources déclarées ».
+- Progression mémorise localement la période, l’unité et l’indicateur de bien-être sélectionnés.
+- Les erreurs de rafraîchissement conservent les dernières données valides et proposent une nouvelle tentative.
 - Regroupement des évaluations FLOW aux coordonnées identiques avec compteur et accès à chaque Moment, sans modifier les valeurs enregistrées.
 - Protection des changements rapides de période FLOW contre les réponses obsolètes et conservation des dernières données valides en cas d’erreur.
 - Effort physique, Défi et Maîtrise démarrent désormais dans un état non renseigné et partagent la même interaction accessible de 1 à 10.

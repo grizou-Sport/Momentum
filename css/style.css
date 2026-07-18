@@ -3,7 +3,7 @@
    ---------------------------------------------------------
    Rôle de ce fichier :
    - socle commun à toute l'application
-   - variables, reset, typographie, topbar, boutons, formulaires
+   - variables, reset, typographie, boutons, formulaires
    - composants génériques réutilisables
 
    Important :
@@ -50,7 +50,6 @@
   /* Layout */
   --page-width:1180px;
   --page-gutter:24px;
-  --topbar-height:68px;
 
   /* Typographie */
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Arial,sans-serif;
@@ -83,6 +82,18 @@ button{cursor:pointer}
 :focus-visible{
   outline:2px solid #111;
   outline-offset:3px;
+}
+
+.sr-only{
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  padding:0!important;
+  margin:-1px!important;
+  overflow:hidden!important;
+  clip:rect(0,0,0,0)!important;
+  white-space:nowrap!important;
+  border:0!important;
 }
 
 /* =========================================================
@@ -152,53 +163,6 @@ p{
 .muted{color:var(--muted)}
 .small{font-size:13px}
 
-/* =========================================================
-   Topbar commune
-   ========================================================= */
-
-.topbar{
-  position:fixed;
-  z-index:50;
-  top:16px;
-  left:50%;
-  transform:translateX(-50%);
-  width:min(var(--page-width),calc(100% - 32px));
-  min-height:var(--topbar-height);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:18px;
-  padding:10px 12px;
-  border:1px solid rgba(0,0,0,.08);
-  background:rgba(247,247,245,.82);
-  backdrop-filter:blur(18px);
-  -webkit-backdrop-filter:blur(18px);
-  border-radius:var(--radius-pill);
-  box-shadow:var(--shadow-sm);
-}
-
-.brand{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  min-width:0;
-  padding:0 12px;
-  font-weight:900;
-}
-
-.brand strong{
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  font-size:14px;
-}
-
-.brand em{
-  color:var(--muted);
-  font-style:normal;
-  font-size:12px;
-  font-weight:700;
-}
-
 .mark{
   display:inline-grid;
   place-items:center;
@@ -211,53 +175,6 @@ p{
   line-height:1;
 }
 
-.topbar nav{
-  display:flex;
-  align-items:center;
-  gap:4px;
-}
-
-.topbar nav a{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-height:42px;
-  padding:0 16px;
-  border-radius:var(--radius-pill);
-  color:var(--muted);
-  font-size:14px;
-  font-weight:800;
-  transition:background .18s ease,color .18s ease;
-}
-
-.topbar nav a:hover,
-.topbar nav a.active-nav{
-  background:#fff;
-  color:#111;
-}
-
-.disabled-link{
-  opacity:.35;
-  pointer-events:none;
-}
-
-.top-actions{
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
-
-.topbar-logout{
-  border:0;
-  border-radius:var(--radius-pill);
-  padding:11px 15px;
-  background:transparent;
-  color:var(--muted);
-  font-size:13px;
-  font-weight:800;
-}
-
-.topbar-logout:hover{background:#111;color:#fff}
 
 /* =========================================================
    Boutons communs
@@ -622,25 +539,6 @@ label{
     --page-gutter:18px;
   }
 
-  .topbar{
-    top:10px;
-    width:calc(100% - 20px);
-    border-radius:22px;
-  }
-
-  .topbar nav{
-    min-width:0;
-    display:flex;
-    gap:2px;
-    margin-left:auto;
-  }
-
-  .topbar nav a{
-    min-height:38px;
-    padding:0 11px;
-    font-size:12px;
-  }
-
   .page-shell{
     padding-top:104px;
   }
@@ -660,35 +558,6 @@ label{
 }
 
 @media(max-width:760px){
-  .brand{
-    padding:0 6px;
-  }
-
-  .brand strong{
-    font-size:13px;
-  }
-
-  .brand em{
-    font-size:11px;
-  }
-
-  .top-actions{
-    flex:0 0 auto;
-    margin-left:0;
-  }
-
-  .top-actions button{
-    min-width:36px;
-    min-height:36px;
-    padding:0 7px!important;
-    font-size:0!important;
-  }
-
-  .top-actions button::before{
-    content:"⏻";
-    font-size:16px;
-  }
-
   .small-btn{
     min-height:38px;
     padding:0 11px;
@@ -737,10 +606,6 @@ label{
 }
 
 @media(max-width:430px){
-  .top-actions{
-    display:flex;
-  }
-
   .page-shell{
     width:calc(100% - 24px);
   }
@@ -761,3 +626,18 @@ duration-picker{display:grid;gap:7px}
 .duration-step:last-of-type{border-left:1px solid var(--line)}
 .duration-step:hover,.duration-step:focus-visible{background:var(--ink);color:#fff}
 .duration-hint{color:var(--muted);font-size:11px;font-weight:600}
+.legal-body{min-height:100vh;background:var(--bg);color:var(--ink)}
+.legal-document{width:min(780px,calc(100% - 40px));margin:0 auto;padding:48px 0 90px;overflow:visible}
+.legal-brand{display:inline-flex;align-items:center;gap:10px;margin-bottom:72px;color:var(--ink);font-size:12px;font-weight:900;letter-spacing:.14em}
+.legal-brand span{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--ink);color:#fff;font-size:18px}
+.legal-document header{padding-bottom:36px;border-bottom:1px solid var(--line)}
+.legal-document h1{margin:12px 0 24px;font-size:clamp(42px,8vw,72px);letter-spacing:-.05em}
+.legal-document header p{margin:5px 0;color:var(--muted)}
+.legal-document section{padding:30px 0;border-bottom:1px solid var(--line)}
+.legal-document section h2{margin:0 0 12px;font-size:22px}.legal-document section p{margin:0;color:var(--muted);line-height:1.75}
+.legal-notice{margin-top:34px;padding:18px;border-radius:14px;background:var(--surface);color:var(--muted);font-size:13px;line-height:1.55}
+.momentum-ui-dialog{width:min(440px,calc(100% - 32px));padding:0;border:0;border-radius:22px;background:var(--surface);color:var(--ink);box-shadow:0 28px 80px rgba(0,0,0,.24)}
+.momentum-ui-dialog::backdrop{background:rgba(12,16,14,.48);backdrop-filter:blur(5px)}
+.momentum-ui-dialog form{display:grid;gap:15px;padding:28px}.momentum-ui-dialog h2,.momentum-ui-dialog p{margin:0}.momentum-ui-dialog p{color:var(--muted);line-height:1.55}
+.momentum-ui-dialog label{display:grid;gap:7px;font-size:12px;font-weight:800}.momentum-ui-dialog input{width:100%}
+.momentum-ui-dialog form>div{display:flex;justify-content:flex-end;gap:9px;margin-top:8px}.momentum-ui-dialog button{min-height:42px;padding:0 16px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--ink);font:inherit;font-weight:800;cursor:pointer}.momentum-ui-dialog button:last-child{border-color:var(--ink);background:var(--ink);color:#fff}.momentum-ui-dialog button.is-danger{border-color:var(--danger);background:var(--danger);color:#fff}

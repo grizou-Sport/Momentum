@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Momentum — HOME</title>
+  <link rel="icon" href="Assets/icons/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/navigation.css" />
   <link rel="stylesheet" href="css/home.css" />
@@ -15,7 +16,7 @@
 
 <main>
 
-  <section id="hero" class="hero">
+  <section id="hero" class="hero" data-nav-theme="light" data-nav-luminance>
 
     <div class="hero-overlay"></div>
 
@@ -35,7 +36,7 @@
 
   </section>
 
-    <section id="today" class="story-section today-story">
+    <section id="today" class="story-section today-story" data-nav-theme="dark">
       <div class="section-kicker">Aujourd'hui</div>
       <div class="today-heading">
         <h2 id="todayTitle"></h2>
@@ -62,7 +63,7 @@
       </div>
     </section>
 
-    <section class="story-section living-section">
+    <section class="story-section living-section" data-nav-theme="dark">
       <div class="section-kicker">Fenêtre vivante</div>
       <div class="section-head">
         <div>
@@ -79,7 +80,7 @@
       <div id="livingWeek" class="living-week"></div>
     </section>
 
-    <section id="journal" class="story-section journal-section">
+    <section id="journal" class="story-section journal-section" data-nav-theme="dark">
       <div class="section-kicker">Journal</div>
       <div class="section-head">
         <div>
@@ -592,6 +593,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script src="js/supabase.js"></script>
+<script src="js/momentum-ui.js"></script>
 <script src="js/guard.js"></script>
 
 <script src="js/navigation.js"></script>

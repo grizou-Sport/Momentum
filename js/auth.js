@@ -26,7 +26,7 @@ function friendlyAuthError(error) {
   if (value.includes("already registered") || value.includes("already been registered")) return "Un compte existe déjà avec cette adresse.";
   if (value.includes("password should be")) return "Choisis un mot de passe d'au moins 8 caractères.";
   if (value.includes("rate limit")) return "Trop de tentatives. Attends un instant avant de réessayer.";
-  return error?.message || "Une erreur est survenue. Réessaie dans un instant.";
+  return "Connexion momentanément indisponible. Réessaie dans un instant.";
 }
 
 function callbackErrorMessage() {
@@ -70,9 +70,12 @@ function showMode(mode) {
     : "Retrouve ton histoire, tes horizons et tout ce que tu construis.";
   authForm.password.autocomplete = mode === "signup" ? "new-password" : "current-password";
   document.querySelectorAll("[data-auth-mode]").forEach((button) => {
-    button.classList.toggle("active", button.dataset.authMode === mode);
-    button.setAttribute("aria-selected", String(button.dataset.authMode === mode));
+    const selected = button.dataset.authMode === mode;
+    button.classList.toggle("active", selected);
+    button.setAttribute("aria-selected", String(selected));
+    button.tabIndex = selected ? 0 : -1;
   });
+  authForm.setAttribute("aria-labelledby", mode === "signup" ? "signupTab" : "loginTab");
   setMessage(document.getElementById("authMessage"));
 }
 
@@ -99,13 +102,21 @@ function showNewPassword() {
 }
 
 document.querySelectorAll("[data-auth-mode]").forEach((button) => button.addEventListener("click", () => showMode(button.dataset.authMode)));
+authTabs.addEventListener("keydown", (event) => {
+  if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+  event.preventDefault();
+  const tabs = [...authTabs.querySelectorAll('[role="tab"]')];
+  const current = tabs.indexOf(document.activeElement);
+  const next = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : (current + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+  tabs[next].focus();
+  showMode(tabs[next].dataset.authMode);
+});
 document.querySelectorAll("[data-back-login]").forEach((button) => button.addEventListener("click", () => showMode("login")));
 document.querySelectorAll("[data-password-toggle]").forEach((button) => button.addEventListener("click", () => {
   const input = document.getElementById(button.dataset.passwordToggle);
   input.type = input.type === "password" ? "text" : "password";
   button.textContent = input.type === "password" ? "Voir" : "Cacher";
 }));
-document.querySelectorAll("[data-legal]").forEach((link) => link.addEventListener("click", (event) => event.preventDefault()));
 forgotBtn.addEventListener("click", showRecovery);
 
 authForm.addEventListener("submit", async (event) => {

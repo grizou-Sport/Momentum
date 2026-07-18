@@ -2,6 +2,13 @@
 
 Les décisions structurantes sont ajoutées ici avec leur contexte, leurs conséquences et leur statut.
 
+## 2026-07-18 — Navigation contextuelle et socle de consolidation bêta
+
+- **Statut :** accepté.
+- **Décision :** utiliser le triangle comme symbole unique, laisser chaque section déclarer un thème clair ou sombre et limiter l’analyse de luminance aux photographies variables, au chargement et aux redimensionnements significatifs.
+- **Conséquence :** le rail conserve un voile flouté garantissant sa lisibilité ; les messages d’erreur, dialogues et alternatives de graphiques reposent sur des conventions partagées, sans nouvelle fonctionnalité produit.
+- **Motif :** garantir une interface stable, accessible et compréhensible avant la bêta sans introduire une analyse continue des pixels ni une refonte structurelle.
+
 ## 2026-07-13 — Organisation documentaire
 
 - **Statut :** accepté.

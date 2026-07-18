@@ -480,7 +480,7 @@ async function openEditActivityDialog(activityId) {
     if (error) console.error("HOME : Moment historique indisponible.", error);
     session = data ? mapActivityRow(data) : null;
     if (!session) {
-      window.alert("Ce moment n'est plus disponible.");
+      await window.MomentumUI.confirm({ title:"Moment indisponible", message:"Ce Moment n’est plus disponible ou n’a pas pu être chargé.", confirmLabel:"Fermer", cancelLabel:"Retour" });
       return;
     }
   }
@@ -983,11 +983,7 @@ async function saveActivity(event) {
       );
     }
 
-    setActivityMessage(
-      error.message ||
-      "Impossible d’enregistrer le moment.",
-      true
-    );
+    setActivityMessage(window.MomentumUI.errorMessage(error, "save"), true);
   }
 }
 
@@ -1018,14 +1014,11 @@ async function deleteActivity(activityId, activityDate) {
   );
 
   if (!session) {
-    window.alert("Ce moment n'est plus disponible.");
+    setActivityMessage("Ce Moment n’est plus disponible.", true);
     return;
   }
 
-  const confirmed = window.confirm(
-    "Supprimer ce moment ?\n\n" +
-    "Le Moment, ses photos et son éventuel fichier FIT ou GPX seront définitivement supprimés."
-  );
+  const confirmed = await window.MomentumUI.confirm({ title:"Supprimer ce Moment ?", message:"Le Moment, ses photos et son éventuel fichier FIT ou GPX seront définitivement supprimés.", confirmLabel:"Supprimer", danger:true });
 
   if (!confirmed) return;
 
@@ -1058,9 +1051,7 @@ async function deleteActivity(activityId, activityDate) {
     openDay(activityDate);
   } catch (error) {
     console.error("HOME : suppression impossible.", error);
-    window.alert(
-      error.message || "Impossible de supprimer ce moment."
-    );
+    setActivityMessage(window.MomentumUI.errorMessage(error, "delete"), true);
   } finally {
     dialog?.classList.remove("is-busy");
   }

@@ -226,7 +226,7 @@ function renderWellbeingCard(date = iso(new Date())) {
   if (!element) return;
 
   const wellbeing = state.wellbeing?.[date] || {};
-  const source = wellbeing.source || "Aucune source connectée";
+  const source = wellbeing.source || "Aucune source déclarée";
   const sleepQuality = wellbeing.sleepQuality ?? wellbeing.sleep_quality;
   const hasData = wellbeingHasData(wellbeing);
 
@@ -355,7 +355,7 @@ async function saveWellbeing(event) {
     if (error) {
       console.error("HOME : impossible d'enregistrer le bien-être.", error);
       if (submitButton) submitButton.disabled = false;
-      setWellbeingDialogMessage(`Enregistrement impossible : ${error.message}`, true);
+      setWellbeingDialogMessage(window.MomentumUI.errorMessage(error, "save"), true);
       return;
     }
 
@@ -372,7 +372,7 @@ async function saveWellbeing(event) {
 
 async function deleteWellbeing(date, returnToDay = null) {
   const user = await getCurrentUser();
-  if (!user || !window.confirm("Supprimer les données de bien-être de cette journée ?")) return;
+  if (!user || !await window.MomentumUI.confirm({ title:"Supprimer ces données ?", message:"Les données de bien-être de cette journée seront définitivement supprimées.", confirmLabel:"Supprimer", danger:true })) return;
 
   const editorDialog = $("#wellbeingDialog");
   const dayDialog = $("#dayDialog");
@@ -395,9 +395,8 @@ async function deleteWellbeing(date, returnToDay = null) {
   if (error) {
     console.error("HOME : impossible de supprimer le bien-être.", error);
     if (editorDialog?.open) {
-      setWellbeingDialogMessage(`Suppression impossible : ${error.message}`, true);
+      setWellbeingDialogMessage(window.MomentumUI.errorMessage(error, "delete"), true);
     } else {
-      window.alert(error.message || "Impossible de supprimer les données de bien-être.");
     }
     dayDialog?.classList.remove("is-busy");
     return;

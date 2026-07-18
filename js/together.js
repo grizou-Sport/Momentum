@@ -297,7 +297,7 @@ async function openClubDetail(clubId) {
   elements.clubDetail.innerHTML = '<div class="detail-loading">Ouverture du Club…</div>';
   if (!elements.clubDetailDialog.open) elements.clubDetailDialog.showModal();
   const { data: members, error } = await window.momentumDB.from("club_members").select("*").eq("club_id", clubId).in("membership_status", ["PENDING", "ACCEPTED"]).order("created_at");
-  if (error) return elements.clubDetail.innerHTML = `<div class="dialog-shell"><p>${escapeHTML(error.message)}</p></div>`;
+  if (error) return elements.clubDetail.innerHTML = `<div class="dialog-shell"><p>${escapeHTML(window.MomentumUI.errorMessage(error, "load"))}</p><button type="button" data-together-retry>Réessayer</button></div>`;
   const userIds = [...new Set((members || []).map((member) => member.user_id))];
   const { data: passports } = userIds.length ? await window.momentumDB.from("passports").select("user_id,display_name,avatar_url,city").in("user_id", userIds) : { data: [] };
   const profiles = new Map((passports || []).map((profile) => [profile.user_id, profile]));
@@ -327,21 +327,21 @@ async function openClubDetail(clubId) {
 async function inviteClubMember(clubId, userId) {
   if (!userId) return;
   const { error } = await window.momentumDB.from("club_members").insert({ club_id: clubId, user_id: userId, invited_by: TOGETHER.user.id, role: "MEMBER", membership_status: "PENDING" });
-  if (error) return setStatus(`Invitation non envoyée : ${error.message}`, true);
+  if (error) return setStatus(window.MomentumUI.errorMessage(error, "action"), true);
   setStatus("Invitation au Club envoyée.");
   elements.clubDetailDialog.close(); await loadTogether();
 }
 
 async function updateClubMemberRole(clubId, membershipId, role) {
   const { error } = await window.momentumDB.from("club_members").update({ role }).eq("id", membershipId).eq("club_id", clubId);
-  if (error) return setStatus(`Rôle non modifié : ${error.message}`, true);
+  if (error) return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
   setStatus("Le rôle du membre a été mis à jour.");
   await loadTogether(); openClubDetail(clubId);
 }
 
 async function answerClubInvitation(id, answer) {
   const { error } = await window.momentumDB.from("club_members").update({ membership_status: answer, joined_at: answer === "ACCEPTED" ? new Date().toISOString() : null }).eq("id", id).eq("user_id", TOGETHER.user.id);
-  if (error) return setStatus(`Réponse non enregistrée : ${error.message}`, true);
+  if (error) return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
   await loadTogether();
 }
 
@@ -410,7 +410,7 @@ function activityMemoryCard(activity = {}) {
 
 async function completeMoment(momentId) {
   const { error } = await window.momentumDB.from("moments").update({ status: "COMPLETED", updated_at: new Date().toISOString() }).eq("id", momentId);
-  if (error) return setStatus(`Moment non terminé : ${error.message}`, true);
+  if (error) return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
   elements.momentDetailDialog.close(); setStatus("Le Moment rejoint maintenant les souvenirs."); await loadTogether();
 }
 
@@ -419,17 +419,17 @@ async function answerMomentInvitation(momentId, answer) {
     ? { invitation_status: "ACCEPTED", participation_status: "REGISTERED", updated_at: new Date().toISOString() }
     : { invitation_status: "DECLINED", participation_status: "DECLINED", updated_at: new Date().toISOString() };
   const { error } = await window.momentumDB.from("moment_participants").update(values).eq("moment_id", momentId).eq("user_id", TOGETHER.user.id);
-  if (error) return setStatus(`Réponse non enregistrée : ${error.message}`, true);
+  if (error) return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
   elements.momentDetailDialog.close();
   setStatus(answer === "ACCEPTED" ? "Invitation acceptée." : "Invitation refusée.");
   await loadTogether();
 }
 
 async function deleteMoment(moment) {
-  if (!window.confirm(`Supprimer définitivement « ${moment.title} » ? Les invitations et souvenirs liés seront également supprimés.`)) return;
+  if (!await window.MomentumUI.confirm({ title:"Supprimer ce Moment ?", message:`« ${moment.title} » ainsi que ses invitations et souvenirs liés seront définitivement supprimés.`, confirmLabel:"Supprimer", danger:true })) return;
   const { data: media } = await window.momentumDB.from("moment_media").select("file_path").eq("moment_id", moment.id);
   const { error } = await window.momentumDB.from("moments").delete().eq("id", moment.id);
-  if (error) return setStatus(`Moment non supprimé : ${error.message}`, true);
+  if (error) return setStatus(window.MomentumUI.errorMessage(error, "delete"), true);
   const paths = (media || []).map((item) => item.file_path).filter(Boolean);
   if (paths.length) {
     const { error: storageError } = await window.momentumDB.storage.from("moment-media").remove(paths);
@@ -443,20 +443,20 @@ async function deleteMoment(moment) {
 async function addMomentPhoto(momentId, file) {
   if (!file) return;
   if (file.size > 10 * 1024 * 1024) return setStatus("La photo dépasse 10 Mo.", true);
-  const caption = window.prompt("Une courte légende ?", "")?.trim() || null;
+  const caption = await window.MomentumUI.prompt({ title:"Ajouter une légende", message:"Quelques mots peuvent donner du contexte à cette photo.", inputLabel:"Légende", confirmLabel:"Ajouter" });
   const extension = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
   const path = `${momentId}/${crypto.randomUUID()}.${extension}`;
   const { error: uploadError } = await window.momentumDB.storage.from("moment-media").upload(path, file, { contentType: file.type, cacheControl: "3600", upsert: false });
-  if (uploadError) return setStatus(`Photo non envoyée : ${uploadError.message}`, true);
+  if (uploadError) return setStatus(window.MomentumUI.errorMessage(uploadError, "upload"), true);
   const { error } = await window.momentumDB.from("moment_media").insert({ moment_id: momentId, user_id: TOGETHER.user.id, file_path: path, caption });
-  if (error) return setStatus(`Photo envoyée mais non liée : ${error.message}`, true);
+  if (error) return setStatus(window.MomentumUI.errorMessage(error, "upload"), true);
   setStatus("La photo a été ajoutée."); await openMomentDetail(momentId);
 }
 
 async function linkMomentActivity(momentId, activityId) {
   if (!activityId) return;
   const { error } = await window.momentumDB.from("moment_activities").insert({ moment_id: momentId, activity_id: activityId, added_by: TOGETHER.user.id });
-  if (error) return setStatus(`Activité non liée : ${error.message}`, true);
+  if (error) return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
   setStatus("L’activité HOME est liée au Moment."); await openMomentDetail(momentId);
 }
 
@@ -465,13 +465,13 @@ async function saveReaction(momentId, type, presetId) {
   const values = { reaction_type: type, preset_message_id: presetId, updated_at: new Date().toISOString() };
   const query = existing ? window.momentumDB.from("reactions").update(values).eq("id", existing.id) : window.momentumDB.from("reactions").insert({ ...values, moment_id: momentId, user_id: TOGETHER.user.id });
   const { error } = await query;
-  if (error) return setStatus(`Réaction non enregistrée : ${error.message}`, true);
+  if (error) return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
   await openMomentDetail(momentId);
 }
 
 async function removeReaction(momentId) {
   const { error } = await window.momentumDB.from("reactions").delete().eq("moment_id", momentId).eq("user_id", TOGETHER.user.id);
-  if (error) return setStatus(`Réaction non retirée : ${error.message}`, true);
+  if (error) return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
   await openMomentDetail(momentId);
 }
 
@@ -479,7 +479,7 @@ async function saveAvailability(optionId, status, momentId) {
   const { data: existing } = await window.momentumDB.from("moment_availability").select("id").eq("date_option_id", optionId).eq("user_id", TOGETHER.user.id).maybeSingle();
   const query = existing ? window.momentumDB.from("moment_availability").update({ availability_status: status, updated_at: new Date().toISOString() }).eq("id", existing.id) : window.momentumDB.from("moment_availability").insert({ date_option_id: optionId, user_id: TOGETHER.user.id, availability_status: status });
   const { error } = await query;
-  if (error) return setStatus(`Disponibilité non enregistrée : ${error.message}`, true);
+  if (error) return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
   await loadTogether(); openMomentDetail(momentId);
 }
 
@@ -489,7 +489,7 @@ async function confirmDateOption(moment, optionId) {
   const { error: optionError } = await window.momentumDB.from("moment_date_options").update({ is_selected: true }).eq("id", optionId);
   if (optionError) return setStatus(`Créneau non confirmé : ${optionError.message}`, true);
   const { error } = await window.momentumDB.from("moments").update({ start_at: option.start_at, end_at: option.end_at, location_name: option.location_name || moment.location_name, status: "CONFIRMED", updated_at: new Date().toISOString() }).eq("id", moment.id);
-  if (error) return setStatus(`Moment non confirmé : ${error.message}`, true);
+  if (error) return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
   elements.momentDetailDialog.close(); setStatus("Le créneau est confirmé."); await loadTogether();
 }
 
@@ -594,16 +594,16 @@ async function createMoment(form) {
     delete payload.user_id;
     delete payload.created_by;
     const { data, error } = await window.momentumDB.from("moments").update({ ...payload, updated_at: new Date().toISOString() }).eq("id", editingId).select().single();
-    if (error) return setStatus(`Moment non modifié : ${error.message}`, true);
+    if (error) return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
     const participantError = await syncMomentParticipants(data.id, participantIds);
     if (participantError) return setStatus(`Moment modifié, mais invitations incomplètes : ${participantError.message}`, true);
     form.reset(); elements.momentDialog.close(); setStatus("Le Moment a été modifié."); await loadTogether(); return;
   }
   payload.status = proposedDates.length === 1 ? "CONFIRMED" : "PLANNING";
   const { data, error } = await window.momentumDB.from("moments").insert(payload).select().single();
-  if (error) return setStatus(`Moment non créé : ${error.message}`, true);
+  if (error) return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
   const participantResult = await window.momentumDB.from("moment_participants").insert({ moment_id: data.id, user_id: TOGETHER.user.id, role: "OWNER", invitation_status: "ACCEPTED", participation_status: "REGISTERED" });
-  if (participantResult.error) return setStatus(`Moment créé, mais organisateur non lié : ${participantResult.error.message}`, true);
+  if (participantResult.error) return setStatus("Moment créé, mais sa mise à jour est incomplète. Réessaie dans un instant.", true);
   const inviteError = await syncMomentParticipants(data.id, participantIds);
   if (inviteError) return setStatus(`Moment créé, mais invitations incomplètes : ${inviteError.message}`, true);
   if (proposedDates.length) {
@@ -640,7 +640,7 @@ async function createClub(form) {
     form.reset(); elements.clubDialog.close(); setStatus("Le Club a été modifié."); await loadTogether(); return;
   }
   const { data: club, error } = await window.momentumDB.from("clubs").insert(payload).select().single();
-  if (error) return setStatus(`Club non créé : ${error.message}`, true);
+  if (error) return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
   const logo = elements.clubLogo?.files?.[0];
   if (logo) {
     try {
@@ -649,7 +649,7 @@ async function createClub(form) {
       if (updateError) throw updateError;
     } catch (logoError) {
       console.error("TOGETHER logo:", logoError);
-      setStatus(`Club créé, mais logo non enregistré : ${logoError.message}`, true);
+      setStatus("Le Club est créé, mais son logo n’a pas pu être enregistré.", true);
       await loadTogether(); return;
     }
   }
@@ -661,7 +661,7 @@ async function answerCircleInvitation(id, answer, button) {
   const { error } = await window.momentumDB.rpc("answer_circle_invitation", { target_invitation: id, answer });
   if (error) {
     button.disabled = false;
-    return setStatus(`Réponse non enregistrée : ${error.message}`, true);
+    return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
   }
   setStatus(answer === "accept" ? "La personne fait maintenant partie de ton Cercle." : answer === "decline" ? "L’invitation a été refusée." : "L’invitation a été annulée.");
   await loadTogether();
@@ -671,12 +671,12 @@ async function endCircleConnection(userId, shouldBlock, button) {
   const message = shouldBlock
     ? "Bloquer cette personne ? Elle sera retirée du Cercle et ne pourra plus t’inviter."
     : "Retirer cette personne de ton Cercle ? Les Moments déjà vécus seront conservés.";
-  if (!window.confirm(message)) return;
+  if (!await window.MomentumUI.confirm({ title:shouldBlock ? "Bloquer cette personne ?" : "Retirer cette personne ?", message, confirmLabel:shouldBlock ? "Bloquer" : "Retirer", danger:true })) return;
   button.disabled = true;
   const { error } = await window.momentumDB.rpc("end_circle_connection", { target_user: userId, should_block: shouldBlock });
   if (error) {
     button.disabled = false;
-    return setStatus(`Action non enregistrée : ${error.message}`, true);
+    return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
   }
   setStatus(shouldBlock ? "La personne a été bloquée et retirée du Cercle." : "La personne a été retirée du Cercle.");
   await loadTogether();
@@ -700,7 +700,7 @@ function renderCircleSearchResult(result) {
     const { data, error } = await window.momentumDB.rpc("send_circle_invitation", { target_user: button.dataset.inviteCircle });
     if (error) {
       button.disabled = false;
-      return setStatus(`Invitation non envoyée : ${error.message}`, true);
+      return setStatus(window.MomentumUI.errorMessage(error, "action"), true);
     }
     if (data?.status === "connected") setStatus("Cette personne est déjà dans ton Cercle.");
     else if (data?.status === "pending") setStatus("Une invitation est déjà en attente.");
@@ -721,14 +721,14 @@ async function searchCircleUser(form) {
   submit.disabled = false;
   if (error) {
     elements.circleSearchResult.innerHTML = "";
-    return setStatus(`Recherche impossible : ${error.message}`, true);
+    return setStatus(window.MomentumUI.errorMessage(error, "load"), true);
   }
   renderCircleSearchResult(data);
 }
 
 function setTogetherView(view) {
   TOGETHER.view = view;
-  elements.tabs.forEach((item) => { const active = item.dataset.view === view; item.classList.toggle("active", active); item.setAttribute("aria-selected", String(active)); });
+  elements.tabs.forEach((item) => { const active = item.dataset.view === view; item.classList.toggle("active", active); item.setAttribute("aria-selected", String(active)); item.tabIndex = active ? 0 : -1; });
   elements.momentsView.hidden = view !== "moments";
   elements.circleView.hidden = view !== "circle";
   if (elements.primaryAction) elements.primaryAction.textContent = view === "moments" ? "Créer un Moment" : "Inviter dans mon Cercle";
@@ -762,6 +762,15 @@ function openCircleInviteForm() {
 elements.tabs.forEach((tab) => tab.addEventListener("click", () => {
   openTogetherSection(tab.dataset.view);
 }));
+document.querySelector(".together-tabs")?.addEventListener("keydown", (event) => {
+  if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+  event.preventDefault();
+  const tabs = [...elements.tabs];
+  const current = tabs.indexOf(document.activeElement);
+  const next = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : (current + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+  tabs[next].focus();
+  openTogetherSection(tabs[next].dataset.view);
+});
 elements.primaryAction?.addEventListener("click", () => {
   if (TOGETHER.section === "moments") return openMomentForm();
   if (TOGETHER.section === "clubs") return openClubForm();
