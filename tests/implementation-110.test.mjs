@@ -86,6 +86,6 @@ test("empty states remain distinct from loading and errors", () => {
 
 test("FLOW and Progression share the completed activity status", () => {
   assert.match(flowSource, /\.eq\("status", "done"\)/);
-  assert.match(progressionSource, /\.in\("status", \["done", "planned"\]\)/);
+  assert.match(progressionSource, /\.eq\("status", "done"\)/);
   assert.match(progressionSource, /MomentumMoments\?\.isCompletedActivity/);
 });

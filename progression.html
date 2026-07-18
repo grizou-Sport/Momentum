@@ -59,31 +59,25 @@
       <div class="kpi-strip" id="kpiStrip" aria-label="Indicateurs clés"></div>
 
       <div class="charts-grid">
-        <article class="chart-card progression-chart-card progression-reveal" id="volumeChartCard">
-          <div class="chart-index">01</div>
-          <div class="chart-heading"><div><span class="card-label">Qu'est-ce que j'ai construit ?</span><h3 id="volume">Volume hebdomadaire</h3><p>Le temps consacré à chaque discipline, semaine après semaine.</p></div><div class="chart-mode"><button class="active" data-volume-mode="time">Temps</button><button data-volume-mode="distance">Distance</button></div></div>
-          <div class="chart-canvas-wrap"><canvas id="volumeChart"></canvas></div>
-          <p class="chart-insight" id="volumeInsight"></p>
-        </article>
-
         <article class="chart-card progression-chart-card progression-reveal" id="sportChartCard">
-          <div class="chart-index">02</div>
-          <div class="chart-heading"><div><span class="card-label">Comment est-ce que je m'entraîne ?</span><h3 id="sports">Répartition sportive</h3><p>Le temps réellement consacré à chaque discipline.</p></div><span class="model-phase" id="sportPeriodLabel">Semaine en cours</span></div>
+          <div class="chart-index">01</div>
+          <div class="chart-heading"><div><span class="card-label" id="activityDistributionQuestion">Où ai-je passé mon temps ?</span><h3 id="sports">Répartition des activités</h3><p>Le temps ou la distance réellement consacrés à chaque discipline.</p></div><div class="chart-mode" aria-label="Mesure de la répartition"><button type="button" class="active" data-volume-mode="time">Temps</button><button type="button" data-volume-mode="distance">Distance</button></div></div>
+          <p class="chart-summary" id="activityDistributionSummary" aria-live="polite"></p>
           <div class="sport-chart-wrap"><canvas id="sportChart"></canvas></div>
           <p class="chart-insight" id="sportInsight"></p>
         </article>
 
         <article class="chart-card progression-chart-card progression-reveal" id="loadChartCard">
-          <div class="chart-index">03</div>
-          <div class="chart-heading"><div><span class="card-label">Comment mon corps réagit ?</span><h3 id="charge">Charge aiguë / chronique</h3><p>Charge récente, charge de fond et équilibre actuel.</p></div><span class="model-phase" id="loadModelPhase">Estimation</span></div>
-          <div class="chart-canvas-wrap"><canvas id="fitnessChart"></canvas></div>
+          <div class="chart-index">02</div>
+          <div class="chart-heading"><div><span class="card-label">Comment évolue ma charge d’entraînement ?</span><h3 id="charge">Charge &amp; Forme</h3><p>Charge chronique, fatigue récente et forme actuelle.</p></div><span class="model-phase" id="loadModelPhase">Estimation</span></div>
           <div class="load-status" id="loadStatus"></div>
+          <div class="chart-canvas-wrap"><canvas id="fitnessChart"></canvas></div>
           <p class="chart-insight" id="loadInsight"></p>
         </article>
 
         <article class="chart-card progression-chart-card progression-reveal" id="wellnessChartCard">
-          <div class="chart-index">04</div>
-          <div class="chart-heading"><div><span class="card-label">Comment est-ce que je me sens ?</span><h3 id="bien-etre">Bien-être</h3><p>Sommeil, motivation, récupération et signaux physiologiques au fil des jours.</p></div><div class="wellness-mode"><button class="active" data-wellness-mode="summary">Synthèse</button><button data-wellness-mode="sleep">Sommeil</button><button data-wellness-mode="motivation">Motivation</button><button data-wellness-mode="recovery">Qualité du sommeil</button><button data-wellness-mode="restingHr">FC au repos</button><button data-wellness-mode="hrv">VFC</button></div></div>
+          <div class="chart-index">03</div>
+          <div class="chart-heading"><div><span class="card-label">Comment me suis-je senti durant cette période ?</span><h3 id="bien-etre">Bien-être</h3><p>Ressenti et mesures physiologiques au fil du temps.</p></div><div class="wellness-filters"><div><span>Ressenti</span><div class="wellness-mode"><button type="button" class="active" data-wellness-mode="summary">Bien-être</button><button type="button" data-wellness-mode="motivation">Motivation</button><button type="button" data-wellness-mode="sleep">Sommeil</button></div></div><div><span>Mesures physiologiques</span><div class="wellness-mode"><button type="button" data-wellness-mode="restingHr">FC au repos</button><button type="button" data-wellness-mode="hrv">VFC</button></div></div></div></div>
           <div class="chart-canvas-wrap"><canvas id="wellnessChart"></canvas></div>
           <p class="chart-insight" id="wellnessInsight"></p>
         </article>

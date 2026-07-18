@@ -57,6 +57,12 @@
 .chart-mode button,.wellness-mode button{border:0;border-radius:999px;padding:9px 14px;background:transparent;color:var(--muted);font-size:11px;font-weight:850}
 .wellness-mode button{padding:8px 10px}
 .chart-mode button.active,.wellness-mode button.active{background:var(--ink);color:#fff}
+.chart-summary{position:relative;z-index:1;margin:-8px 0 24px;color:var(--muted);font-size:15px}
+.chart-summary strong{color:var(--ink);font-size:19px}
+.wellness-filters{display:grid;gap:10px;max-width:460px}
+.wellness-filters > div{display:grid;grid-template-columns:130px minmax(0,1fr);align-items:center;gap:8px}
+.wellness-filters > div > span{color:var(--muted);font-size:9px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;text-align:right}
+.wellness-filters .wellness-mode{justify-content:flex-start}
 .chart-canvas-wrap{position:relative;height:340px}
 .progression-chart-card canvas{width:100%!important;height:100%!important}
 .sport-chart-wrap{height:max(320px,calc(var(--sport-count,4) * 46px))}
@@ -69,7 +75,8 @@
 @keyframes progression-in{to{opacity:1;transform:none}}
 
 .model-phase{position:relative;z-index:1;padding:9px 12px;border-radius:999px;background:#edf0eb;color:#496152;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
-.load-status{display:grid;grid-template-columns:repeat(3,1fr);margin-top:20px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.load-status{display:grid;grid-template-columns:auto repeat(3,1fr);margin:0 0 24px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.load-status > p{align-self:center;margin:0;padding:17px 18px 17px 0;color:var(--muted);font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.08em}
 .load-status div{padding:17px 12px;border-right:1px solid var(--line)}
 .load-status div:last-child{border-right:0}
 .load-status strong,.load-status span{display:block}
@@ -93,6 +100,7 @@
 .load-day-activities{display:grid;gap:8px;margin-top:24px}
 .load-day-activities article{display:flex;justify-content:space-between;gap:20px;padding:15px;border-radius:15px;background:var(--surface-soft)}
 .load-day-activities span{color:var(--muted);font-size:12px}
+.load-day-events{padding:12px 15px;border-left:3px solid #b27d42;background:var(--surface-soft);color:var(--ink);font-weight:750}
 .sport-detail-section{margin-top:28px}.sport-detail-section h3{font-size:24px}
 .sport-breakdown{display:grid;gap:8px}.sport-breakdown > div{display:flex;justify-content:space-between;gap:18px;padding:14px;border-radius:14px;background:var(--surface-soft)}
 .sport-breakdown strong{font-size:12px}.intensity-toggle{width:auto;margin-top:24px}
@@ -118,7 +126,7 @@
   .period-custom{display:grid;grid-template-columns:1fr 1fr;width:100%}.period-custom input{width:100%}.period-custom button{grid-column:1/-1;width:100%}
   .kpi-strip{grid-template-columns:1fr}.kpi-strip > *{border-right:0;border-bottom:1px solid rgba(255,255,255,.12)}.kpi-strip > *:last-child{border-bottom:0}
   .chart-card{min-height:510px;padding:26px 20px;border-radius:22px}.chart-heading{flex-direction:column;padding-right:0}.chart-index{top:18px;right:20px;font-size:68px}
-  .chart-canvas-wrap{height:290px}.wellness-mode{max-width:100%;justify-content:flex-start}
+  .chart-canvas-wrap{height:290px}.wellness-mode{max-width:100%;justify-content:flex-start}.wellness-filters{max-width:100%}.wellness-filters > div{grid-template-columns:1fr}.wellness-filters > div > span{text-align:left}.load-status{grid-template-columns:1fr}.load-status > p{padding-bottom:4px}.load-status div{border-right:0;border-top:1px solid var(--line)}
   .progression-dialog{width:100%;height:100svh;max-height:100svh;margin:0;border-radius:0;padding:70px 20px 28px}
   .progression-detail-kpis,.wellness-detail-grid{grid-template-columns:1fr}.progression-subdisciplines p,.load-day-activities article,.sport-breakdown > div{flex-direction:column;gap:5px}
   .intensity-breakdown > div{grid-template-columns:85px 1fr 46px}

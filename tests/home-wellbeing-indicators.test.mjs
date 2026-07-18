@@ -47,6 +47,9 @@ test("wellbeing chart exposes resting heart rate and HRV with their real units",
   assert.equal(wellnessDefinition("recovery").scale.max, 5);
   assert.match(progressionPage, /data-wellness-mode="restingHr"/);
   assert.match(progressionPage, /data-wellness-mode="hrv"/);
+  assert.match(progressionPage, />Ressenti</);
+  assert.match(progressionPage, />Mesures physiologiques</);
+  assert.doesNotMatch(progressionPage, /data-wellness-mode="recovery"/);
 });
 
 test("wellbeing series keeps raw display values and only normalizes the synthesis", () => {

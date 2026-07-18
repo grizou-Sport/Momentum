@@ -23,9 +23,13 @@ test("HOME remains focused on the day and reserves Flow without analytics", () =
 });
 
 test("Progression owns every existing analytical view and its dependencies", () => {
-  for (const id of ["volumeChart", "fitnessChart", "sportChart", "wellnessChart"]) {
+  for (const id of ["fitnessChart", "sportChart", "wellnessChart"]) {
     assert.match(progression, new RegExp(`id="${id}"`));
   }
+  assert.doesNotMatch(progression, /id="volumeChart"/);
+  assert.match(progression, /Où ai-je passé mon temps/);
+  assert.match(progression, /Comment évolue ma charge d’entraînement/);
+  assert.match(progression, /Comment me suis-je senti durant cette période/);
   assert.match(progression, /js\/home-progression\.js/);
   assert.match(progression, /chart\.js/);
   assert.match(progression, /data-momentum-page="progression"/);
@@ -37,6 +41,23 @@ test("Progression owns every existing analytical view and its dependencies", () 
     wellbeingDependency < progressionModule,
     "Les normalisateurs du bien-être doivent être disponibles avant le rendu des graphiques"
   );
+});
+
+test("Progression V1 separates distribution modes and wellbeing filter families", () => {
+  assert.match(progression, /data-volume-mode="time"/);
+  assert.match(progression, /data-volume-mode="distance"/);
+  assert.match(progression, />Ressenti</);
+  assert.match(progression, />Mesures physiologiques</);
+  assert.doesNotMatch(progression, /data-wellness-mode="recovery"/);
+});
+
+test("Progression only queries completed activities and keeps the full history for load", () => {
+  assert.match(progressionScript, /\.eq\("status", "done"\)/);
+  assert.doesNotMatch(progressionScript, /\["done", "planned"\]/);
+  assert.match(progressionScript, /historyActivities/);
+  assert.match(progressionScript, /Charge chronique \(CTL\)/);
+  assert.match(progressionScript, /Fatigue \(ATL\)/);
+  assert.match(progressionScript, /Forme \(TSB\)/);
 });
 
 test("shared navigation treats Progression as a first-level destination", () => {
