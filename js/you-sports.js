@@ -15,7 +15,7 @@ function renderSports() {
             ${activeSports
               .map((sport) => `
                 <div class="you-small-card sport-practice-card${sport.level === "regular" ? " active" : ""}" data-practice-level="${sport.level}">
-                  <span>${window.MomentumIcons?.renderSport(sport.id, { size: 28 }) || "•"}</span>
+                  <span>${window.MomentumIcons?.render(sport.icon, { collection: sport.iconCollection || "sports", size: 28 }) || "•"}</span>
                   <strong>${sport.label}</strong>
                   <em>${sport.levelLabel} · ${sport.sessionCount ? `${sport.sessionCount} séance${sport.sessionCount > 1 ? "s" : ""} sur 12 mois` : sport.questionnaireRole === "Principal" ? "terrain principal du questionnaire" : "choisi lors du questionnaire"}</em>
                 </div>

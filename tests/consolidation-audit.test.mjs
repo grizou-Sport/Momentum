@@ -54,6 +54,15 @@ test("YOU uses full birth dates, partial errors and declared sources", () => {
   assert.match(passport, /Sources déclarées/);
 });
 
+test("YOU resolves Massage from the wellbeing icon collection", () => {
+  const profile = read("js/you-sport-profile.js");
+  const sports = read("js/you-sports.js");
+  assert.match(profile, /MomentumWellbeing\?\.resolve\(value\)/);
+  assert.match(profile, /iconCollection: wellbeing \? "wellbeing" : "sports"/);
+  assert.match(sports, /collection: sport\.iconCollection \|\| "sports"/);
+  assert.doesNotMatch(sports, /renderSport\(sport\.id/);
+});
+
 test("technical errors, native dialogs and dead legal links are removed from active scripts", () => {
   const scripts = ["js/together.js","js/home-activities.js","js/home-wellbeing.js","js/you-equipment.js","js/you-mission.js","js/you-passport.js","js/you-wellbeing.js"].map(read).join("\n");
   const login = read("login.html");

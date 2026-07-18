@@ -13,13 +13,15 @@
 
   function resolveSport(value) {
     const resolved = window.MomentumSports?.resolve(value);
-    const label = resolved?.label || String(value || "").trim();
+    const wellbeing = resolved ? null : window.MomentumWellbeing?.resolve(value);
+    const label = resolved?.label || wellbeing?.label || String(value || "").trim();
     if (!label) return null;
     return {
-      id: resolved?.id || normalize(label).replace(/[^a-z0-9]+/g, "-"),
+      id: resolved?.id || wellbeing?.id || normalize(label).replace(/[^a-z0-9]+/g, "-"),
       label,
-      icon: resolved?.icon || "activity",
-      traits: resolved?.traits || [],
+      icon: resolved?.icon || wellbeing?.icon || "activity",
+      iconCollection: wellbeing ? "wellbeing" : "sports",
+      traits: resolved?.traits || (wellbeing ? ["wellbeing"] : []),
     };
   }
 
@@ -92,6 +94,7 @@
           id: profile.id,
           label: profile.label,
           icon: profile.icon,
+          iconCollection: profile.iconCollection,
           level: level.id,
           levelLabel: level.label,
           sessionCount: profile.dates.length,
