@@ -78,30 +78,65 @@ function renderAbout() {
         <textarea name="quote" rows="3">${YOU.passport?.quote || ""}</textarea>
       </label>
 
-      <label class="full">Photo de profil
-        <input name="avatar_file" type="file" accept="image/*" />
-      </label>
+      <div class="full you-avatar-field">
+        <div class="you-avatar-form-preview" data-avatar-form-preview>
+          ${YOU.passport?.avatar_url ? `<img src="${YOU.passport.avatar_url}" alt="" />` : `<span>${nameInitials(YOU.passport?.display_name || YOU.currentUser?.email)}</span>`}
+        </div>
+        <label>Photo de profil
+          <span class="you-avatar-help">Choisis une image, puis zoome et déplace-la pour définir le cadrage.</span>
+          <input name="avatar_file" type="file" accept="image/jpeg,image/png,image/webp" />
+        </label>
+      </div>
 
       <button class="login-primary full" type="submit">Enregistrer</button>
       <p id="passportMessage" class="login-message full"></p>
     </form>
   `;
 
-  document.getElementById("passportForm").addEventListener("submit", savePassport);
+  const passportForm = document.getElementById("passportForm");
+  YOU.pendingAvatarBlob = null;
+  passportForm.addEventListener("submit", savePassport);
+  passportForm.elements.avatar_file.addEventListener("change", prepareAvatarCrop);
+}
+
+function nameInitials(name) {
+  return String(name || "YOU").trim().split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
+}
+
+async function prepareAvatarCrop(event) {
+  const input = event.currentTarget;
+  const file = input.files?.[0];
+  if (!file) return;
+
+  try {
+    const cropped = await window.MomentumAvatarCropper.open(file);
+    if (!cropped) {
+      input.value = "";
+      return;
+    }
+    YOU.pendingAvatarBlob = cropped;
+    const preview = document.querySelector("[data-avatar-form-preview]");
+    const url = URL.createObjectURL(cropped);
+    preview.innerHTML = `<img src="${url}" alt="Aperçu de la nouvelle photo" />`;
+    preview.querySelector("img").addEventListener("load", () => URL.revokeObjectURL(url), { once:true });
+  } catch (error) {
+    console.error("YOU : impossible de préparer cette photo.", error);
+    input.value = "";
+  }
 }
 
 async function uploadAvatar(file) {
   if (!file) return YOU.passport?.avatar_url || null;
 
-  const fileExt = file.name.split(".").pop();
-  const fileName = `${YOU.currentUser.id}-${Date.now()}.${fileExt}`;
+  const fileName = `${YOU.currentUser.id}-${Date.now()}.jpg`;
   const filePath = `${YOU.currentUser.id}/${fileName}`;
 
   const { error } = await window.momentumDB.storage
     .from("avatars")
     .upload(filePath, file, {
       cacheControl: "3600",
-      upsert: true,
+      contentType: "image/jpeg",
+      upsert: false,
     });
 
   if (error) throw error;
@@ -122,7 +157,7 @@ async function savePassport(event) {
   message.textContent = "Sauvegarde…";
 
   try {
-    const avatarFile = form.get("avatar_file");
+    const avatarFile = YOU.pendingAvatarBlob;
 
     const avatarUrl =
       avatarFile && avatarFile.size > 0
@@ -164,6 +199,8 @@ async function savePassport(event) {
 
     renderPassportCard();
     renderMenuPreviews();
+    YOU.pendingAvatarBlob = null;
+    window.dispatchEvent(new CustomEvent("momentum:avatar-updated"));
 
     message.textContent = "Sauvegardé.";
     setTimeout(() => {

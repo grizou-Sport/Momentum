@@ -15,7 +15,7 @@ test("every authenticated area uses the shared contextual rail", () => {
     assert.match(page, /js\/navigation\.js/);
     assert.doesNotMatch(page, /<header class="topbar">/);
   }
-  for (const label of ["Home", "Progression", "You", "Together", "Paramètres", "Déconnexion"]) {
+  for (const label of ["Home", "Progression", "You", "Together"]) {
     assert.match(navigation, new RegExp(label));
   }
 });
@@ -40,11 +40,13 @@ test("desktop navigation reveals compact contextual cards and keeps the rail tra
   assert.match(navigationStyles, /body\.has-momentum-navigation\{\s*padding-left:0/);
 });
 
-test("logout is an icon button immediately above settings", () => {
-  const logoutPosition = navigation.indexOf('aria-label="Déconnexion"');
-  const settingsPosition = navigation.indexOf('aria-label="Paramètres, bientôt disponible"');
-  assert.ok(logoutPosition > -1 && logoutPosition < settingsPosition);
-  assert.match(navigation, /icons\.logout/);
+test("the avatar opens YOU directly and account actions are no longer in the rail", async () => {
+  const you = await readFile(new URL("../js/you.js", import.meta.url), "utf8");
+  assert.match(navigation, /data-momentum-user-avatar/);
+  assert.match(navigation, /data-momentum-direct/);
+  assert.doesNotMatch(navigation, /aria-label="Paramètres, bientôt disponible"/);
+  assert.doesNotMatch(navigation, /aria-label="Déconnexion"/);
+  assert.match(you, /data-account-logout/);
 });
 
 test("Moment form follows visibility then Circle participant selection", () => {

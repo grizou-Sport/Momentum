@@ -58,10 +58,6 @@ function bindHome() {
   document.addEventListener("click", (event) => {
     if (event.target.closest("[data-home-retry]")) renderHome();
   });
-  document.getElementById("homeLogoutBtn")?.addEventListener("click", async () => {
-    await window.momentumDB.auth.signOut();
-    window.location.href = "login.html";
-  });
   $("#closeActivityDialog")?.addEventListener("click", closeActivityDialog);
   $("#cancelActivity")?.addEventListener("click", closeActivityDialog);
   $("#activityFile")?.addEventListener("change", handleActivityFile);
@@ -71,6 +67,11 @@ function bindHome() {
     renderLivingWeek(new Date());
     const contexts = await loadLivingWeatherWindow();
     renderLivingWeekWeather(contexts);
+  });
+
+  window.addEventListener("pageshow", () => centerLivingWeekOnToday());
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) centerLivingWeekOnToday();
   });
 
   $("#prevMonth")?.addEventListener("click", async () => {

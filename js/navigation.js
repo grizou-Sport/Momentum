@@ -9,8 +9,6 @@
     progression: '<svg class="momentum-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9"></path><path d="M10 19V5"></path><path d="M16 19v-7"></path><path d="M22 19V3"></path></svg>',
     you: '<svg class="momentum-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>',
     together: '<svg class="momentum-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"></circle><circle cx="17" cy="10" r="2.5"></circle><path d="M3 20a6 6 0 0 1 12 0"></path><path d="M14 15a5 5 0 0 1 7 4.5"></path></svg>',
-    logout: '<svg class="momentum-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v10"></path><path d="M6.3 5.7a8 8 0 1 0 11.4 0"></path></svg>',
-    settings: '<svg class="momentum-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"></path></svg>',
     close: '<svg class="momentum-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>'
   };
 
@@ -36,13 +34,14 @@
     },
     you: {
       label: "You",
-      kicker: "Ton histoire",
+      kicker: "Tout ce qui te concerne",
       items: [
-        ["about", "Passeport", "you.html?section=about"],
-        ["mission", "Mon Horizon", "you.html?section=mission"],
+        ["about", "Mon profil", "you.html?section=about"],
+        ["mission", "Objectifs", "you.html?section=mission"],
         ["sports", "Je vis pour", "you.html?section=sports"],
         ["wellbeing", "Mon équilibre", "you.html?section=wellbeing"],
-        ["equipment", "Mon matériel", "you.html?section=equipment"]
+        ["equipment", "Mon matériel", "you.html?section=equipment"],
+        ["account", "Mon compte", "you.html?section=account"]
       ]
     },
     together: {
@@ -62,6 +61,7 @@
   const initialSubsection = params.get("section") || params.get("view") || (page === "home" ? "today" : page === "progression" ? "volume" : page === "you" ? "mission" : "circle");
 
   const railLink = (key, href, label) => `<a class="momentum-rail-link ${page === key ? "active" : ""}" data-momentum-section="${key}" href="${href}" aria-label="${label}" aria-controls="momentum-panel-${key}" aria-expanded="false" ${page === key ? 'aria-current="page"' : ""}>${icons[key]}</a>`;
+  const youRailLink = () => `<a class="momentum-rail-link momentum-user-link ${page === "you" ? "active" : ""}" data-momentum-section="you" data-momentum-direct href="you.html" aria-label="Ouvrir YOU" title="YOU" ${page === "you" ? 'aria-current="page"' : ""}><span class="momentum-user-avatar" data-momentum-user-avatar>${icons.you}</span></a>`;
   const contextPanel = ([sectionKey, menu]) => {
     const contextLinks = menu.items.map(([key, label, href, note]) => `<a class="momentum-context-link ${page === sectionKey && initialSubsection === key ? "active" : ""}" data-momentum-subsection="${key}" href="${href}" ${note ? 'aria-disabled="true"' : ""}><span>${label}</span>${note ? `<span class="momentum-context-note">${note}</span>` : ""}</a>`).join("");
     return `<aside id="momentum-panel-${sectionKey}" class="momentum-context-panel ${page === sectionKey ? "current" : ""}" data-momentum-panel="${sectionKey}" aria-label="Navigation ${menu.label}">
@@ -76,12 +76,10 @@
     <aside class="momentum-rail" aria-label="Navigation principale">
       <a class="momentum-nav-brand" href="index.html" aria-label="MOMENTUM, accueil">△</a>
       ${railLink("home", "index.html", "Home")}
-      ${railLink("progression", "progression.html", "Progression")}
-      ${railLink("you", "you.html", "You")}
       ${railLink("together", "together.html", "Together")}
+      ${railLink("progression", "progression.html", "Progression")}
+      ${youRailLink()}
       <span class="momentum-rail-spacer"></span>
-      <button id="${page === "home" ? "homeLogoutBtn" : "logoutBtn"}" class="momentum-rail-link momentum-nav-logout" type="button" aria-label="Déconnexion" title="Déconnexion">${icons.logout}</button>
-      <button class="momentum-rail-link" type="button" aria-label="Paramètres, bientôt disponible" disabled title="Paramètres bientôt disponibles">${icons.settings}</button>
     </aside>
     ${Object.entries(sections).map(contextPanel).join("")}
     <button class="momentum-mobile-scrim" type="button" aria-label="Fermer le menu"></button>`;
@@ -210,6 +208,7 @@
     link.addEventListener("mouseleave", scheduleDesktopPanelClose);
     link.addEventListener("click", (event) => {
       if (desktop.matches) return;
+      if (link.hasAttribute("data-momentum-direct")) return;
       event.preventDefault();
       const key = link.dataset.momentumSection;
       const willOpen = !mount.classList.contains("menu-open") || mount.dataset.mobileSection !== key;
@@ -268,6 +267,49 @@
   if (page === "you" && initialSubsection !== "mission") {
     window.setTimeout(() => document.querySelector(`[data-you-section="${initialSubsection}"]`)?.click(), 0);
   }
+
+  function initials(name) {
+    return String(name || "")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "YOU";
+  }
+
+  async function hydrateUserAvatar() {
+    const avatar = mount.querySelector("[data-momentum-user-avatar]");
+    if (!avatar || !window.momentumDB) return;
+
+    try {
+      const { data:sessionData } = await window.momentumDB.auth.getSession();
+      const user = sessionData.session?.user;
+      if (!user) return;
+      const { data:passport, error } = await window.momentumDB
+        .from("passports")
+        .select("display_name,avatar_url")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (error) throw error;
+
+      avatar.replaceChildren();
+      if (passport?.avatar_url) {
+        const image = document.createElement("img");
+        image.src = passport.avatar_url;
+        image.alt = "";
+        avatar.append(image);
+      } else {
+        avatar.textContent = initials(passport?.display_name || user.email);
+      }
+    } catch (error) {
+      console.warn("Navigation : avatar momentanément indisponible.", error);
+    }
+  }
+
+  window.addEventListener("load", hydrateUserAvatar, { once:true });
+  window.addEventListener("momentum:avatar-updated", hydrateUserAvatar);
 
   window.MomentumNavigation = { setSubsection, closeMenu };
 })();

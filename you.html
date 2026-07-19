@@ -22,7 +22,7 @@
 
     <section class="you-layout">
       <aside class="you-overview-card">
-        <div class="you-portrait" id="passportAvatar"></div>
+        <a class="you-portrait" id="passportAvatar" href="you.html" aria-label="Ouvrir YOU"></a>
 
         <h2 id="passportName">—</h2>
         <p id="passportLocation" class="you-location">—</p>
@@ -46,11 +46,13 @@
 
       <section class="you-main">
         <div class="you-menu">
+          <p class="you-menu-heading">Objectifs</p>
           <button class="you-menu-item active" data-you-section="mission" type="button">
             <span>Mon Horizon</span>
             <strong id="missionMenuTitle">Horizon non défini</strong>
           </button>
 
+          <p class="you-menu-heading">Passeport</p>
           <button class="you-menu-item" data-you-section="sports" type="button">
             <span>Je vis pour</span>
             <strong id="sportsMenuSummary">Sports pratiqués</strong>
@@ -67,8 +69,14 @@
           </button>
 
           <button class="you-menu-item" data-you-section="about" type="button">
-            <span>Passeport</span>
+            <span>Mon profil</span>
             <strong id="passportMenuName">—</strong>
+          </button>
+
+          <p class="you-menu-heading">Mon compte</p>
+          <button class="you-menu-item" data-you-section="account" type="button">
+            <span>Préférences & accès</span>
+            <strong>Gérer mon compte</strong>
           </button>
         </div>
 
@@ -84,6 +92,7 @@
   <script src="js/guard.js"></script>
 
   <script src="js/you-passport.js"></script>
+  <script src="js/avatar-cropper.js"></script>
   <script src="js/momentum-sports.js"></script>
   <script src="js/momentum-wellbeing.js"></script>
   <script src="js/momentum-icons.js"></script>

@@ -173,6 +173,20 @@
   align-content:start;
 }
 
+.you-menu-heading{
+  grid-column:1 / -1;
+  margin:18px 12px 0;
+  color:var(--you-muted);
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+
+.you-menu-heading:first-child{margin-top:4px}
+
+.you-portrait{color:#fff;text-decoration:none}
+
 .you-menu-item{
   width:100%;
   min-height:94px;
@@ -426,6 +440,41 @@ button.you-small-card{
   resize:vertical;
 }
 
+.you-avatar-field{display:flex;align-items:center;gap:18px;padding:18px;border:1px solid var(--you-line);border-radius:20px;background:var(--you-card)}
+.you-avatar-field > label{flex:1}
+.you-avatar-help{display:block;margin:6px 0 12px;color:var(--you-muted);font-size:12px;font-weight:600;line-height:1.4}
+.you-avatar-form-preview{display:grid;place-items:center;width:76px;height:76px;flex:0 0 76px;overflow:hidden;border-radius:50%;background:#111;color:#fff;font-size:18px;font-weight:950}
+.you-avatar-form-preview img{width:100%;height:100%;object-fit:cover}
+
+.avatar-crop-dialog{width:min(560px,calc(100% - 32px));max-width:none;padding:0;border:0;border-radius:28px;background:#fff;color:var(--you-ink);box-shadow:0 30px 90px rgba(0,0,0,.24)}
+.avatar-crop-dialog::backdrop{background:rgba(10,12,11,.62);backdrop-filter:blur(6px)}
+.avatar-crop-panel{padding:28px}
+.avatar-crop-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+.avatar-crop-heading h2{margin:0;font-size:34px;letter-spacing:-.05em}
+.avatar-crop-heading .section-kicker{margin-bottom:8px}
+.avatar-crop-close{width:40px;height:40px;border:0;border-radius:50%;background:#f0efea;color:#111;font-size:28px;line-height:1;cursor:pointer}
+.avatar-crop-panel > p{margin:14px 0 22px;color:var(--you-soft);line-height:1.45}
+.avatar-crop-stage{position:relative;width:min(360px,100%);aspect-ratio:1;margin:0 auto;overflow:hidden;border-radius:50%;background:#ddd;touch-action:none;cursor:grab;user-select:none}
+.avatar-crop-stage.is-dragging{cursor:grabbing}
+.avatar-crop-stage img{position:absolute;top:50%;left:50%;max-width:none;max-height:none;object-fit:contain;pointer-events:none}
+.avatar-crop-ring{position:absolute;z-index:2;inset:0;border:2px solid rgba(255,255,255,.94);border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);pointer-events:none}
+.avatar-crop-zoom{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:16px;margin:24px 0;color:var(--you-soft);font-size:13px;font-weight:850}
+.avatar-crop-zoom input{width:100%}
+.avatar-crop-actions{display:flex;justify-content:flex-end;gap:10px}
+
+.you-account-form{display:grid;gap:18px}
+.you-account-section,.you-account-danger{padding:24px;border:1px solid var(--you-line);border-radius:22px;background:var(--you-card)}
+.you-account-section > div:first-child,.you-account-danger > div:first-child{margin-bottom:18px}
+.you-account-section h3,.you-account-danger h3{margin:0;font-size:24px;letter-spacing:-.04em}
+.you-account-section .you-kicker,.you-account-danger .you-kicker{margin-bottom:7px}
+.you-account-section > label:not(.you-account-toggle){display:grid;grid-template-columns:1fr minmax(150px,220px);align-items:center;gap:18px;margin-top:12px;font-size:14px;font-weight:850}
+.you-account-toggle{display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:46px;border-top:1px solid var(--you-line);font-size:14px;font-weight:800}
+.you-account-toggle input{width:20px;height:20px;accent-color:#111}
+.you-account-links a,.you-account-links button{display:flex;align-items:center;width:100%;min-height:46px;padding:0;border:0;border-top:1px solid var(--you-line);background:transparent;color:var(--you-ink);font:inherit;font-size:14px;font-weight:850;text-decoration:none;cursor:pointer}
+.you-account-actions{display:grid;gap:8px}
+.you-account-danger{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:22px}
+.you-account-danger > div:first-child{margin:0}
+
 .primary,
 .login-primary,
 .you-primary,
@@ -550,6 +599,14 @@ button.you-small-card{
     grid-template-columns:1fr 1fr;
     gap:8px;
   }
+
+  .you-menu-heading{margin:14px 8px 0}
+  .you-avatar-field{align-items:flex-start;flex-direction:column}
+  .avatar-crop-panel{padding:20px}
+  .avatar-crop-heading h2{font-size:28px}
+  .you-account-section{padding:18px}
+  .you-account-section > label:not(.you-account-toggle){grid-template-columns:1fr}
+  .you-account-danger{align-items:flex-start;flex-direction:column}
 
   .you-menu-item{
     min-height:86px;

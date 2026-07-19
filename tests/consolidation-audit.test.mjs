@@ -16,11 +16,13 @@ test("the triangle is the shared brand and the contextual rail has protected the
   assert.match(css, /backdrop-filter:blur\(20px\)/);
 });
 
-test("legacy topbar styles are gone and unavailable settings is a disabled button", () => {
+test("legacy topbar styles are gone and settings live inside YOU", () => {
   const styles = ["css/style.css","css/home.css","css/you.css","css/together.css"].map(read).join("\n");
   const navigation = read("js/navigation.js");
+  const you = read("js/you.js");
   assert.doesNotMatch(styles, /\.topbar\b/);
-  assert.match(navigation, /<button class="momentum-rail-link"[^>]+disabled[^>]+Paramètres bientôt disponibles/);
+  assert.doesNotMatch(navigation, /Paramètres bientôt disponibles/);
+  assert.match(you, /<span class="you-kicker">Paramètres<\/span>/);
 });
 
 test("Progression exposes accessible tables, definitions and persisted preferences", () => {

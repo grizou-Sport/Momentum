@@ -38,6 +38,7 @@ function renderLivingWeek(centerDate = new Date()) {
         type="button"
         class="living-day${isToday ? " is-today" : ""}"
         data-date="${dateIso}"
+        data-day-offset="${index - 3}"
         data-today="${isToday ? "true" : "false"}"
       >
         <span class="card-label">${escapeHtml(fmtShortDate(dateIso))}</span>
@@ -55,6 +56,21 @@ function renderLivingWeek(centerDate = new Date()) {
       </button>
     `;
   }).join("");
+
+  centerLivingWeekOnToday(container);
+}
+
+function centerLivingWeekOnToday(container = $("#livingWeek"), behavior = "auto") {
+  if (!container || !window.matchMedia("(max-width:760px)").matches) return;
+
+  window.requestAnimationFrame(() => {
+    const todayCard = container.querySelector('[data-today="true"]');
+    if (!todayCard) return;
+    const containerRect = container.getBoundingClientRect();
+    const cardRect = todayCard.getBoundingClientRect();
+    const left = container.scrollLeft + cardRect.left - containerRect.left - (container.clientWidth - cardRect.width) / 2;
+    container.scrollTo({ left:Math.max(0, left), behavior });
+  });
 }
 
 function renderMonth() {
