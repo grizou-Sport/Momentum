@@ -461,6 +461,7 @@ button.you-small-card{
 .avatar-crop-zoom{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:16px;margin:24px 0;color:var(--you-soft);font-size:13px;font-weight:850}
 .avatar-crop-zoom input{width:100%}
 .avatar-crop-actions{display:flex;justify-content:flex-end;gap:10px}
+.avatar-crop-message{min-height:20px;margin:12px 0 0!important;color:#a64235!important;font-size:13px;line-height:1.4}
 
 .you-account-form{display:grid;gap:18px}
 .you-account-section,.you-account-danger{padding:24px;border:1px solid var(--you-line);border-radius:22px;background:var(--you-card)}

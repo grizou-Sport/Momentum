@@ -20,6 +20,18 @@
     });
   }
 
+  function nextFrame() {
+    return new Promise((resolve) => window.requestAnimationFrame(() => resolve()));
+  }
+
+  function waitForImage(image) {
+    if (image.complete && image.naturalWidth > 0) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      image.addEventListener("load", resolve, { once:true });
+      image.addEventListener("error", () => reject(new Error("Cette image ne peut pas être ouverte.")), { once:true });
+    });
+  }
+
   async function open(file) {
     const { image, url } = await loadImage(file);
     const state = { zoom:1, x:0, y:0, pointerId:null, startX:0, startY:0, originX:0, originY:0 };
@@ -28,10 +40,10 @@
     dialog.className = "avatar-crop-dialog";
     dialog.setAttribute("aria-labelledby", "avatarCropTitle");
     dialog.innerHTML = `
-      <form method="dialog" class="avatar-crop-panel">
+      <div class="avatar-crop-panel">
         <div class="avatar-crop-heading">
           <div><span class="section-kicker">Photo de profil</span><h2 id="avatarCropTitle">Choisir le cadrage</h2></div>
-          <button class="avatar-crop-close" value="cancel" type="submit" aria-label="Annuler">×</button>
+          <button class="avatar-crop-close" data-crop-cancel type="button" aria-label="Annuler">×</button>
         </div>
         <p>Déplace la photo et ajuste le zoom. Ce cercle correspond exactement à l’avatar affiché dans MOMENTUM.</p>
         <div class="avatar-crop-stage" data-crop-stage>
@@ -42,15 +54,18 @@
           <input type="range" min="1" max="3" value="1" step="0.01" data-crop-zoom />
         </label>
         <div class="avatar-crop-actions">
-          <button class="secondary" value="cancel" type="submit">Annuler</button>
-          <button class="primary" value="confirm" type="submit">Utiliser cette photo</button>
+          <button class="secondary" data-crop-cancel type="button">Annuler</button>
+          <button class="primary" data-crop-confirm type="button">Utiliser cette photo</button>
         </div>
-      </form>`;
+        <p class="avatar-crop-message" data-crop-message role="status"></p>
+      </div>`;
 
     document.body.append(dialog);
     const stage = dialog.querySelector("[data-crop-stage]");
     const preview = dialog.querySelector("[data-crop-image]");
     const zoom = dialog.querySelector("[data-crop-zoom]");
+    const confirmButton = dialog.querySelector("[data-crop-confirm]");
+    const message = dialog.querySelector("[data-crop-message]");
     preview.src = url;
 
     function geometry() {
@@ -106,15 +121,38 @@
     stage.addEventListener("pointerup", endDrag);
     stage.addEventListener("pointercancel", endDrag);
 
-    const result = new Promise((resolve, reject) => {
-      dialog.addEventListener("close", async () => {
+    const result = new Promise((resolve) => {
+      let settled = false;
+
+      function finish(value) {
+        if (settled) return;
+        settled = true;
+        if (dialog.open) dialog.close();
+        URL.revokeObjectURL(url);
+        dialog.remove();
+        resolve(value);
+      }
+
+      dialog.querySelectorAll("[data-crop-cancel]").forEach((button) => {
+        button.addEventListener("click", () => finish(null));
+      });
+      dialog.addEventListener("cancel", (event) => {
+        event.preventDefault();
+        finish(null);
+      });
+
+      confirmButton.addEventListener("click", async () => {
+        confirmButton.disabled = true;
+        confirmButton.textContent = "Préparation…";
+        message.textContent = "";
         try {
-          if (dialog.returnValue !== "confirm") return resolve(null);
+          await waitForImage(preview);
+          await nextFrame();
           const { size, scale } = geometry();
+          if (!size || !Number.isFinite(scale) || scale <= 0) throw new Error("Cadrage indisponible.");
           const sourceSize = size / scale;
           const sourceX = (image.naturalWidth - sourceSize) / 2 - state.x / scale;
           const sourceY = (image.naturalHeight - sourceSize) / 2 - state.y / scale;
-          await preview.decode();
           const canvas = document.createElement("canvas");
           canvas.width = OUTPUT_SIZE;
           canvas.height = OUTPUT_SIZE;
@@ -129,15 +167,14 @@
             }
           }
           if (visiblePixels < 16) throw new Error("Safari n’a pas pu restituer cette photo. Réessaie avec une autre image.");
-          resolve(await canvasBlob(canvas));
+          finish(await canvasBlob(canvas));
         } catch (error) {
           console.error("YOU : recadrage de l’avatar interrompu.", error);
-          reject(error);
-        } finally {
-          URL.revokeObjectURL(url);
-          dialog.remove();
+          message.textContent = "La photo n’a pas pu être préparée. Essaie à nouveau ou choisis une autre image.";
+          confirmButton.disabled = false;
+          confirmButton.textContent = "Utiliser cette photo";
         }
-      }, { once:true });
+      });
     });
 
     dialog.showModal();
