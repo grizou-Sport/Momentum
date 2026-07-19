@@ -299,6 +299,10 @@
         const image = document.createElement("img");
         image.src = passport.avatar_url;
         image.alt = "";
+        image.addEventListener("error", () => {
+          avatar.replaceChildren();
+          avatar.textContent = initials(passport?.display_name || user.email);
+        }, { once:true });
         avatar.append(image);
       } else {
         avatar.textContent = initials(passport?.display_name || user.email);

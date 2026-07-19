@@ -15,16 +15,19 @@ function renderPassportCard() {
     YOU.passport?.weight_kg ? `${YOU.passport.weight_kg} kg` : "—";
 
   const avatar = document.getElementById("passportAvatar");
+  const fallback = nameInitials(name);
 
   if (YOU.passport?.avatar_url) {
-    avatar.innerHTML = `<img src="${YOU.passport.avatar_url}" alt="${name}" />`;
+    const image = document.createElement("img");
+    image.src = YOU.passport.avatar_url;
+    image.alt = name;
+    image.addEventListener("error", () => {
+      avatar.replaceChildren();
+      avatar.textContent = fallback;
+    }, { once:true });
+    avatar.replaceChildren(image);
   } else {
-    avatar.textContent = name
-      .split(" ")
-      .map((part) => part[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase();
+    avatar.textContent = fallback;
   }
 }
 
@@ -97,6 +100,12 @@ function renderAbout() {
   YOU.pendingAvatarBlob = null;
   passportForm.addEventListener("submit", savePassport);
   passportForm.elements.avatar_file.addEventListener("change", prepareAvatarCrop);
+  const formPreviewImage = passportForm.querySelector("[data-avatar-form-preview] img");
+  formPreviewImage?.addEventListener("error", () => {
+    const preview = passportForm.querySelector("[data-avatar-form-preview]");
+    preview.replaceChildren();
+    preview.textContent = nameInitials(YOU.passport?.display_name || YOU.currentUser?.email);
+  }, { once:true });
 }
 
 function nameInitials(name) {
@@ -121,6 +130,8 @@ async function prepareAvatarCrop(event) {
     preview.querySelector("img").addEventListener("load", () => URL.revokeObjectURL(url), { once:true });
   } catch (error) {
     console.error("YOU : impossible de préparer cette photo.", error);
+    const message = document.getElementById("passportMessage");
+    if (message) message.textContent = "Cette photo n’a pas pu être préparée. Essaie à nouveau ou choisis une autre image.";
     input.value = "";
   }
 }

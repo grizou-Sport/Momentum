@@ -106,7 +106,7 @@
     stage.addEventListener("pointerup", endDrag);
     stage.addEventListener("pointercancel", endDrag);
 
-    const result = new Promise((resolve) => {
+    const result = new Promise((resolve, reject) => {
       dialog.addEventListener("close", async () => {
         try {
           if (dialog.returnValue !== "confirm") return resolve(null);
@@ -114,14 +114,25 @@
           const sourceSize = size / scale;
           const sourceX = (image.naturalWidth - sourceSize) / 2 - state.x / scale;
           const sourceY = (image.naturalHeight - sourceSize) / 2 - state.y / scale;
+          await preview.decode();
           const canvas = document.createElement("canvas");
           canvas.width = OUTPUT_SIZE;
           canvas.height = OUTPUT_SIZE;
-          canvas.getContext("2d").drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
+          const context = canvas.getContext("2d", { colorSpace:"srgb" });
+          context.drawImage(preview, sourceX, sourceY, sourceSize, sourceSize, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
+          const pixels = context.getImageData(0, 0, OUTPUT_SIZE, OUTPUT_SIZE).data;
+          let visiblePixels = 0;
+          for (let index = 3; index < pixels.length; index += 4) {
+            if (pixels[index] > 0) {
+              visiblePixels += 1;
+              if (visiblePixels >= 16) break;
+            }
+          }
+          if (visiblePixels < 16) throw new Error("Safari n’a pas pu restituer cette photo. Réessaie avec une autre image.");
           resolve(await canvasBlob(canvas));
         } catch (error) {
           console.error("YOU : recadrage de l’avatar interrompu.", error);
-          resolve(null);
+          reject(error);
         } finally {
           URL.revokeObjectURL(url);
           dialog.remove();

@@ -43,5 +43,7 @@ test("YOU centralise le compte et recadre les avatars avant l’upload", async (
   assert.match(you, /data-account-logout/);
   assert.match(passport, /MomentumAvatarCropper\.open/);
   assert.match(cropper, /OUTPUT_SIZE = 512/);
+  assert.match(cropper, /await preview\.decode\(\)/);
+  assert.match(cropper, /visiblePixels/);
   assert.match(cropper, /drawImage/);
 });
