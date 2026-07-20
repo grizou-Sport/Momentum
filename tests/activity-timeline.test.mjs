@@ -87,7 +87,8 @@ test("Lot B.1 persists a protected business object and exposes a read API", () =
   assert.match(migration, /\(select auth\.uid\(\)\) = user_id/);
   assert.match(migration, /unique \(activity_id, position\)/);
   assert.match(timelineSource, /from\("activity_timeline"\)[\s\S]*\.order\("timestamp"/);
-  assert.match(activitySource, /MomentumTimeline\.save\(persistedActivityId, user\.id, timeline\)/);
+  assert.match(activitySource, /saveActivityTimelineSafely\([\s\S]*persistedActivityId,[\s\S]*user\.id,[\s\S]*timeline/);
+  assert.match(activitySource, /await window\.MomentumTimeline\.save\(activityId, userId, timeline\)/);
   assert.ok(homePage.indexOf("js/activity-timeline.js") < homePage.indexOf("js/home-import.js"));
 });
 

@@ -819,6 +819,8 @@ async function parseActivityFile(file) {
     }
 
     return {
+      sourceFileType: "gpx",
+
       date:
         route.startTime
           ? iso(new Date(route.startTime))
@@ -860,7 +862,10 @@ async function parseActivityFile(file) {
   }
 
   if (extension === "fit") {
-    return parseFit(file);
+    return {
+      ...(await parseFit(file)),
+      sourceFileType: "fit"
+    };
   }
 
   throw new Error(

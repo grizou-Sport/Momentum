@@ -597,23 +597,29 @@ function fillActivityForm(data) {
   if (!form) return;
 
   const category = getSelectedActivityCategory(form);
+  const isPlannedGpx =
+    data.sourceFileType === "gpx" &&
+    form.elements.status?.value === "planned";
+
   updateActivityFormCategory();
 
-  setFormValue(
-    form,
-    "activity_date",
-    data.date
-  );
+  if (!isPlannedGpx) {
+    setFormValue(
+      form,
+      "activity_date",
+      data.date
+    );
 
-  setSelectValue(form, "sport", data.sport);
+    setSelectValue(form, "sport", data.sport);
 
-  const typeFields = {
-    sport: "sport_activity_type",
-    wellbeing: "wellbeing_activity_type",
-    adventure: "adventure_activity_type"
-  };
+    const typeFields = {
+      sport: "sport_activity_type",
+      wellbeing: "wellbeing_activity_type",
+      adventure: "adventure_activity_type"
+    };
 
-  setSelectValue(form, typeFields[category], data.type);
+    setSelectValue(form, typeFields[category], data.type);
+  }
 
   setFormValue(
     form,
@@ -621,7 +627,9 @@ function fillActivityForm(data) {
     data.distance
   );
 
-  setDurationFormValues(form, data.duration);
+  if (!isPlannedGpx) {
+    setDurationFormValues(form, data.duration);
+  }
 
   setFormValue(
     form,
@@ -660,6 +668,76 @@ function fillActivityForm(data) {
     total_ascent_m:data.totalAscentMeters ?? null,
     average_heart_rate_bpm:data.averageHeartRateBpm ?? null
   });
+}
+
+const NORMALIZED_FIT_ACTIVITY_FIELDS = [
+  "started_at",
+  "ended_at",
+  "total_duration_seconds",
+  "moving_time_seconds",
+  "paused_time_seconds",
+  "distance_m",
+  "total_ascent_m",
+  "average_heart_rate_bpm"
+];
+
+function normalizedFitActivityPayload(form, file, hasActivityMetrics) {
+  if (
+    !file ||
+    !hasActivityMetrics ||
+    activityFileExtension(file) !== "fit" ||
+    !form.dataset.importedActivity
+  ) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(form.dataset.importedActivity);
+  } catch {
+    return {};
+  }
+}
+
+function withoutNormalizedFitActivityFields(payload) {
+  const legacyPayload = { ...payload };
+
+  NORMALIZED_FIT_ACTIVITY_FIELDS.forEach((field) => {
+    delete legacyPayload[field];
+  });
+
+  return legacyPayload;
+}
+
+function activityTimelineForSave(form, file, completed) {
+  if (
+    !file ||
+    !completed ||
+    !["fit", "gpx"].includes(activityFileExtension(file)) ||
+    !form.dataset.activityTimeline
+  ) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(form.dataset.activityTimeline);
+  } catch {
+    return null;
+  }
+}
+
+async function saveActivityTimelineSafely(activityId, userId, timeline) {
+  if (!activityId || !timeline?.events?.length) return false;
+
+  try {
+    await window.MomentumTimeline.save(activityId, userId, timeline);
+    return true;
+  } catch (error) {
+    console.warn(
+      "HOME : Moment enregistré sans Timeline.",
+      error
+    );
+    return false;
+  }
 }
 
 function numberOrNull(formData, name) {
@@ -913,14 +991,14 @@ async function saveActivity(event) {
           : null
     };
 
-    if (file && hasActivityMetrics && form.dataset.importedActivity) {
-      try {
-        Object.assign(payload, JSON.parse(form.dataset.importedActivity));
-      } catch {
-        // Le formulaire visible reste enregistrable si les donnees internes
-        // d'import ont ete invalidees dans le navigateur.
-      }
-    }
+    Object.assign(
+      payload,
+      normalizedFitActivityPayload(
+        form,
+        file,
+        hasActivityMetrics
+      )
+    );
 
     setActivityMessage(
       editingId
@@ -928,23 +1006,43 @@ async function saveActivity(event) {
         : "Enregistrement du moment…"
     );
 
-    let query = window.momentumDB
-        .from("activities")
-        [editingId ? "update" : "insert"](payload);
+    const persistActivity = async (activityPayload) => {
+      let query = window.momentumDB
+          .from("activities")
+          [editingId ? "update" : "insert"](activityPayload);
 
-    if (editingId) {
-      query = query
-        .eq("id", editingId)
-        .eq("user_id", user.id)
-        .select("id")
-        .single();
-    } else {
-      query = query
-        .select("id")
-        .single();
+      if (editingId) {
+        query = query
+          .eq("id", editingId)
+          .eq("user_id", user.id)
+          .select("id")
+          .single();
+      } else {
+        query = query
+          .select("id")
+          .single();
+      }
+
+      return query;
+    };
+
+    let { data:savedActivity, error } = await persistActivity(payload);
+
+    if (
+      error &&
+      activityFileExtension(file) === "fit" &&
+      typeof isUnavailableFitFieldError === "function" &&
+      isUnavailableFitFieldError(error)
+    ) {
+      console.warn(
+        "HOME : schéma FIT indisponible, enregistrement compatible.",
+        error
+      );
+
+      ({ data:savedActivity, error } = await persistActivity(
+        withoutNormalizedFitActivityFields(payload)
+      ));
     }
-
-    const { data:savedActivity, error } = await query;
 
     if (error) {
       throw error;
@@ -952,10 +1050,8 @@ async function saveActivity(event) {
     persistedActivityId = savedActivity?.id || editingId;
     if (persistedActivityId) form.dataset.editActivityId = persistedActivityId;
 
-    let timeline = null;
-    if (file && form.dataset.activityTimeline) {
-      timeline = JSON.parse(form.dataset.activityTimeline);
-    } else if (completed && hasActivityMetrics && !retainedSourceFileType && payload.activity_time) {
+    let timeline = activityTimelineForSave(form, file, completed);
+    if (!timeline && completed && hasActivityMetrics && !retainedSourceFileType && payload.activity_time) {
       const startTime = new Date(`${activityDate}T${payload.activity_time}`);
       const durationSeconds = Math.max(0, Number(payload.duration_min) || 0) * 60;
       timeline = window.MomentumTimeline.build({
@@ -965,9 +1061,11 @@ async function saveActivity(event) {
         totalElapsedSeconds:durationSeconds
       });
     }
-    if (persistedActivityId && timeline?.events?.length) {
-      await window.MomentumTimeline.save(persistedActivityId, user.id, timeline);
-    }
+    await saveActivityTimelineSafely(
+      persistedActivityId,
+      user.id,
+      timeline
+    );
 
     if (completed && savedActivity?.id) {
       const assessmentPayload = {
