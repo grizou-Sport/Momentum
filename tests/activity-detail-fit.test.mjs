@@ -80,7 +80,7 @@ test("HOME charge et adapte les champs normalisés du Lot A", () => {
     assert.match(dataSource, new RegExp(`"${field}"`));
   }
 
-  assert.match(activitiesSource, /\.select\(ACTIVITY_HOME_FIELDS\)/);
+  assert.match(activitiesSource, /queryActivitiesWithFieldFallback/);
 
   const context = loadDataFunctions();
   const session = context.mapActivityRow({
@@ -105,6 +105,31 @@ test("HOME charge et adapte les champs normalisés du Lot A", () => {
   assert.equal(session.distanceMeters, 42195);
   assert.equal(session.deviceManufacturer, "coros");
   assert.equal(session.deviceModel, "Apex 2 Pro");
+});
+
+test("HOME retombe sur le schéma historique si les colonnes FIT ne sont pas déployées", async () => {
+  const context = loadDataFunctions();
+  const selectedFields = [];
+
+  const result = await context.queryActivitiesWithFieldFallback((fields) => {
+    selectedFields.push(fields);
+    return Promise.resolve(selectedFields.length === 1
+      ? {
+          data: null,
+          error: {
+            code: "42703",
+            message: "column activities.started_at does not exist"
+          }
+        }
+      : { data: [{ id: "legacy-activity" }], error: null });
+  });
+
+  assert.equal(selectedFields.length, 2);
+  assert.match(selectedFields[0], /started_at/);
+  assert.doesNotMatch(selectedFields[1], /started_at/);
+  assert.deepEqual(JSON.parse(JSON.stringify(result.data)), [
+    { id: "legacy-activity" }
+  ]);
 });
 
 test("la grille affiche les sept indicateurs disponibles et masque les absents", () => {

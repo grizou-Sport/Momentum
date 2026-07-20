@@ -471,12 +471,14 @@ async function openEditActivityDialog(activityId) {
 
   if (!session) {
     const user = await getCurrentUser();
-    const { data, error } = await window.momentumDB
-      .from("activities")
-      .select(ACTIVITY_HOME_FIELDS)
-      .eq("id", activityId)
-      .eq("user_id", user?.id || "")
-      .maybeSingle();
+    const { data, error } = await queryActivitiesWithFieldFallback(
+      (fields) => window.momentumDB
+        .from("activities")
+        .select(fields)
+        .eq("id", activityId)
+        .eq("user_id", user?.id || "")
+        .maybeSingle()
+    );
     if (error) console.error("HOME : Moment historique indisponible.", error);
     session = data ? mapActivityRow(data) : null;
     if (!session) {

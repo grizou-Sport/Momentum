@@ -4,17 +4,55 @@
    Accès aux données Supabase et adaptation des enregistrements.
    ========================================================= */
 
-const ACTIVITY_HOME_FIELDS = [
+const ACTIVITY_HOME_LEGACY_FIELDS = [
   "id", "user_id", "sport", "activity_type", "status",
   "distance_km", "duration_min", "elevation_m", "avg_hr", "rpe",
   "gear", "notes", "created_at", "activity_date", "activity_time",
   "weather", "location_name", "route_summary", "activity_category",
-  "source_file_url", "source_file_type", "gpx_url",
+  "source_file_url", "source_file_type", "gpx_url"
+].join(",");
+
+const ACTIVITY_HOME_FIT_FIELDS = [
   "started_at", "ended_at", "total_duration_seconds",
   "moving_time_seconds", "paused_time_seconds", "distance_m",
   "total_ascent_m", "average_heart_rate_bpm", "calories_kcal",
   "device_manufacturer", "device_model"
 ].join(",");
+
+const ACTIVITY_HOME_FIELDS =
+  `${ACTIVITY_HOME_LEGACY_FIELDS},${ACTIVITY_HOME_FIT_FIELDS}`;
+
+let preferredActivityHomeFields = ACTIVITY_HOME_FIELDS;
+
+function isUnavailableFitFieldError(error) {
+  if (!error) return false;
+  if (["42703", "PGRST204"].includes(error.code)) return true;
+
+  const description = [error.message, error.details, error.hint]
+    .filter(Boolean)
+    .join(" ");
+
+  return /column[\s\S]*(does not exist|schema cache)|could not find[\s\S]*column/i
+    .test(description);
+}
+
+async function queryActivitiesWithFieldFallback(queryFactory) {
+  const result = await queryFactory(preferredActivityHomeFields);
+
+  if (
+    preferredActivityHomeFields !== ACTIVITY_HOME_LEGACY_FIELDS &&
+    isUnavailableFitFieldError(result.error)
+  ) {
+    console.warn(
+      "HOME : colonnes FIT indisponibles, utilisation du schéma historique.",
+      result.error
+    );
+    preferredActivityHomeFields = ACTIVITY_HOME_LEGACY_FIELDS;
+    return queryFactory(ACTIVITY_HOME_LEGACY_FIELDS);
+  }
+
+  return result;
+}
 
 function sessionsOn(date) {
   return (state.sessions || [])
@@ -145,14 +183,14 @@ async function loadActivitiesForHome(
   ).toISOString();
 
   const [activitiesResult, momentsResult] = await Promise.all([
-    window.momentumDB
+    queryActivitiesWithFieldFallback((fields) => window.momentumDB
       .from("activities")
-      .select(ACTIVITY_HOME_FIELDS)
+      .select(fields)
       .eq("user_id", user.id)
       .gte("activity_date", iso(rangeStart))
       .lte("activity_date", iso(rangeEnd))
       .order("activity_date", { ascending: true })
-      .order("created_at", { ascending: true }),
+      .order("created_at", { ascending: true })),
     window.momentumDB
       .from("moments")
       .select(
