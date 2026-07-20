@@ -48,6 +48,10 @@ test("HOME and TOGETHER share one Moment classification rule", () => {
   assert.match(togetherSource, /MomentumMoments\.calendarStatus/);
 });
 
+test("the empty-day message is not duplicated above the day feed", () => {
+  assert.doesNotMatch(calendarSource, /Une journée calme fait aussi partie du chemin/);
+});
+
 test("HOME loads authorized Moments separately from personal activities", () => {
   assert.match(dataSource, /\.from\("moments"\)/);
   assert.match(dataSource, /\.in\("status", \["CONFIRMED", "ONGOING", "COMPLETED", "CANCELLED"\]\)/);

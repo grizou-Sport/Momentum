@@ -11,9 +11,10 @@ function renderToday(date, sessions) {
   if (title) title.textContent = fmtDate(date);
 
   if (narrative) {
+    narrative.hidden = !sessions.length;
     narrative.textContent = sessions.length
       ? `${sessions.length} moment${sessions.length > 1 ? "s" : ""} inscrit${sessions.length > 1 ? "s" : ""} aujourd'hui.`
-      : "Aucun Moment inscrit aujourd’hui. Une journée calme fait aussi partie du chemin.";
+      : "";
   }
 }
 
