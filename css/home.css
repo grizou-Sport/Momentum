@@ -1690,17 +1690,108 @@ momentum-slider[disabled]{opacity:.55}
 .day-moment-card p{margin-bottom:8px}
 .day-moment-meta{color:var(--ink);font-weight:750}
 
-.day-file-label{
-  display:inline-flex;
-  margin-top:10px;
-  padding:7px 10px;
-  border:1px solid var(--line);
-  border-radius:999px;
+.activity-detail-card{
+  display:block;
+  padding:0;
+  overflow:hidden;
+}
+
+.activity-detail-header{
+  padding:28px 30px 26px;
+}
+
+.activity-detail-header h3{
+  margin-bottom:18px;
+}
+
+.activity-detail-context{
+  display:grid;
+  gap:6px;
   color:var(--muted);
-  font-size:11px;
+  font-size:15px;
+  line-height:1.45;
+}
+
+.activity-detail-context > *{
+  display:block;
+}
+
+.activity-detail-sport{
+  color:var(--ink);
+  font-size:17px;
   font-weight:800;
+}
+
+.activity-detail-location{
+  color:var(--ink);
+  font-weight:700;
+}
+
+.activity-detail-comment{
+  margin:20px 0 0;
+  padding-top:18px;
+  border-top:1px solid var(--line);
+}
+
+.activity-detail-import{
+  margin:18px 0 0;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:700;
+}
+
+.activity-detail-metrics{
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+}
+
+.activity-detail-metrics dl{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:1px;
+  margin:0;
+  background:var(--line);
+}
+
+.activity-detail-metric{
+  min-width:0;
+  padding:20px 22px;
+  background:var(--surface);
+}
+
+.activity-detail-metric dt{
+  color:var(--muted);
+  font-size:10px;
+  font-weight:850;
   letter-spacing:.06em;
+  line-height:1.35;
   text-transform:uppercase;
+}
+
+.activity-detail-metric dd{
+  margin:9px 0 0;
+  color:var(--ink);
+  font-size:clamp(20px,2.7vw,27px);
+  font-weight:850;
+  line-height:1.1;
+}
+
+.activity-detail-map{
+  background:#e8ece8;
+}
+
+.activity-detail-map .activity-route-map{
+  height:420px;
+  margin:0;
+  border:0;
+  border-radius:0;
+}
+
+.activity-detail-actions{
+  justify-content:flex-end;
+  padding:18px 30px;
+  border-top:1px solid var(--line);
+  background:var(--surface);
 }
 
 .momentum-map{
@@ -1815,6 +1906,11 @@ momentum-slider[disabled]{opacity:.55}
   .day-moment-card{flex-direction:column}
   .day-moment-actions{align-self:flex-end}
   .activity-route-map{height:230px}
+  .activity-detail-header{padding:24px 20px}
+  .activity-detail-metrics dl{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .activity-detail-metric{padding:18px 16px}
+  .activity-detail-map .activity-route-map{height:310px}
+  .activity-detail-actions{width:100%;padding:16px 20px}
   .day-dialog #dayDialogContent{padding:72px 20px 28px}
   .period-selector{align-items:stretch;margin-top:-24px}.period-selector select{width:100%}.period-custom{display:grid;grid-template-columns:1fr 1fr}.period-custom button{grid-column:1/-1;width:100%}
   .wellbeing-dialog{width:100%;max-width:none;height:100svh;max-height:100svh;margin:0;border-radius:0}.wellbeing-dialog-content{padding:72px 20px 28px}.wellbeing-dialog-form{grid-template-columns:1fr}.wellbeing-dialog-form .full{grid-column:auto}.wellbeing-dialog-actions{grid-template-columns:1fr 1fr}.wellbeing-dialog-actions span{display:none}.wellbeing-dialog-actions .danger-link{grid-column:1/-1;justify-self:start}
