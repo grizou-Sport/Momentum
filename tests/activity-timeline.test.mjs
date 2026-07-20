@@ -3,11 +3,12 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import vm from "node:vm";
 
-const [timelineSource, importSource, activitySource, migration, homePage, architecture] = await Promise.all([
+const [timelineSource, importSource, activitySource, migration, privilegeMigration, homePage, architecture] = await Promise.all([
   readFile(new URL("../js/activity-timeline.js", import.meta.url), "utf8"),
   readFile(new URL("../js/home-import.js", import.meta.url), "utf8"),
   readFile(new URL("../js/home-activities.js", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20260720000100_activity_timeline_b1.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20260720202025_activity_timeline_privilege_hardening.sql", import.meta.url), "utf8"),
   readFile(new URL("../index.html", import.meta.url), "utf8"),
   readFile(new URL("../docs/Architecture_Activity_Timeline.md", import.meta.url), "utf8")
 ]);
@@ -86,6 +87,8 @@ test("Lot B.1 persists a protected business object and exposes a read API", () =
   assert.match(migration, /enable row level security/);
   assert.match(migration, /\(select auth\.uid\(\)\) = user_id/);
   assert.match(migration, /unique \(activity_id, position\)/);
+  assert.match(privilegeMigration, /revoke all privileges[\s\S]*from anon, authenticated/);
+  assert.match(privilegeMigration, /grant select, insert, update, delete[\s\S]*to authenticated/);
   assert.match(timelineSource, /from\("activity_timeline"\)[\s\S]*\.order\("timestamp"/);
   assert.match(activitySource, /saveActivityTimelineSafely\([\s\S]*persistedActivityId,[\s\S]*user\.id,[\s\S]*timeline/);
   assert.match(activitySource, /await window\.MomentumTimeline\.save\(activityId, userId, timeline\)/);
