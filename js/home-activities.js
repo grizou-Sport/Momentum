@@ -408,6 +408,8 @@ function resetActivityDialogMode(form) {
   delete form.dataset.existingSourceFileUrl;
   delete form.dataset.existingSourceFileType;
   delete form.dataset.existingGpxUrl;
+  delete form.dataset.activityTimeline;
+  delete form.dataset.importedActivity;
 
   const title = $("#activityDialogTitle");
   const saveButton = $("#saveActivityButton");
@@ -643,6 +645,21 @@ function fillActivityForm(data) {
     data.routeSummary
       ? JSON.stringify(data.routeSummary)
       : "";
+
+  form.dataset.activityTimeline = data.timeline
+    ? JSON.stringify(data.timeline)
+    : "";
+
+  form.dataset.importedActivity = JSON.stringify({
+    started_at:data.startedAt ?? null,
+    ended_at:data.endedAt ?? null,
+    total_duration_seconds:data.totalDurationSeconds ?? null,
+    moving_time_seconds:data.movingTimeSeconds ?? null,
+    paused_time_seconds:data.pausedTimeSeconds ?? null,
+    distance_m:data.distanceMeters ?? null,
+    total_ascent_m:data.totalAscentMeters ?? null,
+    average_heart_rate_bpm:data.averageHeartRateBpm ?? null
+  });
 }
 
 function numberOrNull(formData, name) {
@@ -896,6 +913,15 @@ async function saveActivity(event) {
           : null
     };
 
+    if (file && hasActivityMetrics && form.dataset.importedActivity) {
+      try {
+        Object.assign(payload, JSON.parse(form.dataset.importedActivity));
+      } catch {
+        // Le formulaire visible reste enregistrable si les donnees internes
+        // d'import ont ete invalidees dans le navigateur.
+      }
+    }
+
     setActivityMessage(
       editingId
         ? "Mise à jour du moment…"
@@ -925,6 +951,23 @@ async function saveActivity(event) {
     }
     persistedActivityId = savedActivity?.id || editingId;
     if (persistedActivityId) form.dataset.editActivityId = persistedActivityId;
+
+    let timeline = null;
+    if (file && form.dataset.activityTimeline) {
+      timeline = JSON.parse(form.dataset.activityTimeline);
+    } else if (completed && hasActivityMetrics && !retainedSourceFileType && payload.activity_time) {
+      const startTime = new Date(`${activityDate}T${payload.activity_time}`);
+      const durationSeconds = Math.max(0, Number(payload.duration_min) || 0) * 60;
+      timeline = window.MomentumTimeline.build({
+        source:"manual",
+        startTime,
+        endTime:new Date(startTime.getTime() + durationSeconds * 1000),
+        totalElapsedSeconds:durationSeconds
+      });
+    }
+    if (persistedActivityId && timeline?.events?.length) {
+      await window.MomentumTimeline.save(persistedActivityId, user.id, timeline);
+    }
 
     if (completed && savedActivity?.id) {
       const assessmentPayload = {

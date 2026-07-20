@@ -410,6 +410,9 @@ async function parseFit(file) {
   let session = null;
   const fitPoints = [];
   const fitRecords = [];
+  const fitLaps = [];
+  const fitEvents = [];
+  let lastFitTimestamp = null;
 
   while (offset < dataEnd) {
     const header = view.getUint8(offset);
@@ -553,12 +556,27 @@ async function parseFit(file) {
       offset += field.size;
     }
 
+    // Un en-tete compresse remplace le champ timestamp par un offset
+    // de cinq bits relatif au dernier timestamp FIT rencontre.
+    if (compressedTimestamp && lastFitTimestamp != null) {
+      const timeOffset = header & 0x1f;
+      const previousOffset = lastFitTimestamp & 0x1f;
+      values[253] = (lastFitTimestamp & ~0x1f) + timeOffset;
+      if (timeOffset < previousOffset) values[253] += 0x20;
+    }
+    if (values[253] != null) lastFitTimestamp = Number(values[253]);
+
     // Message global 18 = session
     if (definition.globalMessageNumber === 18) {
       session = {
         startTime:
           values[2] != null
             ? fitEpochToDate(values[2])
+            : null,
+
+        endTime:
+          values[253] != null
+            ? fitEpochToDate(values[253])
             : null,
 
         sport: values[5],
@@ -609,6 +627,31 @@ async function parseFit(file) {
       };
     }
 
+    // Message global 19 = lap. Le timestamp du message correspond a
+    // la fin du tour ; le debut est conserve dans le champ start_time.
+    if (definition.globalMessageNumber === 19) {
+      fitLaps.push({
+        number:fitLaps.length + 1,
+        startTime:values[2] != null ? fitEpochToDate(values[2]).toISOString() : null,
+        endTime:values[253] != null ? fitEpochToDate(values[253]).toISOString() : null,
+        totalElapsedSeconds:values[7] != null ? values[7] / 1000 : null,
+        totalTimerSeconds:values[8] != null ? values[8] / 1000 : null,
+        distanceMeters:values[9] != null ? values[9] / 100 : null
+      });
+    }
+
+    // Message global 21 = event. Les evenements timer sont la source
+    // objective des pauses et reprises ; les autres restent generiques.
+    if (definition.globalMessageNumber === 21) {
+      fitEvents.push({
+        timestamp:values[253] != null ? fitEpochToDate(values[253]).toISOString() : null,
+        event:values[0] ?? null,
+        eventType:values[1] ?? null,
+        data:values[3] ?? values[2] ?? null,
+        eventGroup:values[4] ?? null
+      });
+    }
+
     // Message global 20 = record. Les positions sont exprimées
     // en semicircles dans les champs 0 (latitude) et 1 (longitude).
     if (definition.globalMessageNumber === 20) {
@@ -621,6 +664,11 @@ async function parseFit(file) {
 
       fitRecords.push({
         timestamp:values[253] != null ? fitEpochToDate(values[253]).toISOString() : null,
+        positionValid:
+          Number.isFinite(latitude) &&
+          Number.isFinite(longitude) &&
+          latitude >= -90 && latitude <= 90 &&
+          longitude >= -180 && longitude <= 180,
         heartRate:values[3] ?? null,
         cadence:values[4] ?? null,
         distance:values[5] != null ? values[5] / 100 : null,
@@ -651,6 +699,20 @@ async function parseFit(file) {
   }
 
   const fitAnalysis = summarizeFitAnalysis(fitRecords, session);
+  const lastRecordTime = [...fitRecords].reverse().find((record) => record.timestamp)?.timestamp || null;
+  const endTime = session.endTime?.toISOString?.() || lastRecordTime || (
+    session.startTime && session.totalElapsedSeconds
+      ? new Date(session.startTime.getTime() + session.totalElapsedSeconds * 1000).toISOString()
+      : null
+  );
+  const timeline = window.MomentumTimeline?.build({
+    startTime:session.startTime,
+    endTime,
+    totalElapsedSeconds:session.totalElapsedSeconds,
+    records:fitRecords,
+    laps:fitLaps,
+    fitEvents
+  }) || null;
   const routeSummary = createRouteSummary(file.name, fitPoints, { fit_analysis:fitAnalysis }) || {
     file_name:file.name,
     point_count:0,
@@ -704,9 +766,19 @@ async function parseFit(file) {
     avgHr:
       session.avgHeartRate || "",
 
+    startedAt:session.startTime?.toISOString?.() || null,
+    endedAt:endTime,
+    totalDurationSeconds:session.totalElapsedSeconds || null,
+    movingTimeSeconds:session.totalTimerSeconds || null,
+    pausedTimeSeconds:Math.max(0, (session.totalElapsedSeconds || 0) - (session.totalTimerSeconds || 0)),
+    distanceMeters:session.totalDistanceKm ? session.totalDistanceKm * 1000 : null,
+    totalAscentMeters:session.totalAscent ?? null,
+    averageHeartRateBpm:session.avgHeartRate ?? null,
+
     locationName,
 
-    routeSummary
+    routeSummary,
+    timeline
   };
 }
 
@@ -720,6 +792,15 @@ async function parseActivityFile(file) {
   if (extension === "gpx") {
     const route = await parseGpx(file);
     const center = routeCenter(route);
+    const timeline = window.MomentumTimeline?.build({
+      source:"gpx",
+      startTime:route.startTime,
+      endTime:route.endTime,
+      records:route.points.map((point) => ({
+        timestamp:point.time,
+        positionValid:true
+      }))
+    }) || null;
 
     let locationName = "";
 
@@ -756,6 +837,14 @@ async function parseActivityFile(file) {
 
       elevation: "",
       avgHr: "",
+      startedAt:route.startTime,
+      endedAt:route.endTime,
+      totalDurationSeconds:route.duration ? route.duration * 60 : null,
+      movingTimeSeconds:route.duration ? route.duration * 60 : null,
+      pausedTimeSeconds:0,
+      distanceMeters:route.distance ? route.distance * 1000 : null,
+      totalAscentMeters:null,
+      averageHeartRateBpm:null,
       locationName,
 
       routeSummary: createRouteSummary(
@@ -765,7 +854,8 @@ async function parseActivityFile(file) {
           start_time: route.startTime,
           end_time: route.endTime
         }
-      )
+      ),
+      timeline
     };
   }
 
