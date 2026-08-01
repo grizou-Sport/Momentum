@@ -39,6 +39,8 @@ async function renderHome() {
 
   const weatherCard = $("#weatherCard");
 
+  renderMoonCard(todayDate);
+
   if (weatherCard) {
     weatherCard.innerHTML = `
       <span class="card-label">Météo</span>

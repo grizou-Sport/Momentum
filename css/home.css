@@ -280,7 +280,7 @@ main{
 
 .today-dashboard{
   display:grid;
-  grid-template-columns:minmax(0,1.45fr) minmax(320px,.75fr);
+  grid-template-columns:minmax(0,1.15fr) minmax(220px,.55fr) minmax(300px,.75fr);
   gap:18px;
   align-items:stretch;
 }
@@ -366,6 +366,74 @@ main{
   font-weight:850;
   line-height:.92;
   letter-spacing:-.055em;
+}
+
+.moon-card{
+  min-height:470px;
+  padding:30px;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  background:var(--ink);
+  color:#fff;
+}
+
+.moon-heading{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:20px;
+}
+
+.moon-card .card-label{
+  color:rgba(255,255,255,.62);
+}
+
+.moon-symbol{
+  margin:-16px -8px 0 0;
+  font-size:clamp(80px,9vw,126px);
+  line-height:1;
+  filter:grayscale(1) contrast(.85) brightness(1.45);
+  text-shadow:0 0 38px rgba(255,255,255,.12);
+}
+
+.moon-content{
+  margin-top:auto;
+  padding-top:44px;
+}
+
+.moon-card h2{
+  margin:0;
+  color:#fff;
+  font-size:clamp(27px,2.7vw,40px);
+  line-height:1.02;
+}
+
+.moon-illumination{
+  margin:12px 0 0;
+  color:rgba(255,255,255,.68);
+  font-size:14px;
+}
+
+.moon-next{
+  margin:28px 0 0;
+  padding-top:18px;
+  display:grid;
+  gap:5px;
+  border-top:1px solid rgba(255,255,255,.18);
+}
+
+.moon-next span{
+  color:rgba(255,255,255,.56);
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+
+.moon-next strong{
+  color:#fff;
+  font-size:17px;
 }
 
 .day-feed{
@@ -1189,6 +1257,10 @@ momentum-slider[disabled]{opacity:.55}
     grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);
   }
 
+  .day-feed{
+    grid-column:1 / -1;
+  }
+
   .living-week{
     grid-template-columns:repeat(4,minmax(0,1fr));
   }
@@ -1358,6 +1430,15 @@ momentum-slider[disabled]{opacity:.55}
   .weather-card{
     min-height:390px;
     padding:28px;
+  }
+
+  .moon-card{
+    min-height:320px;
+    padding:28px;
+  }
+
+  .day-feed{
+    grid-column:auto;
   }
 
   .weather-card.has-map{

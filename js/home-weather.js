@@ -41,6 +41,65 @@ function timeOnly(value) {
   return match ? match[1] : String(value).slice(0, 5);
 }
 
+const LUNAR_CYCLE_DAYS = 29.530588853;
+const LUNAR_REFERENCE_NEW_MOON = Date.UTC(2000, 0, 6, 18, 14);
+
+function getMoonPhase(date = new Date()) {
+  const elapsedDays = (date.getTime() - LUNAR_REFERENCE_NEW_MOON) / 86400000;
+  const age = ((elapsedDays % LUNAR_CYCLE_DAYS) + LUNAR_CYCLE_DAYS) % LUNAR_CYCLE_DAYS;
+  const fraction = age / LUNAR_CYCLE_DAYS;
+  const phaseIndex = Math.floor((fraction * 8 + .5) % 8);
+  const phases = [
+    { name: "Nouvelle lune", symbol: "🌑" },
+    { name: "Premier croissant", symbol: "🌒" },
+    { name: "Premier quartier", symbol: "🌓" },
+    { name: "Gibbeuse croissante", symbol: "🌔" },
+    { name: "Pleine lune", symbol: "🌕" },
+    { name: "Gibbeuse décroissante", symbol: "🌖" },
+    { name: "Dernier quartier", symbol: "🌗" },
+    { name: "Dernier croissant", symbol: "🌘" }
+  ];
+  let daysUntilFullMoon = LUNAR_CYCLE_DAYS / 2 - age;
+
+  if (daysUntilFullMoon < 0) daysUntilFullMoon += LUNAR_CYCLE_DAYS;
+
+  return {
+    ...phases[phaseIndex],
+    age,
+    illumination: Math.round(((1 - Math.cos(2 * Math.PI * fraction)) / 2) * 100),
+    nextFullMoon: new Date(date.getTime() + daysUntilFullMoon * 86400000)
+  };
+}
+
+function formatMoonDate(date) {
+  return new Intl.DateTimeFormat("fr-CH", {
+    day: "numeric",
+    month: "long"
+  }).format(date);
+}
+
+function renderMoonCard(date = new Date()) {
+  const element = $("#moonCard");
+  if (!element) return;
+
+  const moon = getMoonPhase(date);
+
+  element.innerHTML = `
+    <div class="moon-heading">
+      <span class="card-label">Lune</span>
+      <span class="moon-symbol" aria-hidden="true">${moon.symbol}</span>
+    </div>
+    <div class="moon-content">
+      <h2 id="moonCardTitle">${moon.name}</h2>
+      <p class="moon-illumination">${moon.illumination}% illuminée</p>
+    </div>
+    <p class="moon-next">
+      <span>Prochaine pleine lune</span>
+      <strong>${formatMoonDate(moon.nextFullMoon)}</strong>
+    </p>
+  `;
+}
+
 async function getWeather(latitude, longitude, date) {
   const today = iso(new Date());
   const isPast = date < today;

@@ -6,6 +6,8 @@ Donner une vue immédiate de la journée vécue et des prochaines actions utiles
 
 HOME réunit le HERO, les informations du jour, la fenêtre vivante, le calendrier et le Journal. Les analyses longitudinales appartiennent désormais à la page `progression.html`.
 
+Les informations du jour présentent la phase lunaire à côté de la météo locale. La lune est un contexte d'observation personnel : son affichage reste descriptif (phase, illumination et prochaine pleine lune) et ne suggère aucune interprétation médicale.
+
 Le module `FLOW` suit le Journal. Il raconte comment les activités ont été vécues à travers l’équilibre entre défi et maîtrise ressentis. Sa position dans HOME est narrative : aucun score de performance n’est produit.
 
 ## À documenter
