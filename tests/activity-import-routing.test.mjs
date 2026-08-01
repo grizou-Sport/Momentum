@@ -130,6 +130,114 @@ test("l’import GPX planifié préserve les champs de planification", () => {
   assert.match(form.dataset.routeSummary, /map_points/);
 });
 
+test("l’import préremplit l’heure de départ dans le fuseau local", () => {
+  const fields = {
+    activity_category: { value: "sport" },
+    status: { value: "done" },
+    activity_date: { value: "" },
+    activity_time: { value: "" },
+    sport: { value: "running", options: [] },
+    sport_activity_type: { value: "Course", options: [] },
+    distance_km: { value: "" },
+    elevation_m: { value: "" },
+    avg_hr: { value: "" },
+    location_name: { value: "" }
+  };
+  const form = {
+    dataset: {},
+    elements: fields,
+    querySelector() { return null; },
+    querySelectorAll() { return []; }
+  };
+  const context = loadActivityImportFunctions({
+    $(selector) { return selector === "#activityForm" ? form : null; }
+  });
+  const startedAt = "2026-07-20T07:37:00.000Z";
+  const expected = context.activityLocalDateTime(startedAt);
+
+  context.fillActivityForm({
+    sourceFileType: "fit",
+    date: expected.date,
+    startedAt,
+    distance: 10,
+    duration: 60
+  });
+
+  assert.equal(fields.activity_time.value, expected.time);
+  assert.equal(form.dataset.importedActivityTime, expected.time);
+});
+
+test("une heure corrigée manuellement n’est pas remplacée par un nouvel import", () => {
+  const fields = {
+    activity_category: { value: "sport" },
+    status: { value: "done" },
+    activity_date: { value: "2026-07-20" },
+    activity_time: { value: "08:37" },
+    sport: { value: "running", options: [] },
+    sport_activity_type: { value: "Course", options: [] },
+    distance_km: { value: "" },
+    elevation_m: { value: "" },
+    avg_hr: { value: "" },
+    location_name: { value: "" }
+  };
+  const form = {
+    dataset: {},
+    elements: fields,
+    querySelector() { return null; },
+    querySelectorAll() { return []; }
+  };
+  const context = loadActivityImportFunctions({
+    $(selector) { return selector === "#activityForm" ? form : null; }
+  });
+
+  context.fillActivityForm({
+    sourceFileType: "gpx",
+    date: "2026-07-20",
+    startedAt: "2026-07-20T10:00:00.000Z"
+  });
+
+  assert.equal(fields.activity_time.value, "08:37");
+  assert.equal(form.dataset.importedActivityTime, undefined);
+});
+
+test("un horodatage absent ou invalide laisse l’heure vide", () => {
+  const context = loadActivityImportFunctions();
+
+  assert.equal(context.activityLocalDateTime(null), null);
+  assert.equal(context.activityLocalDateTime("not-a-date"), null);
+});
+
+test("le parseur GPX retient le premier horodatage valide", async () => {
+  const points = [
+    { lat: "46.9", lon: "7.4", time: "invalid" },
+    { lat: "46.91", lon: "7.41", time: "2026-07-20T07:37:00Z" },
+    { lat: "46.92", lon: "7.42", time: "2026-07-20T08:37:00Z" }
+  ];
+  const xml = {
+    querySelector() { return null; },
+    querySelectorAll(selector) {
+      if (selector !== "trkpt") return [];
+      return points.map((point) => ({
+        getAttribute(name) { return point[name]; },
+        querySelector(name) {
+          return name === "time" ? { textContent: point.time } : null;
+        }
+      }));
+    }
+  };
+  const context = loadActivityImportFunctions({
+    DOMParser: class { parseFromString() { return xml; } }
+  });
+
+  const parsed = await context.parseGpx({
+    name: "sortie.gpx",
+    async text() { return "<gpx />"; }
+  });
+
+  assert.equal(parsed.startTime, "2026-07-20T07:37:00.000Z");
+  assert.equal(parsed.endTime, "2026-07-20T08:37:00.000Z");
+});
+
 test("une Timeline indisponible ne transforme pas le succès principal en échec", async () => {
   const warnings = [];
   const context = loadActivityImportFunctions({

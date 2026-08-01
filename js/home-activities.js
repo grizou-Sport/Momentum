@@ -410,6 +410,7 @@ function resetActivityDialogMode(form) {
   delete form.dataset.existingGpxUrl;
   delete form.dataset.activityTimeline;
   delete form.dataset.importedActivity;
+  delete form.dataset.importedActivityTime;
 
   const title = $("#activityDialogTitle");
   const saveButton = $("#saveActivityButton");
@@ -602,6 +603,17 @@ function fillActivityForm(data) {
     form.elements.status?.value === "planned";
 
   updateActivityFormCategory();
+
+  const localStart = activityLocalDateTime(data.startedAt);
+  const timeField = form.elements.activity_time;
+  const previousImportedTime = form.dataset.importedActivityTime || "";
+  const hasManualTime = Boolean(timeField?.value) &&
+    timeField.value !== previousImportedTime;
+
+  if (localStart && timeField && !isPlannedGpx && !hasManualTime) {
+    timeField.value = localStart.time;
+    form.dataset.importedActivityTime = localStart.time;
+  }
 
   if (!isPlannedGpx) {
     setFormValue(

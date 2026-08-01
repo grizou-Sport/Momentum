@@ -47,6 +47,28 @@ function routeDurationMinutes(points) {
     : 0;
 }
 
+function validActivityTimestamp(value) {
+  if (!value) return null;
+
+  const date = value instanceof Date
+    ? new Date(value.getTime())
+    : new Date(value);
+
+  return Number.isFinite(date.getTime()) ? date : null;
+}
+
+function activityLocalDateTime(value) {
+  const date = validActivityTimestamp(value);
+  if (!date) return null;
+
+  const pad = (part) => String(part).padStart(2, "0");
+
+  return {
+    date: `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
+    time: `${pad(date.getHours())}:${pad(date.getMinutes())}`
+  };
+}
+
 function routeCenter(route) {
   const points = route?.points || [];
 
@@ -162,13 +184,20 @@ async function parseGpx(file) {
     );
   }
 
+  const firstTimedPoint = points.find((point) =>
+    validActivityTimestamp(point.time)
+  );
+  const lastTimedPoint = [...points].reverse().find((point) =>
+    validActivityTimestamp(point.time)
+  );
+
   return {
     name: file.name,
     points,
     startTime:
-      points.find((point) => point.time)?.time || null,
+      validActivityTimestamp(firstTimedPoint?.time)?.toISOString() || null,
     endTime:
-      [...points].reverse().find((point) => point.time)?.time || null,
+      validActivityTimestamp(lastTimedPoint?.time)?.toISOString() || null,
     distance: routeDistance(points),
     duration: routeDurationMinutes(points)
   };
@@ -699,6 +728,10 @@ async function parseFit(file) {
   }
 
   const fitAnalysis = summarizeFitAnalysis(fitRecords, session);
+  const firstRecordTime = fitRecords.find((record) =>
+    validActivityTimestamp(record.timestamp)
+  )?.timestamp || null;
+  const startTime = session.startTime?.toISOString?.() || firstRecordTime;
   const lastRecordTime = [...fitRecords].reverse().find((record) => record.timestamp)?.timestamp || null;
   const endTime = session.endTime?.toISOString?.() || lastRecordTime || (
     session.startTime && session.totalElapsedSeconds
@@ -706,7 +739,7 @@ async function parseFit(file) {
       : null
   );
   const timeline = window.MomentumTimeline?.build({
-    startTime:session.startTime,
+    startTime,
     endTime,
     totalElapsedSeconds:session.totalElapsedSeconds,
     records:fitRecords,
@@ -738,7 +771,7 @@ async function parseFit(file) {
 
   return {
     date:
-      fitDate(session.startTime) ||
+      fitDate(startTime) ||
       iso(new Date()),
 
     sport:
@@ -766,7 +799,7 @@ async function parseFit(file) {
     avgHr:
       session.avgHeartRate || "",
 
-    startedAt:session.startTime?.toISOString?.() || null,
+    startedAt:startTime,
     endedAt:endTime,
     totalDurationSeconds:session.totalElapsedSeconds || null,
     movingTimeSeconds:session.totalTimerSeconds || null,
