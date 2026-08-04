@@ -35,26 +35,31 @@ function renderLivingWeek(centerDate = new Date()) {
       : "Rien n’est encore prévu";
 
     return `
-      <button
-        type="button"
-        class="living-day${isToday ? " is-today" : ""}"
-        data-date="${dateIso}"
+      <article
+        class="living-day-shell${isToday ? " is-today" : ""}"
         data-day-offset="${index - 3}"
         data-today="${isToday ? "true" : "false"}"
       >
-        <span class="card-label">${escapeHtml(fmtShortDate(dateIso))}</span>
-        <div
-          class="living-weather is-loading"
-          data-living-weather="${dateIso}"
+        <button
+          type="button"
+          class="living-day"
+          data-date="${dateIso}"
         >
-          <span>Météo…</span>
-        </div>
-        <div class="living-moments">
-          <div class="calendar-session-icons">${sessionIconsHtml(sessions, "calendar-session-icon")}</div>
-          <strong>${sessions.length || "—"}</strong>
-          <p>${escapeHtml(summary)}</p>
-        </div>
-      </button>
+          <span class="card-label">${escapeHtml(fmtShortDate(dateIso))}</span>
+          <div
+            class="living-weather is-loading"
+            data-living-weather="${dateIso}"
+          >
+            <span>Météo…</span>
+          </div>
+          <div class="living-moments">
+            <div class="calendar-session-icons">${sessionIconsHtml(sessions, "calendar-session-icon")}</div>
+            <strong>${sessions.length || "—"}</strong>
+            <p>${escapeHtml(summary)}</p>
+          </div>
+        </button>
+        ${moonTriggerHtml(dateIso)}
+      </article>
     `;
   }).join("");
 

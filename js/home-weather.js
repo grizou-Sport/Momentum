@@ -50,14 +50,14 @@ function getMoonPhase(date = new Date()) {
   const fraction = age / LUNAR_CYCLE_DAYS;
   const phaseIndex = Math.floor((fraction * 8 + .5) % 8);
   const phases = [
-    { name: "Nouvelle lune", symbol: "🌑" },
-    { name: "Premier croissant", symbol: "🌒" },
-    { name: "Premier quartier", symbol: "🌓" },
-    { name: "Gibbeuse croissante", symbol: "🌔" },
-    { name: "Pleine lune", symbol: "🌕" },
-    { name: "Gibbeuse décroissante", symbol: "🌖" },
-    { name: "Dernier quartier", symbol: "🌗" },
-    { name: "Dernier croissant", symbol: "🌘" }
+    { name: "Nouvelle lune" },
+    { name: "Premier croissant" },
+    { name: "Premier quartier" },
+    { name: "Gibbeuse croissante" },
+    { name: "Pleine lune" },
+    { name: "Gibbeuse décroissante" },
+    { name: "Dernier quartier" },
+    { name: "Dernier croissant" }
   ];
   let daysUntilFullMoon = LUNAR_CYCLE_DAYS / 2 - age;
 
@@ -65,10 +65,57 @@ function getMoonPhase(date = new Date()) {
 
   return {
     ...phases[phaseIndex],
+    phaseIndex,
     age,
     illumination: Math.round(((1 - Math.cos(2 * Math.PI * fraction)) / 2) * 100),
     nextFullMoon: new Date(date.getTime() + daysUntilFullMoon * 86400000)
   };
+}
+
+function moonPhaseSvg(moon) {
+  const illuminatedPaths = [
+    "",
+    "M16 3A13 13 0 0 1 16 29A9 13 0 0 0 16 3Z",
+    "M16 3A13 13 0 0 1 16 29Z",
+    "M16 3A13 13 0 1 1 16 29A7 13 0 0 1 16 3Z",
+    '<circle cx="16" cy="16" r="13" />',
+    "M16 3A13 13 0 1 0 16 29A7 13 0 0 0 16 3Z",
+    "M16 3A13 13 0 0 0 16 29Z",
+    "M16 3A13 13 0 0 0 16 29A9 13 0 0 1 16 3Z"
+  ];
+  const illuminated = illuminatedPaths[moon?.phaseIndex] || "";
+  const shape = illuminated.startsWith("<")
+    ? illuminated
+    : illuminated ? `<path d="${illuminated}" />` : "";
+
+  return `
+    <svg class="moon-phase-icon" viewBox="0 0 32 32" focusable="false" aria-hidden="true">
+      <circle class="moon-phase-disc" cx="16" cy="16" r="13"></circle>
+      <g class="moon-phase-light">${shape}</g>
+    </svg>
+  `;
+}
+
+function moonForCalendarDate(dateIso) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(dateIso || ""))) return null;
+  return getMoonPhase(new Date(`${dateIso}T12:00:00`));
+}
+
+function moonTriggerHtml(dateIso) {
+  const moon = moonForCalendarDate(dateIso);
+  if (!moon) return "";
+
+  return `
+    <button
+      class="living-moon-trigger"
+      type="button"
+      data-moon-date="${dateIso}"
+      aria-label="${moon.name}, ${moon.illumination} % illuminée"
+      aria-haspopup="dialog"
+    >
+      ${moonPhaseSvg(moon)}
+    </button>
+  `;
 }
 
 function formatMoonDate(date) {
@@ -78,26 +125,25 @@ function formatMoonDate(date) {
   }).format(date);
 }
 
-function renderMoonCard(date = new Date()) {
-  const element = $("#moonCard");
-  if (!element) return;
+function openMoonDialog(dateIso) {
+  const dialog = $("#moonDialog");
+  const moon = moonForCalendarDate(dateIso);
+  if (!dialog || !moon) return;
 
-  const moon = getMoonPhase(date);
+  $("#moonDialogVisual").innerHTML = moonPhaseSvg(moon);
+  $("#moonDialogTitle").textContent = moon.name;
+  $("#moonDialogIllumination").textContent = `${moon.illumination} % illuminée`;
+  $("#moonDialogNextFull").textContent = formatMoonDate(moon.nextFullMoon);
 
-  element.innerHTML = `
-    <div class="moon-heading">
-      <span class="card-label">Lune</span>
-      <span class="moon-symbol" aria-hidden="true">${moon.symbol}</span>
-    </div>
-    <div class="moon-content">
-      <h2 id="moonCardTitle">${moon.name}</h2>
-      <p class="moon-illumination">${moon.illumination}% illuminée</p>
-    </div>
-    <p class="moon-next">
-      <span>Prochaine pleine lune</span>
-      <strong>${formatMoonDate(moon.nextFullMoon)}</strong>
-    </p>
-  `;
+  if (typeof dialog.showModal === "function") dialog.showModal();
+  else dialog.setAttribute("open", "");
+}
+
+function closeMoonDialog() {
+  const dialog = $("#moonDialog");
+  if (!dialog) return;
+  if (typeof dialog.close === "function") dialog.close();
+  else dialog.removeAttribute("open");
 }
 
 async function getWeather(latitude, longitude, date) {

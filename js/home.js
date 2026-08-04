@@ -39,8 +39,6 @@ async function renderHome() {
 
   const weatherCard = $("#weatherCard");
 
-  renderMoonCard(todayDate);
-
   if (weatherCard) {
     weatherCard.innerHTML = `
       <span class="card-label">Météo</span>
@@ -95,8 +93,19 @@ function bindHome() {
   });
 
   $("#livingWeek")?.addEventListener("click", async (event) => {
+    const moonTrigger = event.target.closest("[data-moon-date]");
+    if (moonTrigger?.dataset.moonDate) {
+      openMoonDialog(moonTrigger.dataset.moonDate);
+      return;
+    }
+
     const day = event.target.closest("[data-date]");
     if (day?.dataset.date) await openDay(day.dataset.date);
+  });
+
+  $("#closeMoonDialog")?.addEventListener("click", closeMoonDialog);
+  $("#moonDialog")?.addEventListener("click", (event) => {
+    if (event.target === event.currentTarget) closeMoonDialog();
   });
 
   $("#monthGrid")?.addEventListener("click", async (event) => {

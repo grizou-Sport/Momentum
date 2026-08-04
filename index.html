@@ -46,8 +46,6 @@
       <div class="today-dashboard">
         <article class="home-card weather-card" id="weatherCard"></article>
 
-        <article class="home-card moon-card" id="moonCard" aria-labelledby="moonCardTitle"></article>
-
         <aside class="day-feed" aria-labelledby="dayFeedTitle">
           <div class="day-feed-heading">
             <div>
@@ -588,6 +586,24 @@
     <p>Il apparaît lorsque le défi rencontré correspond à ton sentiment de maîtrise.</p>
     <p>L'objectif n'est pas de rester en permanence dans le Flow, mais de mieux comprendre quelles expériences te font grandir, progresser ou simplement te ressourcer.</p>
     <p class="flow-dialog-emphasis">Aucune zone n'est mauvaise. Chacune raconte un moment différent de ton parcours.</p>
+  </div>
+</dialog>
+
+<dialog id="moonDialog" class="moon-dialog" aria-labelledby="moonDialogTitle">
+  <button class="close-btn" id="closeMoonDialog" type="button" aria-label="Fermer">×</button>
+  <div class="moon-dialog-content">
+    <span class="card-label">Lune</span>
+    <div class="moon-dialog-heading">
+      <div id="moonDialogVisual" class="moon-dialog-visual" aria-hidden="true"></div>
+      <div>
+        <h2 id="moonDialogTitle"></h2>
+        <p id="moonDialogIllumination" class="moon-dialog-illumination"></p>
+      </div>
+    </div>
+    <p class="moon-dialog-next">
+      <span>Prochaine pleine lune</span>
+      <strong id="moonDialogNextFull"></strong>
+    </p>
   </div>
 </dialog>
 
