@@ -37,6 +37,13 @@ test("Progression loads the dawn hero and the reusable motion component", () => 
   assert.ok((page.match(/data-motion-reveal/g) || []).length >= 6);
 });
 
+test("the Progression hero is full width while its content stays on the page grid", () => {
+  assert.match(page, /class="progression-hero-inner"/);
+  assert.match(progressionStyles, /\.progression-hero\{[\s\S]*?width:100%;min-height:76svh/);
+  assert.match(progressionStyles, /\.progression-hero-inner\{width:min\(var\(--page-width\),calc\(100% - var\(--page-gutter\) \* 2\)\)/);
+  assert.doesNotMatch(progressionStyles, /\.progression-hero,\.progression-dashboard/);
+});
+
 test("motion timings stay calm and use only opacity and transforms", () => {
   assert.match(progressionStyles, /progression-hero-in 600ms ease-out/);
   assert.match(progressionStyles, /translate3d\(0,15px,0\)/);
