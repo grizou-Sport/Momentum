@@ -16,6 +16,33 @@ const progressionState = {
   periodPreset:"current-week", periodStart:null, periodEnd:null, requestVersion:0
 };
 
+function progressionCounter(value, { decimals = 0, prefix = "", suffix = "" } = {}) {
+  return `<strong data-motion-number data-motion-value="${Number(value) || 0}" data-motion-decimals="${decimals}" data-motion-prefix="${prefix}" data-motion-suffix="${suffix}">0${suffix}</strong>`;
+}
+
+function animateProgressionNumbers(root) {
+  window.MomentumMotion?.animateNumbers(root);
+}
+
+function progressionChartTooltip(callbacks) {
+  if (!window.MomentumMotion?.externalChartTooltip) return { callbacks };
+  return {
+    enabled:false,
+    external:window.MomentumMotion.externalChartTooltip,
+    callbacks
+  };
+}
+
+function stageProgressionChart(chart, cardId) {
+  const card = document.getElementById(cardId);
+  if (window.MomentumMotion?.stageChart) {
+    window.MomentumMotion.stageChart(chart, card, { duration:780, easing:"easeOutQuart" });
+  } else {
+    chart.options.animation = false;
+    chart.update("none");
+  }
+}
+
 function readProgressionPreferences() {
   try { return JSON.parse(localStorage.getItem(PROGRESSION_PREFERENCES_KEY)) || {}; }
   catch (_error) { return {}; }
@@ -135,7 +162,7 @@ async function loadProgressionData() {
     if (requestVersion !== progressionState.requestVersion) return;
     console.error("PROGRESSION : impossible de charger les indicateurs.", error);
     if (message) message.innerHTML = 'Les indicateurs n’ont pas pu être chargés. <button type="button" data-progression-retry>Réessayer</button>';
-    document.querySelectorAll(".progression-reveal").forEach((card) => card.classList.add("is-visible"));
+    window.MomentumMotion?.reveal();
   }
 }
 
@@ -178,7 +205,8 @@ function renderProgressionKpis() {
   const distance = completed.reduce((sum, item) => sum + Number(item.distance_km || 0), 0);
   const activeWeeks = progressionState.weeks.filter((week) => completedActivities(week.activities).length).length;
   const periodLabel = PROGRESSION_PERIODS[progressionState.periodPreset]?.label || "Période";
-  strip.innerHTML = `<div><strong>${completed.length}</strong><span>Séances réalisées · ${escapeHtml(periodLabel)}</span></div><div><strong>${hours.toFixed(1)} h</strong><span>Temps construit</span></div><div><strong>${distance.toFixed(0)} km</strong><span>Distance totale</span></div><div><strong>${activeWeeks}</strong><span>Semaines actives</span></div>`;
+  strip.innerHTML = `<div>${progressionCounter(completed.length)}<span>Séances réalisées · ${escapeHtml(periodLabel)}</span></div><div>${progressionCounter(hours,{decimals:1,suffix:" h"})}<span>Temps construit</span></div><div>${progressionCounter(distance,{suffix:" km"})}<span>Distance totale</span></div><div>${progressionCounter(activeWeeks)}<span>Semaines actives</span></div>`;
+  animateProgressionNumbers(strip);
 }
 
 function passportBaselineLoad() {
@@ -318,7 +346,6 @@ function renderLoadChart() {
     document.getElementById("loadStatus").innerHTML = "";
     document.getElementById("loadInsight").textContent = "Tes premières activités feront apparaître ta progression ici.";
     renderAccessibleChartTable("fitnessChartTable", ["Période","Charge chronique","Charge aiguë","Forme"], []);
-    requestAnimationFrame(()=>document.getElementById("loadChartCard")?.classList.add("is-visible"));
     return;
   }
   const series = buildLoadSeries();
@@ -329,13 +356,15 @@ function renderLoadChart() {
   progressionState.loadDisplaySeries = displaySeries;
   progressionState.loadChart?.destroy();
   const eventLabels = displaySeries.map((day) => day.eventLabels || []);
-  progressionState.loadChart = new Chart(canvas,{ type:"line", data:{ labels:displaySeries.map((day) => progressionDateLabel(day.date, granularity)), datasets:[{label:"Charge chronique (CTL)",data:displaySeries.map((day)=>day.chronic),borderColor:"#273c31",backgroundColor:"rgba(39,60,49,.08)",fill:true,tension:.35,pointRadius:displaySeries.length > 45 ? 0 : 2,borderWidth:2.5},{label:"Fatigue (ATL)",data:displaySeries.map((day)=>day.acute),borderColor:"#d9763d",backgroundColor:"transparent",tension:.35,pointRadius:displaySeries.length > 45 ? 0 : 2,borderWidth:2},{label:"Forme (TSB)",data:displaySeries.map((day)=>day.form),borderColor:"#6f63a6",backgroundColor:"transparent",tension:.3,pointRadius:displaySeries.length > 45 ? 0 : 2,borderWidth:2},{label:"Événements",data:displaySeries.map((day,index)=>eventLabels[index].length?Math.max(day.chronic,day.acute)+6:null),borderColor:"#b27d42",backgroundColor:"#b27d42",showLine:false,pointRadius:5,pointHoverRadius:7,pointStyle:"rectRot"}] }, options:{responsive:true,maintainAspectRatio:false,animation:{duration:850,easing:"easeOutQuart"},interaction:{mode:"index",intersect:false},onClick:(_event,elements)=>{if(elements[0])openLoadDay(elements[0].index);},plugins:{legend:{position:"bottom",align:"start",labels:{usePointStyle:true,pointStyle:"circle",boxWidth:8,padding:16}},tooltip:{callbacks:{label:(context)=>context.dataset.label==="Événements"?eventLabels[context.dataIndex].join(" • "):`${context.dataset.label} : ${Math.round(context.parsed.y)}`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,color:"#858178",maxRotation:0}},y:{grid:{color:"rgba(20,20,20,.07)"},ticks:{color:"#858178"}}}} });
+  progressionState.loadChart = new Chart(canvas,{ type:"line", data:{ labels:displaySeries.map((day) => progressionDateLabel(day.date, granularity)), datasets:[{label:"Charge chronique (CTL)",data:displaySeries.map((day)=>day.chronic),borderColor:"#273c31",backgroundColor:"rgba(39,60,49,.08)",fill:true,tension:.35,pointRadius:displaySeries.length > 45 ? 0 : 2,pointHoverRadius:6,pointHoverBorderWidth:3,borderWidth:2.5},{label:"Fatigue (ATL)",data:displaySeries.map((day)=>day.acute),borderColor:"#d9763d",backgroundColor:"transparent",tension:.35,pointRadius:displaySeries.length > 45 ? 0 : 2,pointHoverRadius:6,pointHoverBorderWidth:3,borderWidth:2},{label:"Forme (TSB)",data:displaySeries.map((day)=>day.form),borderColor:"#6f63a6",backgroundColor:"transparent",tension:.3,pointRadius:displaySeries.length > 45 ? 0 : 2,pointHoverRadius:6,pointHoverBorderWidth:3,borderWidth:2},{label:"Événements",data:displaySeries.map((day,index)=>eventLabels[index].length?Math.max(day.chronic,day.acute)+6:null),borderColor:"#b27d42",backgroundColor:"#b27d42",showLine:false,pointRadius:5,pointHoverRadius:7,pointStyle:"rectRot"}] }, options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:"index",intersect:false},onClick:(_event,elements)=>{if(elements[0])openLoadDay(elements[0].index);},plugins:{legend:{position:"bottom",align:"start",labels:{usePointStyle:true,pointStyle:"circle",boxWidth:8,padding:16}},tooltip:progressionChartTooltip({label:(context)=>context.dataset.label==="Événements"?eventLabels[context.dataIndex].join(" • "):`${context.dataset.label} : ${Math.round(context.parsed.y)}`})},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,color:"#858178",maxRotation:0}},y:{grid:{color:"rgba(20,20,20,.07)"},ticks:{color:"#858178"}}}} });
+  stageProgressionChart(progressionState.loadChart,"loadChartCard");
   renderAccessibleChartTable("fitnessChartTable", ["Période","Charge chronique","Charge aiguë","Forme"], displaySeries.map((day)=>[progressionDateLabel(day.date,granularity),Math.round(day.chronic),Math.round(day.acute),`${day.form>=0?"+":""}${Math.round(day.form)}`]), "load");
   document.getElementById("loadModelPhase").textContent=phase.label;
   document.getElementById("loadModelPhase").title=phase.detail;
-  document.getElementById("loadStatus").innerHTML=`<p>Aujourd’hui</p><div><strong>${Math.round(today?.chronic||0)}</strong><span>Charge chronique</span></div><div><strong>${Math.round(today?.acute||0)}</strong><span>Fatigue</span></div><div><strong>${today?.form>=0?"+":""}${Math.round(today?.form||0)}</strong><span>Forme</span></div>`;
+  const loadStatus=document.getElementById("loadStatus");
+  loadStatus.innerHTML=`<p>Aujourd’hui</p><div>${progressionCounter(Math.round(today?.chronic||0))}<span>Charge chronique</span></div><div>${progressionCounter(Math.round(today?.acute||0))}<span>Fatigue</span></div><div>${progressionCounter(Math.round(today?.form||0),{prefix:today?.form>=0?"+":""})}<span>Forme</span></div>`;
+  animateProgressionNumbers(loadStatus);
   document.getElementById("loadInsight").textContent=loadInterpretation(today);
-  requestAnimationFrame(()=>document.getElementById("loadChartCard")?.classList.add("is-visible"));
 }
 
 function openLoadDay(index) {
@@ -376,17 +405,17 @@ function renderSportChart() {
   const hasCompleted = groups.some((group) => group[valueKey] > 0);
   setProgressionChartEmpty(canvas, !hasCompleted);
   const summary=document.getElementById("activityDistributionSummary");
-  if (!hasCompleted) { progressionState.sportChart?.destroy(); if(summary)summary.textContent=progressionState.mode==="distance"?"Aucune activité avec distance sur cette période.":"Tes premières activités feront apparaître ta progression ici."; document.getElementById("sportInsight").textContent=""; renderAccessibleChartTable("sportChartTable",["Discipline",progressionState.mode==="distance"?"Distance":"Temps"],[]); requestAnimationFrame(()=>document.getElementById("sportChartCard")?.classList.add("is-visible")); return; }
+  if (!hasCompleted) { progressionState.sportChart?.destroy(); if(summary)summary.textContent=progressionState.mode==="distance"?"Aucune activité avec distance sur cette période.":"Tes premières activités feront apparaître ta progression ici."; document.getElementById("sportInsight").textContent=""; renderAccessibleChartTable("sportChartTable",["Discipline",progressionState.mode==="distance"?"Distance":"Temps"],[]); return; }
   canvas.parentElement.style.height=`${Math.max(300,groups.length*48)}px`;
   progressionState.sportChart?.destroy();
-  progressionState.sportChart=new Chart(canvas,{type:"bar",data:{labels:groups.map((group)=>group.label),datasets:[{label:progressionState.mode==="distance"?"Distance":"Temps",data:groups.map((group)=>group[valueKey]),backgroundColor:groups.map((group)=>group.color),borderRadius:8,borderSkipped:false,barThickness:22}]},options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,animation:{duration:850,easing:"easeOutQuart"},onClick:(_event,elements)=>{if(elements[0])openSportDetail(elements[0].index);},plugins:{legend:{display:false},tooltip:{callbacks:{label:(context)=>`${context.dataset.label} : ${context.parsed.x.toLocaleString("fr-CH",{maximumFractionDigits:1})} ${unit}`}}},scales:{x:{beginAtZero:true,grid:{color:"rgba(20,20,20,.07)"},ticks:{color:"#858178",callback:(value)=>`${value} ${unit}`}},y:{grid:{display:false},ticks:{color:"#2f2f2f",font:{weight:"700"}}}}}});
+  progressionState.sportChart=new Chart(canvas,{type:"bar",data:{labels:groups.map((group)=>group.label),datasets:[{label:progressionState.mode==="distance"?"Distance":"Temps",data:groups.map((group)=>group[valueKey]),backgroundColor:groups.map((group)=>group.color),borderRadius:8,borderSkipped:false,barThickness:22}]},options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,animation:false,onClick:(_event,elements)=>{if(elements[0])openSportDetail(elements[0].index);},plugins:{legend:{display:false},tooltip:progressionChartTooltip({label:(context)=>`${context.dataset.label} : ${context.parsed.x.toLocaleString("fr-CH",{maximumFractionDigits:1})} ${unit}`})},scales:{x:{beginAtZero:true,grid:{color:"rgba(20,20,20,.07)"},ticks:{color:"#858178",callback:(value)=>`${value} ${unit}`}},y:{grid:{display:false},ticks:{color:"#2f2f2f",font:{weight:"700"}}}}}});
+  stageProgressionChart(progressionState.sportChart,"sportChartCard");
   renderAccessibleChartTable("sportChartTable",["Discipline",progressionState.mode==="distance"?"Distance":"Temps"],groups.map((group)=>[group.label,`${group[valueKey].toLocaleString("fr-CH",{maximumFractionDigits:1})} ${unit}`]),"sport");
   const total=groups.reduce((sum,group)=>sum+group[valueKey],0);
   const dominant=groups[0];
   const formattedTotal=total.toLocaleString("fr-CH",{maximumFractionDigits:1});
   if(summary)summary.innerHTML=progressionState.mode==="distance"?`<strong>${formattedTotal} km parcourus</strong><span> • ${groups.length} discipline${groups.length>1?"s":""} pratiquée${groups.length>1?"s":""}</span>`:`<strong>${formattedTotal} h d’activités</strong><span> • ${groups.length} discipline${groups.length>1?"s":""} pratiquée${groups.length>1?"s":""}</span>`;
   document.getElementById("sportInsight").textContent=dominant?`${dominant.label} représente ${Math.round(dominant[valueKey]/Math.max(total,.01)*100)} % ${progressionState.mode==="distance"?"de la distance":"du temps"} sur cette période.`:"";
-  requestAnimationFrame(()=>document.getElementById("sportChartCard")?.classList.add("is-visible"));
 }
 
 function intensityLabel(rpe) {
@@ -510,15 +539,15 @@ function renderWellnessChart() {
   progressionState.wellbeingDisplayDays=days;
   const availableCount=days.filter((day)=>day[definition.dataKey]!=null).length;
   setProgressionChartEmpty(canvas, availableCount === 0, "Aucune donnée ne correspond à cette période.", "Le bien-être apparaîtra après une saisie ou une source déclarée.");
-  if (availableCount === 0) { progressionState.wellnessChart?.destroy(); document.getElementById("wellnessInsight").textContent=""; renderAccessibleChartTable("wellnessChartTable",["Date",definition.label],[]); requestAnimationFrame(()=>document.getElementById("wellnessChartCard")?.classList.add("is-visible")); return; }
+  if (availableCount === 0) { progressionState.wellnessChart?.destroy(); document.getElementById("wellnessInsight").textContent=""; renderAccessibleChartTable("wellnessChartTable",["Date",definition.label],[]); return; }
   progressionState.wellnessChart?.destroy();
-  progressionState.wellnessChart=new Chart(canvas,{type:"line",data:{labels:days.map((day)=>progressionDateLabel(day.date,granularity)),datasets:[{label:definition.label,data:days.map((day)=>day[definition.dataKey]),borderColor:definition.color,backgroundColor:`${definition.color}18`,fill:true,tension:.35,pointRadius:days.length>45?0:2,pointHoverRadius:5,spanGaps:true,borderWidth:2.5}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:850,easing:"easeOutQuart"},interaction:{mode:"index",intersect:false},onClick:(_event,elements)=>{if(elements[0])openWellnessDay(elements[0].index);},plugins:{legend:{display:false},tooltip:{callbacks:{label:(context)=>`${definition.label} : ${wellnessChartValue(progressionState.wellnessMode,context.parsed.y)}`}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,maxRotation:0,color:"#858178"}},y:{...definition.scale,grid:{color:"rgba(20,20,20,.07)"},ticks:{color:"#858178",stepSize:definition.stepSize,callback:(value)=>wellnessAxisValue(progressionState.wellnessMode,value)}}}}});
+  progressionState.wellnessChart=new Chart(canvas,{type:"line",data:{labels:days.map((day)=>progressionDateLabel(day.date,granularity)),datasets:[{label:definition.label,data:days.map((day)=>day[definition.dataKey]),borderColor:definition.color,backgroundColor:`${definition.color}18`,fill:true,tension:.35,pointRadius:days.length>45?0:2,pointHoverRadius:6,pointHoverBorderWidth:3,spanGaps:true,borderWidth:2.5}]},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:"index",intersect:false},onClick:(_event,elements)=>{if(elements[0])openWellnessDay(elements[0].index);},plugins:{legend:{display:false},tooltip:progressionChartTooltip({label:(context)=>`${definition.label} : ${wellnessChartValue(progressionState.wellnessMode,context.parsed.y)}`})},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,maxRotation:0,color:"#858178"}},y:{...definition.scale,grid:{color:"rgba(20,20,20,.07)"},ticks:{color:"#858178",stepSize:definition.stepSize,callback:(value)=>wellnessAxisValue(progressionState.wellnessMode,value)}}}}});
+  stageProgressionChart(progressionState.wellnessChart,"wellnessChartCard");
   renderAccessibleChartTable("wellnessChartTable",["Date",definition.label],days.map((day)=>[progressionDateLabel(day.date,granularity),day[definition.dataKey]==null?"Non renseigné":wellnessChartValue(progressionState.wellnessMode,day[definition.dataKey])]),"wellness");
   if(availableCount<5){progressionState.wellnessChart.data.datasets[0].pointRadius=4;progressionState.wellnessChart.update("none");}
   const recent=[...days].reverse().find((day)=>day[definition.dataKey]!=null);
   const insight=document.getElementById("wellnessInsight");
   insight.textContent=recent?`${definition.label} : ${wellnessChartValue(progressionState.wellnessMode,recent[definition.dataKey])} lors de la dernière journée renseignée.`:"Aucune donnée disponible pour cet indicateur. MOMENTUM attend une saisie ou une source déclarée.";
-  requestAnimationFrame(()=>document.getElementById("wellnessChartCard")?.classList.add("is-visible"));
 }
 
 function wellnessValue(value,suffix=" / 100") { return value==null?"Non renseigné":`${Math.round(value)}${suffix}`; }
@@ -608,6 +637,9 @@ function bindProgression() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  if (window.Chart && window.MomentumMotion?.chartHaloPlugin) {
+    window.Chart.register(window.MomentumMotion.chartHaloPlugin);
+  }
   bindProgression();
   loadProgressionData();
   document.getElementById("logoutBtn")?.addEventListener("click", async () => {

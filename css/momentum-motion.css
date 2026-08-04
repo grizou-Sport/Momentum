@@ -1,0 +1,80 @@
+/* MOMENTUM — MOTION
+   Mouvement partagé, calme et accessible. */
+
+.motion-capable [data-motion-reveal]{
+  opacity:0;
+  transform:translate3d(0,20px,0);
+  transition:
+    opacity 450ms ease-out,
+    transform 450ms ease-out;
+  will-change:opacity,transform;
+}
+
+.motion-capable [data-motion-reveal].is-motion-visible{
+  opacity:1;
+  transform:translate3d(0,0,0);
+  will-change:auto;
+}
+
+.momentum-chart-tooltip{
+  --tooltip-x:0px;
+  --tooltip-y:0px;
+  position:absolute;
+  z-index:5;
+  top:0;
+  left:0;
+  min-width:120px;
+  max-width:240px;
+  padding:10px 12px;
+  border:1px solid rgba(24,27,25,.09);
+  border-radius:12px;
+  background:rgba(247,247,245,.96);
+  color:var(--ink);
+  box-shadow:0 12px 36px rgba(25,29,27,.12);
+  opacity:0;
+  transform:
+    translate3d(var(--tooltip-x),var(--tooltip-y),0)
+    translate(-50%,-100%)
+    translateY(8px);
+  transition:opacity 200ms ease-out,transform 200ms ease-out;
+  pointer-events:none;
+}
+
+.momentum-chart-tooltip.is-visible{
+  opacity:1;
+  transform:
+    translate3d(var(--tooltip-x),var(--tooltip-y),0)
+    translate(-50%,-100%)
+    translateY(0);
+}
+
+.momentum-chart-tooltip strong,
+.momentum-chart-tooltip span{
+  display:block;
+}
+
+.momentum-chart-tooltip strong{
+  margin-bottom:5px;
+  font-size:12px;
+}
+
+.momentum-chart-tooltip span{
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.45;
+}
+
+@media(prefers-reduced-motion:reduce){
+  .motion-capable [data-motion-reveal],
+  .motion-capable [data-motion-reveal].is-motion-visible{
+    opacity:1;
+    transform:none;
+    transition:none;
+    will-change:auto;
+  }
+
+  .momentum-chart-tooltip,
+  .momentum-chart-tooltip.is-visible{
+    transition:none;
+  }
+}
