@@ -37,7 +37,14 @@ test("desktop navigation reveals compact contextual cards and keeps the rail tra
   assert.match(navigationStyles, /background:rgba\(247,247,245,\.14\)/);
   assert.match(navigationStyles, /height:auto/);
   assert.match(navigationStyles, /visibility:hidden/);
-  assert.match(navigationStyles, /body\.has-momentum-navigation\{\s*padding-left:0/);
+  assert.match(navigationStyles, /@media\(min-width:901px\)[\s\S]*body\.has-momentum-navigation\{\s*padding-left:var\(--momentum-rail-width\)/);
+});
+
+test("tablet landscape content is offset from the fixed desktop rail", () => {
+  assert.match(navigationStyles, /--momentum-rail-width:72px/);
+  assert.match(navigationStyles, /@media\(min-width:901px\)/);
+  assert.match(navigationStyles, /padding-left:var\(--momentum-rail-width\)/);
+  assert.match(navigationStyles, /@media\(max-width:900px\)[\s\S]*padding-left:0/);
 });
 
 test("the avatar opens YOU directly and account actions are no longer in the rail", async () => {

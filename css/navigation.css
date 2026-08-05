@@ -7,6 +7,12 @@ body.has-momentum-navigation{
   padding-left:0;
 }
 
+@media(min-width:901px){
+  body.has-momentum-navigation{
+    padding-left:var(--momentum-rail-width);
+  }
+}
+
 .momentum-navigation{
   position:fixed;
   z-index:80;
