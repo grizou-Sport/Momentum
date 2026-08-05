@@ -22,11 +22,14 @@ test("HOME remains focused on the day and reserves Flow without analytics", () =
   assert.doesNotMatch(home, /chart\.js/);
 });
 
-test("Progression owns every existing analytical view and its dependencies", () => {
-  for (const id of ["fitnessChart", "sportChart", "wellnessChart"]) {
+test("Progression owns the four analytical views and their dependencies", () => {
+  for (const id of ["volumeChart", "fitnessChart", "sportChart", "wellnessChart"]) {
     assert.match(progression, new RegExp(`id="${id}"`));
   }
-  assert.doesNotMatch(progression, /id="volumeChart"/);
+  assert.match(progression, />Ton activité</);
+  assert.match(progression, />Ton équilibre</);
+  assert.ok(progression.indexOf('id="volumeChartCard"') < progression.indexOf('id="sportChartCard"'));
+  assert.ok(progression.indexOf('id="loadChartCard"') < progression.indexOf('id="wellnessChartCard"'));
   assert.match(progression, /Où ai-je passé mon temps/);
   assert.match(progression, /Comment évolue ma charge d’entraînement/);
   assert.match(progression, /Comment me suis-je senti durant cette période/);
@@ -49,6 +52,19 @@ test("Progression V1 separates distribution modes and wellbeing filter families"
   assert.match(progression, />Ressenti</);
   assert.match(progression, />Mesures physiologiques</);
   assert.doesNotMatch(progression, /data-wellness-mode="recovery"/);
+});
+
+test("Progression exposes the standard period shortcuts and temporal navigation", () => {
+  const shortcuts = ["last-7-days","current-week","last-4-weeks","current-month","custom"];
+  let previousIndex = -1;
+  shortcuts.forEach((shortcut) => {
+    const index = progression.indexOf(`data-period-preset="${shortcut}"`);
+    assert.ok(index > previousIndex, `${shortcut} doit suivre l’ordre standard`);
+    previousIndex = index;
+  });
+  assert.match(progression, /data-period-shift="-1"/);
+  assert.match(progression, /data-period-shift="1"/);
+  assert.match(progression, /data-period-range/);
 });
 
 test("Progression only queries completed activities and keeps the full history for load", () => {

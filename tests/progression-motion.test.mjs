@@ -3,8 +3,10 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import vm from "node:vm";
 
-const [page, progressionStyles, motionStyles, motionSource, progressionSource] = await Promise.all([
+const [home, page, heroStyles, progressionStyles, motionStyles, motionSource, progressionSource] = await Promise.all([
+  readFile(new URL("../index.html", import.meta.url), "utf8"),
   readFile(new URL("../progression.html", import.meta.url), "utf8"),
+  readFile(new URL("../css/momentum-hero.css", import.meta.url), "utf8"),
   readFile(new URL("../css/progression.css", import.meta.url), "utf8"),
   readFile(new URL("../css/momentum-motion.css", import.meta.url), "utf8"),
   readFile(new URL("../js/momentum-motion.js", import.meta.url), "utf8"),
@@ -37,11 +39,14 @@ test("Progression loads the dawn hero and the reusable motion component", () => 
   assert.ok((page.match(/data-motion-reveal/g) || []).length >= 6);
 });
 
-test("the Progression hero is full width while its content stays on the page grid", () => {
-  assert.match(page, /class="progression-hero-inner"/);
-  assert.match(progressionStyles, /\.progression-hero\{[\s\S]*?width:100%;min-height:76svh/);
-  assert.match(progressionStyles, /\.progression-hero-inner\{width:min\(var\(--page-width\),calc\(100% - var\(--page-gutter\) \* 2\)\)/);
-  assert.doesNotMatch(progressionStyles, /\.progression-hero,\.progression-dashboard/);
+test("HOME and Progression use the same Hero shell", () => {
+  assert.match(home, /class="hero momentum-hero"/);
+  assert.match(page, /class="progression-hero momentum-hero"/);
+  assert.match(home, /class="hero-content momentum-hero-content"/);
+  assert.match(page, /class="progression-hero-inner momentum-hero-content"/);
+  assert.match(heroStyles, /min-height:100svh/);
+  assert.match(heroStyles, /border-radius:0/);
+  assert.match(heroStyles, /@media\(max-width:760px\)[\s\S]*min-height:820px/);
 });
 
 test("motion timings stay calm and use only opacity and transforms", () => {
@@ -59,6 +64,7 @@ test("reveals and charts play once and respect reduced motion", () => {
   assert.match(motionSource, /prefers-reduced-motion: reduce/);
   assert.match(progressionSource, /animation:false/);
   assert.match(progressionSource, /stageProgressionChart\(progressionState\.loadChart/);
+  assert.match(progressionSource, /stageProgressionChart\(progressionState\.volumeChart/);
   assert.match(progressionSource, /stageProgressionChart\(progressionState\.sportChart/);
   assert.match(progressionSource, /stageProgressionChart\(progressionState\.wellnessChart/);
 });

@@ -28,8 +28,8 @@ test("legacy topbar styles are gone and settings live inside YOU", () => {
 test("Progression exposes accessible tables, definitions and persisted preferences", () => {
   const html = read("progression.html");
   const script = read("js/home-progression.js");
-  for (const id of ["sportChartTable","fitnessChartTable","wellnessChartTable"]) assert.match(html, new RegExp(`id="${id}"`));
-  assert.equal((html.match(/<canvas[^>]+role="img"/g) || []).length, 3);
+  for (const id of ["volumeChartTable","sportChartTable","fitnessChartTable","wellnessChartTable"]) assert.match(html, new RegExp(`id="${id}"`));
+  assert.equal((html.match(/<canvas[^>]+role="img"/g) || []).length, 4);
   assert.match(html, /Comprendre les indicateurs/);
   assert.match(html, /Charge aiguë/);
   assert.match(script, /momentum_progression_preferences_v1/);

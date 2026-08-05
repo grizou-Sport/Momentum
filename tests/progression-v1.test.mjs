@@ -19,9 +19,32 @@ function loadFunctions() {
     iso:(date) => date.toISOString().slice(0,10)
   };
   vm.createContext(context);
-  vm.runInContext(`${source}\n;globalThis.__api={progressionState,progressionGranularity,buildSportDistribution,buildLoadSeries,buildProgressionEvents};`,context);
+  vm.runInContext(`${source}\n;globalThis.__api={progressionState,progressionPeriodRange,progressionPeriodDateLabel,progressionGranularity,buildVolumeSeries,buildSportDistribution,buildLoadSeries,buildProgressionEvents};`,context);
   return context.__api;
 }
+
+test("standard periods distinguish rolling and civil ranges", () => {
+  const { progressionPeriodRange, progressionPeriodDateLabel } = loadFunctions();
+  const reference = new Date("2026-08-05T12:00:00");
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(progressionPeriodRange("last-7-days",null,null,0,reference))),
+    {start:"2026-07-30",end:"2026-08-05",label:"7 derniers jours"}
+  );
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(progressionPeriodRange("current-week",null,null,0,reference))),
+    {start:"2026-08-03",end:"2026-08-09",label:"Semaine"}
+  );
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(progressionPeriodRange("last-4-weeks",null,null,-1,reference))),
+    {start:"2026-06-11",end:"2026-07-08",label:"4 dernières semaines"}
+  );
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(progressionPeriodRange("current-month",null,null,1,reference))),
+    {start:"2026-09-01",end:"2026-09-30",label:"Mois"}
+  );
+  assert.equal(progressionPeriodDateLabel("2026-08-03","2026-08-09"),"3 – 9 août");
+  assert.equal(progressionPeriodDateLabel("2026-07-30","2026-08-05"),"30 juillet – 5 août");
+});
 
 test("temporal granularity changes from days to weeks to months", () => {
   const { progressionState, progressionGranularity } = loadFunctions();
@@ -32,6 +55,21 @@ test("temporal granularity changes from days to weeks to months", () => {
   assert.equal(progressionGranularity(),"week");
   progressionState.periodEnd="2027-01-31";
   assert.equal(progressionGranularity(),"month");
+});
+
+test("volume groups completed activity time across the selected period", () => {
+  const { progressionState, buildVolumeSeries } = loadFunctions();
+  progressionState.periodStart="2026-08-03";
+  progressionState.periodEnd="2026-08-09";
+  progressionState.activities=[
+    {status:"done",activity_date:"2026-08-03",duration_min:60,distance_km:10},
+    {status:"done",activity_date:"2026-08-03",duration_min:30,distance_km:5},
+    {status:"planned",activity_date:"2026-08-04",duration_min:120,distance_km:20}
+  ];
+  const series=buildVolumeSeries();
+  assert.equal(series.length,7);
+  assert.deepEqual(JSON.parse(JSON.stringify(series[0])),{date:"2026-08-03",hours:1.5,sessions:2,distance:15});
+  assert.equal(series[1].hours,0);
 });
 
 test("distance distribution excludes activities without distance and sorts descending", () => {

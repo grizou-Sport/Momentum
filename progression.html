@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/navigation.css" />
   <link rel="stylesheet" href="css/momentum-motion.css" />
+  <link rel="stylesheet" href="css/momentum-hero.css" />
   <link rel="stylesheet" href="css/progression.css" />
 </head>
 
@@ -16,11 +17,11 @@
   <div data-momentum-navigation></div>
 
   <main data-nav-theme="dark">
-    <header class="progression-hero" data-motion-parallax="0.24">
+    <header class="progression-hero momentum-hero" data-motion-parallax="0.24">
       <div class="progression-hero-media" data-motion-parallax-media aria-hidden="true">
         <img src="Assets/photography/dawn/dawn-002.jpg" alt="" fetchpriority="high" />
       </div>
-      <div class="progression-hero-inner">
+      <div class="progression-hero-inner momentum-hero-content">
         <div class="progression-hero-copy">
           <span class="section-kicker">Progression</span>
           <h1>Voir le chemin.<br><em>Comprendre l’élan.</em></h1>
@@ -44,16 +45,23 @@
           <h2 id="dashboardTitle">Ton évolution, dans le temps.</h2>
         </div>
 
-        <div class="period-selector" data-period-selector data-compatible-mode="horizon">
-          <label for="chartPeriod">Période</label>
-          <select id="chartPeriod" data-period-preset>
-            <option value="current-week" selected>Semaine en cours</option>
-            <option value="4-weeks">4 semaines</option>
-            <option value="12-weeks">12 semaines</option>
-            <option value="6-months">6 mois</option>
-            <option value="1-year">1 année</option>
-            <option value="custom">Période personnalisée</option>
-          </select>
+        <div class="period-selector" data-period-selector>
+          <span class="period-selector-label">Période</span>
+          <div class="period-shortcuts" role="group" aria-label="Raccourcis de période">
+            <button type="button" data-period-preset="last-7-days">7 derniers jours</button>
+            <button type="button" class="active" data-period-preset="current-week">Semaine</button>
+            <button type="button" data-period-preset="last-4-weeks">4 dernières semaines</button>
+            <button type="button" data-period-preset="current-month">Mois</button>
+            <button type="button" data-period-preset="custom">Personnalisé</button>
+          </div>
+          <div class="period-navigation" aria-live="polite">
+            <button class="period-arrow" type="button" data-period-shift="-1" aria-label="Période précédente">‹</button>
+            <div>
+              <strong data-period-title>Semaine</strong>
+              <span data-period-range></span>
+            </div>
+            <button class="period-arrow" type="button" data-period-shift="1" aria-label="Période suivante">›</button>
+          </div>
           <div class="period-custom" data-period-custom hidden>
             <label>Du <input type="date" data-period-start></label>
             <label>Au <input type="date" data-period-end></label>
@@ -65,38 +73,66 @@
 
       <div class="kpi-strip" id="kpiStrip" aria-label="Indicateurs clés" data-motion-reveal></div>
 
-      <div class="charts-grid">
-        <article class="chart-card progression-chart-card" id="sportChartCard" data-motion-reveal>
-          <div class="chart-index">01</div>
-          <div class="chart-heading"><div><span class="card-label" id="activityDistributionQuestion">Où ai-je passé mon temps ?</span><h3 id="sports">Répartition des activités</h3><p>Le temps ou la distance réellement consacrés à chaque discipline.</p></div><div class="chart-mode" aria-label="Mesure de la répartition"><button type="button" class="active" data-volume-mode="time">Temps</button><button type="button" data-volume-mode="distance">Distance</button></div></div>
-          <p class="chart-summary" id="activityDistributionSummary" aria-live="polite"></p>
-          <div class="sport-chart-wrap"><canvas id="sportChart" role="img" tabindex="0" aria-labelledby="sports" aria-describedby="activityDistributionSummary sportChartDescription"></canvas></div>
-          <p id="sportChartDescription" class="sr-only">Graphique comparant le temps ou la distance par discipline. Le tableau suivant reprend toutes les valeurs.</p>
-          <button class="chart-data-toggle" type="button" data-chart-table-toggle="sportChartTable" aria-expanded="false">Afficher les données</button>
-          <div id="sportChartTable" class="chart-data-table" hidden></div>
-          <p class="chart-insight" id="sportInsight"></p>
-        </article>
+      <div class="progression-groups">
+        <section class="progression-group" aria-labelledby="activityGroupTitle">
+          <header class="progression-group-heading" data-motion-reveal>
+            <span>01 · Ce que tu as construit</span>
+            <h2 id="activityGroupTitle">Ton activité</h2>
+            <p>Combien as-tu pratiqué, et à quoi as-tu consacré ce temps&nbsp;?</p>
+          </header>
+          <div class="chart-pair">
+            <article class="chart-card chart-card-main progression-chart-card" id="volumeChartCard" data-motion-reveal>
+              <div class="chart-index">01</div>
+              <div class="chart-heading"><div><span class="card-label">Combien ai-je pratiqué ?</span><h3 id="volume">Volume</h3><p>Le temps d’activité construit au fil de la période.</p></div></div>
+              <div class="chart-canvas-wrap"><canvas id="volumeChart" role="img" tabindex="0" aria-labelledby="volume" aria-describedby="volumeInsight volumeChartDescription"></canvas></div>
+              <p id="volumeChartDescription" class="sr-only">Évolution du temps d’activité sur la période. Le tableau suivant reprend toutes les valeurs.</p>
+              <button class="chart-data-toggle" type="button" data-chart-table-toggle="volumeChartTable" aria-expanded="false">Afficher les données</button>
+              <div id="volumeChartTable" class="chart-data-table" hidden></div>
+              <p class="chart-insight" id="volumeInsight"></p>
+            </article>
 
-        <article class="chart-card progression-chart-card" id="loadChartCard" data-motion-reveal>
-          <div class="chart-index">02</div>
-          <div class="chart-heading"><div><span class="card-label">Comment évolue ma charge d’entraînement ?</span><h3 id="charge">Charge &amp; Forme</h3><p>Charge chronique, fatigue récente et forme actuelle.</p></div><span class="model-phase" id="loadModelPhase">Estimation</span></div>
-          <div class="load-status" id="loadStatus"></div>
-          <div class="chart-canvas-wrap"><canvas id="fitnessChart" role="img" tabindex="0" aria-labelledby="charge" aria-describedby="loadInsight fitnessChartDescription"></canvas></div>
-          <p id="fitnessChartDescription" class="sr-only">Évolution de la charge chronique, de la fatigue récente et de la forme. Le tableau permet d’ouvrir chaque période au clavier.</p>
-          <button class="chart-data-toggle" type="button" data-chart-table-toggle="fitnessChartTable" aria-expanded="false">Afficher les données</button>
-          <div id="fitnessChartTable" class="chart-data-table" hidden></div>
-          <p class="chart-insight" id="loadInsight"></p>
-        </article>
+            <article class="chart-card chart-card-side progression-chart-card" id="sportChartCard" data-motion-reveal>
+              <div class="chart-index">02</div>
+              <div class="chart-heading"><div><span class="card-label" id="activityDistributionQuestion">Où ai-je passé mon temps ?</span><h3 id="sports">Répartition sportive</h3><p>Le temps ou la distance consacrés à chaque discipline.</p></div><div class="chart-mode" aria-label="Mesure de la répartition"><button type="button" class="active" data-volume-mode="time">Temps</button><button type="button" data-volume-mode="distance">Distance</button></div></div>
+              <p class="chart-summary" id="activityDistributionSummary" aria-live="polite"></p>
+              <div class="sport-chart-wrap"><canvas id="sportChart" role="img" tabindex="0" aria-labelledby="sports" aria-describedby="activityDistributionSummary sportChartDescription"></canvas></div>
+              <p id="sportChartDescription" class="sr-only">Graphique comparant le temps ou la distance par discipline. Le tableau suivant reprend toutes les valeurs.</p>
+              <button class="chart-data-toggle" type="button" data-chart-table-toggle="sportChartTable" aria-expanded="false">Afficher les données</button>
+              <div id="sportChartTable" class="chart-data-table" hidden></div>
+              <p class="chart-insight" id="sportInsight"></p>
+            </article>
+          </div>
+        </section>
 
-        <article class="chart-card progression-chart-card" id="wellnessChartCard" data-motion-reveal>
-          <div class="chart-index">03</div>
-          <div class="chart-heading"><div><span class="card-label">Comment me suis-je senti durant cette période ?</span><h3 id="bien-etre">Bien-être</h3><p>Ressenti et mesures physiologiques au fil du temps.</p></div><div class="wellness-filters"><div><span>Ressenti</span><div class="wellness-mode"><button type="button" class="active" data-wellness-mode="summary">Bien-être</button><button type="button" data-wellness-mode="motivation">Motivation</button><button type="button" data-wellness-mode="sleep">Sommeil</button></div></div><div><span>Mesures physiologiques</span><div class="wellness-mode"><button type="button" data-wellness-mode="restingHr">FC au repos</button><button type="button" data-wellness-mode="hrv">VFC</button></div></div></div></div>
-          <div class="chart-canvas-wrap"><canvas id="wellnessChart" role="img" tabindex="0" aria-labelledby="bien-etre" aria-describedby="wellnessInsight wellnessChartDescription"></canvas></div>
-          <p id="wellnessChartDescription" class="sr-only">Évolution de l’indicateur de bien-être sélectionné. Le tableau permet d’ouvrir chaque journée au clavier.</p>
-          <button class="chart-data-toggle" type="button" data-chart-table-toggle="wellnessChartTable" aria-expanded="false">Afficher les données</button>
-          <div id="wellnessChartTable" class="chart-data-table" hidden></div>
-          <p class="chart-insight" id="wellnessInsight"></p>
-        </article>
+        <section class="progression-group" aria-labelledby="balanceGroupTitle">
+          <header class="progression-group-heading" data-motion-reveal>
+            <span>02 · Ce que ton corps raconte</span>
+            <h2 id="balanceGroupTitle">Ton équilibre</h2>
+            <p>Comment ton entraînement influence-t-il ton état de forme&nbsp;?</p>
+          </header>
+          <div class="chart-pair">
+            <article class="chart-card chart-card-main progression-chart-card" id="loadChartCard" data-motion-reveal>
+              <div class="chart-index">03</div>
+              <div class="chart-heading"><div><span class="card-label">Comment évolue ma charge d’entraînement ?</span><h3 id="charge">Charge &amp; Forme</h3><p>Charge chronique, fatigue récente et forme actuelle.</p></div><span class="model-phase" id="loadModelPhase">Estimation</span></div>
+              <div class="load-status" id="loadStatus"></div>
+              <div class="chart-canvas-wrap"><canvas id="fitnessChart" role="img" tabindex="0" aria-labelledby="charge" aria-describedby="loadInsight fitnessChartDescription"></canvas></div>
+              <p id="fitnessChartDescription" class="sr-only">Évolution de la charge chronique, de la fatigue récente et de la forme. Le tableau permet d’ouvrir chaque période au clavier.</p>
+              <button class="chart-data-toggle" type="button" data-chart-table-toggle="fitnessChartTable" aria-expanded="false">Afficher les données</button>
+              <div id="fitnessChartTable" class="chart-data-table" hidden></div>
+              <p class="chart-insight" id="loadInsight"></p>
+            </article>
+
+            <article class="chart-card chart-card-side progression-chart-card" id="wellnessChartCard" data-motion-reveal>
+              <div class="chart-index">04</div>
+              <div class="chart-heading"><div><span class="card-label">Comment me suis-je senti durant cette période ?</span><h3 id="bien-etre">Bien-être</h3><p>Ressenti et mesures physiologiques au fil du temps.</p></div><div class="wellness-filters"><div><span>Ressenti</span><div class="wellness-mode"><button type="button" class="active" data-wellness-mode="summary">Bien-être</button><button type="button" data-wellness-mode="motivation">Motivation</button><button type="button" data-wellness-mode="sleep">Sommeil</button></div></div><div><span>Mesures physiologiques</span><div class="wellness-mode"><button type="button" data-wellness-mode="restingHr">FC au repos</button><button type="button" data-wellness-mode="hrv">VFC</button></div></div></div></div>
+              <div class="chart-canvas-wrap"><canvas id="wellnessChart" role="img" tabindex="0" aria-labelledby="bien-etre" aria-describedby="wellnessInsight wellnessChartDescription"></canvas></div>
+              <p id="wellnessChartDescription" class="sr-only">Évolution de l’indicateur de bien-être sélectionné. Le tableau permet d’ouvrir chaque journée au clavier.</p>
+              <button class="chart-data-toggle" type="button" data-chart-table-toggle="wellnessChartTable" aria-expanded="false">Afficher les données</button>
+              <div id="wellnessChartTable" class="chart-data-table" hidden></div>
+              <p class="chart-insight" id="wellnessInsight"></p>
+            </article>
+          </div>
+        </section>
       </div>
       <details class="metric-definitions" data-motion-reveal>
         <summary>Comprendre les indicateurs</summary>

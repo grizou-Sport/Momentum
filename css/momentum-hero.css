@@ -1,0 +1,28 @@
+/* MOMENTUM — shared full-screen Hero shell */
+
+.momentum-hero{
+  position:relative;
+  width:100%;
+  min-height:100svh;
+  margin:0;
+  overflow:hidden;
+  border-radius:0;
+}
+
+.momentum-hero-content{
+  position:relative;
+  z-index:2;
+  width:min(var(--page-width),calc(100% - var(--page-gutter) * 2));
+  margin:0 auto;
+  padding:190px 36px 118px;
+}
+
+@media(max-width:760px){
+  .momentum-hero{min-height:820px}
+  .momentum-hero-content{padding:160px 8px 104px}
+}
+
+@media(max-width:480px){
+  .momentum-hero{min-height:760px}
+  .momentum-hero-content{width:calc(100% - 28px);padding-left:0;padding-right:0}
+}
