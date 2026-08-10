@@ -11,6 +11,9 @@ const home = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const together = await readFile(new URL("../together.html", import.meta.url), "utf8");
 const homeActivities = await readFile(new URL("../js/home-activities.js", import.meta.url), "utf8");
 const togetherClient = await readFile(new URL("../js/together.js", import.meta.url), "utf8");
+const you = await readFile(new URL("../you.html", import.meta.url), "utf8");
+const youClient = await readFile(new URL("../js/you.js", import.meta.url), "utf8");
+const youPassport = await readFile(new URL("../js/you-passport.js", import.meta.url), "utf8");
 
 test("Geoapify est appelé côté serveur et normalisé dans le modèle MOMENTUM", () => {
   const normalized = api.normalizeGeoapifyResult({
@@ -88,6 +91,8 @@ test("LocationPicker privilégie MOMENTUM, attend 3 caractères et propose la cr
   assert.match(picker, /Lieu public MOMENTUM/);
   assert.match(picker, /value="private" checked/);
   assert.match(picker, /latitude:[\s\S]*null/);
+  assert.match(picker, /Corriger l’adresse/);
+  assert.match(picker, /country_code: this\._manualCoordinates\?\.country_code/);
 });
 
 test("le composant universel est branché aux activités, Moments et Clubs", () => {
@@ -100,4 +105,15 @@ test("le composant universel est branché aux activités, Moments et Clubs", () 
   assert.match(togetherClient, /MomentumLocations\.resolveForSave/);
   assert.match(homeActivities, /location_id:/);
   assert.match(togetherClient, /default_location_id:/);
+});
+
+test("YOU mémorise un lieu de référence privé pour favoriser les recherches proches", () => {
+  assert.match(you, /css\/location-picker\.css/);
+  assert.match(you, /js\/momentum-location-picker\.js/);
+  assert.match(youPassport, /id="profileLocationPicker" mode="reference"/);
+  assert.match(youPassport, /from\("user_locations"\)[\s\S]*\.upsert/);
+  assert.match(youPassport, /latitude: referenceLocation\?\.latitude/);
+  assert.match(youPassport, /MomentumLocations\?\.setUserProximity/);
+  assert.match(youClient, /select\("city,country,latitude,longitude,timezone"\)/);
+  assert.match(picker, /setUserProximity/);
 });

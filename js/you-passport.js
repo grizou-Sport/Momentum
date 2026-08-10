@@ -41,12 +41,11 @@ function renderAbout() {
         <input name="display_name" value="${YOU.passport?.display_name || ""}" />
       </label>
 
-      <label>Ville
-        <input name="city" value="${YOU.passport?.city || ""}" />
-      </label>
-
-      <label>Pays
-        <input name="country" value="${YOU.passport?.country || ""}" />
+      <label class="full">Lieu de référence
+        <momentum-location-picker id="profileLocationPicker" mode="reference"
+          name="profile_location_name" location-id-name="profile_location_id"
+          placeholder="Rechercher ta ville ou ton adresse…"></momentum-location-picker>
+        <span class="you-location-help">Privé. Il sert uniquement à privilégier les résultats proches, sans bloquer les recherches internationales.</span>
       </label>
 
       <label>Date de naissance
@@ -97,6 +96,21 @@ function renderAbout() {
   `;
 
   const passportForm = document.getElementById("passportForm");
+  const profileLocationPicker = document.getElementById("profileLocationPicker");
+  const savedCity = YOU.userLocation?.city || YOU.passport?.city || "";
+  const savedCountry = YOU.userLocation?.country || YOU.passport?.country || "";
+  if (savedCity || savedCountry) {
+    profileLocationPicker?.setLocation({
+      name: savedCity || savedCountry,
+      city: savedCity || null,
+      country: savedCountry || null,
+      latitude: YOU.userLocation?.latitude ?? null,
+      longitude: YOU.userLocation?.longitude ?? null,
+      source: "manual",
+      visibility: "private",
+      structured: true
+    });
+  }
   YOU.pendingAvatarBlob = null;
   passportForm.addEventListener("submit", savePassport);
   passportForm.elements.avatar_file.addEventListener("change", prepareAvatarCrop);
@@ -168,6 +182,13 @@ async function savePassport(event) {
   message.textContent = "Sauvegarde…";
 
   try {
+    const referenceLocation = document.getElementById("profileLocationPicker")?.getLocation() || null;
+    if (referenceLocation && !referenceLocation.structured) {
+      message.textContent = "Sélectionne une proposition ou utilise « Corriger l’adresse » pour définir ton lieu de référence.";
+      return;
+    }
+    const referenceCity = referenceLocation?.city || "";
+    const referenceCountry = referenceLocation?.country || "";
     const avatarFile = YOU.pendingAvatarBlob;
 
     const avatarUrl =
@@ -178,8 +199,8 @@ async function savePassport(event) {
     const updates = {
       display_name: form.get("display_name")?.trim(),
       avatar_url: avatarUrl,
-      city: form.get("city")?.trim(),
-      country: form.get("country")?.trim(),
+      city: referenceCity,
+      country: referenceCountry,
       quote: form.get("quote")?.trim(),
       birth_date: form.get("birth_date") || null,
       birth_year: form.get("birth_date") ? Number(String(form.get("birth_date")).slice(0, 4)) : null,
@@ -197,16 +218,35 @@ async function savePassport(event) {
       updated_at: new Date().toISOString(),
     };
 
-    const { data, error } = await window.momentumDB
-      .from("passports")
-      .update(updates)
-      .eq("user_id", YOU.currentUser.id)
-      .select()
-      .single();
+    const now = new Date().toISOString();
+    const [{ data, error }, { data: userLocation, error: locationError }] = await Promise.all([
+      window.momentumDB
+        .from("passports")
+        .update(updates)
+        .eq("user_id", YOU.currentUser.id)
+        .select()
+        .single(),
+      window.momentumDB
+        .from("user_locations")
+        .upsert({
+          user_id: YOU.currentUser.id,
+          city: referenceCity || null,
+          country: referenceCountry || null,
+          latitude: referenceLocation?.latitude ?? null,
+          longitude: referenceLocation?.longitude ?? null,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || null,
+          updated_at: now
+        }, { onConflict: "user_id" })
+        .select()
+        .single()
+    ]);
 
     if (error) throw error;
+    if (locationError) throw locationError;
 
     YOU.passport = data;
+    YOU.userLocation = userLocation;
+    window.MomentumLocations?.setUserProximity(userLocation);
 
     renderPassportCard();
     renderMenuPreviews();

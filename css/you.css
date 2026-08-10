@@ -440,6 +440,8 @@ button.you-small-card{
   resize:vertical;
 }
 
+.you-location-help{display:block;color:var(--you-muted);font-size:12px;font-weight:600;line-height:1.45}
+
 .you-avatar-field{display:flex;align-items:center;gap:18px;padding:18px;border:1px solid var(--you-line);border-radius:20px;background:var(--you-card)}
 .you-avatar-field > label{flex:1}
 .you-avatar-help{display:block;margin:6px 0 12px;color:var(--you-muted);font-size:12px;font-weight:600;line-height:1.4}

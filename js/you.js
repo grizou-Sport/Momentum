@@ -13,6 +13,7 @@ const YOU = {
   userEquipment: [],
   wellbeingProfile: null,
   userSettings: null,
+  userLocation: null,
   pendingAvatarBlob: null,
   loadErrors: {},
   loading: true,
@@ -114,6 +115,7 @@ async function loadYou() {
     userEquipmentResult,
     wellbeingResult,
     settingsResult,
+    locationResult,
   ] = await Promise.all([
     window.momentumDB
       .from("passports")
@@ -155,10 +157,16 @@ async function loadYou() {
       .select("*")
       .eq("user_id", YOU.currentUser.id)
       .maybeSingle(),
+
+    window.momentumDB
+      .from("user_locations")
+      .select("city,country,latitude,longitude,timezone")
+      .eq("user_id", YOU.currentUser.id)
+      .maybeSingle(),
   ]);
 
   YOU.loadErrors = {
-    about: passportResult.error || null,
+    about: passportResult.error || locationResult.error || null,
     sports: userSportsResult.error || activitiesResult.error || null,
     equipment: equipmentCategoriesResult.error || userEquipmentResult.error || null,
     wellbeing: wellbeingResult.error || null,
@@ -176,6 +184,7 @@ async function loadYou() {
   if (!userEquipmentResult.error) YOU.userEquipment = userEquipmentResult.data || [];
   if (!wellbeingResult.error) YOU.wellbeingProfile = wellbeingResult.data || null;
   if (!settingsResult.error) YOU.userSettings = settingsResult.data || null;
+  if (!locationResult.error) YOU.userLocation = locationResult.data || null;
   YOU.loading = false;
 
   renderPassportCard();

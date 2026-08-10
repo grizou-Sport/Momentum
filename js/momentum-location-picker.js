@@ -95,6 +95,14 @@
     return sharedProximityPromise;
   }
 
+  function setUserProximity(location) {
+    const latitude = numberOrNull(location?.latitude);
+    const longitude = numberOrNull(location?.longitude);
+    sharedProximityPromise = Promise.resolve(
+      latitude === null || longitude === null ? null : { latitude, longitude }
+    );
+  }
+
   async function providerSearch(text, explicitProximity = null) {
     const parameters = new URLSearchParams({ text });
     const proximity = explicitProximity || await loadUserProximity();
@@ -166,6 +174,7 @@
       const placeholder = this.getAttribute("placeholder") || "Rechercher un lieu, une adresse ou une ville…";
       const required = this.hasAttribute("required") ? "required" : "";
       const unique = `location-visibility-${crypto.randomUUID()}`;
+      const referenceMode = this.getAttribute("mode") === "reference";
 
       this.innerHTML = `
         <div class="location-picker-shell">
@@ -176,10 +185,13 @@
           <input class="location-picker-id" type="hidden" name="${escapeHTML(idName)}" />
           <button class="location-picker-clear" type="button" aria-label="Effacer le lieu" hidden>×</button>
           <div class="location-picker-results" role="listbox" hidden></div>
-          <p class="location-picker-status" aria-live="polite"></p>
+          <div class="location-picker-meta">
+            <p class="location-picker-status" aria-live="polite"></p>
+            <button class="location-picker-edit" type="button" data-location-action="edit-selection" hidden>Corriger l’adresse</button>
+          </div>
           <section class="location-picker-manual" hidden aria-label="Ajouter un nouveau lieu">
             <div class="location-picker-manual-head">
-              <div><span>Nouveau lieu</span><strong>Créer un lieu MOMENTUM</strong></div>
+              <div><span>${referenceMode ? "Profil" : "Nouveau lieu"}</span><strong>${referenceMode ? "Définir mon lieu de référence" : "Créer un lieu MOMENTUM"}</strong></div>
               <button type="button" data-location-action="close-manual" aria-label="Fermer">×</button>
             </div>
             <label>Nom du lieu<input data-location-manual="name" maxlength="120" placeholder="Padel House Studen" /></label>
@@ -192,7 +204,7 @@
               <label>Ville<input data-location-manual="city" autocomplete="address-level2" /></label>
             </div>
             <label>Pays<input data-location-manual="country" autocomplete="country-name" /></label>
-            <fieldset>
+            <fieldset ${referenceMode ? "hidden" : ""}>
               <legend>Visibilité</legend>
               <label><input type="radio" name="${unique}" value="private" checked /> <span><strong>Lieu personnel</strong><small>Visible uniquement par vous</small></span></label>
               <label><input type="radio" name="${unique}" value="public" /> <span><strong>Lieu public MOMENTUM</strong><small>Établissement ou lieu accessible publiquement</small></span></label>
@@ -211,12 +223,14 @@
       this._clearButton = this.querySelector(".location-picker-clear");
       this._results = this.querySelector(".location-picker-results");
       this._status = this.querySelector(".location-picker-status");
+      this._editButton = this.querySelector(".location-picker-edit");
       this._manual = this.querySelector(".location-picker-manual");
     }
 
     _bind() {
       this._input.addEventListener("input", () => {
         if (clean(this._input.value) !== this._selection?.name) this._selection = null;
+        this._editButton.hidden = !this._selection;
         this._syncHiddenInputs();
         clearTimeout(this._searchTimer);
         const text = clean(this._input.value);
@@ -234,6 +248,7 @@
       });
 
       this._clearButton.addEventListener("click", () => this.clear());
+      this._editButton.addEventListener("click", () => this._openManual(this._selection));
 
       this._results.addEventListener("click", (event) => {
         const resultButton = event.target.closest("[data-location-result]");
@@ -267,6 +282,12 @@
           return;
         }
         this._manualAddressTimer = setTimeout(() => this._searchManualAddress(text), SEARCH_DELAY);
+      });
+
+      this._manual.querySelectorAll('[data-location-manual="postal_code"], [data-location-manual="city"], [data-location-manual="country"]').forEach((input) => {
+        input.addEventListener("input", () => {
+          this._manualCoordinates = null;
+        });
       });
 
       const form = this.closest("form");
@@ -342,10 +363,25 @@
       this._input.setAttribute("aria-expanded", "false");
     }
 
-    _openManual() {
+    _openManual(location = null) {
       this._closeResults();
       this._manual.hidden = false;
-      this._manual.querySelector('[data-location-manual="name"]').value = clean(this._input.value);
+      const selected = location ? normalizeLocation(location) : null;
+      this._manual.querySelector('[data-location-manual="name"]').value = selected?.name || clean(this._input.value);
+      ["address", "postal_code", "city", "country"].forEach((field) => {
+        this._manual.querySelector(`[data-location-manual="${field}"]`).value = selected?.[field] || "";
+      });
+      this._manualCoordinates = selected && selected.latitude !== null && selected.longitude !== null
+        ? {
+            latitude: selected.latitude,
+            longitude: selected.longitude,
+            provider_place_id: selected.provider_place_id,
+            country_code: selected.country_code
+          }
+        : null;
+      const visibility = this.getAttribute("mode") === "reference" ? "private" : selected?.visibility || "private";
+      const visibilityInput = this._manual.querySelector(`input[type="radio"][value="${visibility}"]`);
+      if (visibilityInput) visibilityInput.checked = true;
       this._manual.querySelector('[data-location-manual="name"]').focus();
     }
 
@@ -378,7 +414,8 @@
       this._manualCoordinates = {
         latitude: location.latitude,
         longitude: location.longitude,
-        provider_place_id: location.provider_place_id
+        provider_place_id: location.provider_place_id,
+        country_code: location.country_code
       };
       this._manual.querySelector(".location-picker-address-results").hidden = true;
     }
@@ -394,14 +431,16 @@
         error.textContent = "Ajoute un nom et au moins une adresse ou une ville.";
         return;
       }
-      const visibility = this._manual.querySelector('input[type="radio"]:checked')?.value || "private";
+      const visibility = this.getAttribute("mode") === "reference"
+        ? "private"
+        : this._manual.querySelector('input[type="radio"]:checked')?.value || "private";
       this.setLocation({
         name,
         address: address || null,
         postal_code: read("postal_code") || null,
         city: city || null,
         country: country || null,
-        country_code: null,
+        country_code: this._manualCoordinates?.country_code ?? null,
         latitude: this._manualCoordinates?.latitude ?? null,
         longitude: this._manualCoordinates?.longitude ?? null,
         provider_place_id: this._manualCoordinates?.provider_place_id ?? null,
@@ -426,6 +465,7 @@
       this._syncHiddenInputs();
       this._closeResults();
       this._status.textContent = locationSubtitle(normalized);
+      this._editButton.hidden = !normalized.structured;
       this.dispatchEvent(new CustomEvent("locationchange", {
         bubbles: true,
         detail: { location: this.getLocation() }
@@ -442,6 +482,7 @@
       this._selection = null;
       if (this._input) this._input.value = "";
       if (this._status) this._status.textContent = "";
+      if (this._editButton) this._editButton.hidden = true;
       if (this._manual) this._manual.hidden = true;
       this._syncHiddenInputs();
       this._closeResults();
@@ -526,6 +567,7 @@
     sameLocation,
     providerSearch,
     momentumSearch,
+    setUserProximity,
     resolveForSave,
     rollbackCreated
   };

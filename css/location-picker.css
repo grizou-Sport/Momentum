@@ -5,6 +5,9 @@ momentum-location-picker{display:block;position:relative;width:100%;text-align:l
 .location-picker-input{width:100%;min-height:48px;padding-right:44px!important}
 .location-picker-clear{position:absolute;z-index:3;top:7px;right:8px;width:34px;height:34px;border:0;border-radius:50%;background:#ece9e2;color:#555951;font-size:19px;line-height:1;cursor:pointer}
 .location-picker-status{min-height:0;margin:6px 2px 0!important;color:#7c7a73!important;font-size:11px!important;font-weight:600!important;line-height:1.35;text-transform:none!important;letter-spacing:0!important}
+.location-picker-meta{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.location-picker-edit{flex:0 0 auto;padding:3px 2px;border:0;background:transparent;color:#1d4b38;font-size:11px;font-weight:800;cursor:pointer}
+.location-picker-edit:hover,.location-picker-edit:focus-visible{text-decoration:underline}
 .location-picker-results{position:absolute;z-index:30;top:calc(100% + 8px);left:0;right:0;max-height:330px;overflow:auto;padding:8px;border:1px solid #d6d1c8;border-radius:18px;background:#fbfaf7;box-shadow:0 20px 50px rgba(24,29,25,.18)}
 .location-picker-results section{display:grid;gap:3px;padding:4px 0 8px}
 .location-picker-results section>span{padding:5px 9px;color:#8a877f;font-size:9px;font-weight:900;letter-spacing:.13em;text-transform:uppercase}
@@ -23,6 +26,7 @@ momentum-location-picker{display:block;position:relative;width:100%;text-align:l
 .location-picker-manual input:not([type="radio"]){width:100%;min-height:44px;padding:11px 12px!important;border:1px solid #d6d1c8!important;border-radius:13px!important;background:#fff!important;color:#171b18!important;font-size:13px!important;font-weight:600!important;text-transform:none!important;letter-spacing:0!important}
 .location-picker-manual-grid{display:grid;grid-template-columns:.7fr 1.3fr;gap:10px}
 .location-picker-manual fieldset{display:grid;gap:7px;margin:0;padding:12px;border:1px solid #d6d1c8;border-radius:15px;background:#fff}
+.location-picker-manual fieldset[hidden]{display:none}
 .location-picker-manual legend{padding:0 5px;color:#696860;font-size:10px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}
 .location-picker-manual fieldset label{display:flex!important;align-items:flex-start;gap:9px;padding:5px;cursor:pointer}
 .location-picker-manual fieldset input{width:auto!important;margin-top:3px}.location-picker-manual fieldset label>span{display:grid;gap:2px}.location-picker-manual fieldset strong{font-size:12px;text-transform:none;letter-spacing:0}.location-picker-manual fieldset small{color:#858178;font-size:10px;font-weight:500;text-transform:none;letter-spacing:0}
