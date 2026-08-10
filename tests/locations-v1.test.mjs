@@ -79,6 +79,7 @@ test("LocationPicker privilégie MOMENTUM, attend 3 caractères et propose la cr
   assert.match(picker, /const MINIMUM_QUERY_LENGTH = 3/);
   assert.match(picker, /const SEARCH_DELAY = 350/);
   assert.match(picker, /attempt < 2/);
+  assert.match(picker, /if \(proximity && proximity\.latitude !== null && proximity\.longitude !== null\)/);
   assert.match(picker, /Mes lieux/);
   assert.match(picker, /Lieux MOMENTUM/);
   assert.match(picker, /Résultats/);

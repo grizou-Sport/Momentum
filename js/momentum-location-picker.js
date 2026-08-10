@@ -98,7 +98,7 @@
   async function providerSearch(text, explicitProximity = null) {
     const parameters = new URLSearchParams({ text });
     const proximity = explicitProximity || await loadUserProximity();
-    if (proximity?.latitude !== null && proximity?.longitude !== null) {
+    if (proximity && proximity.latitude !== null && proximity.longitude !== null) {
       parameters.set("latitude", String(proximity.latitude));
       parameters.set("longitude", String(proximity.longitude));
     }
