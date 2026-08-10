@@ -5,7 +5,7 @@ import test from "node:test";
 
 const require = createRequire(import.meta.url);
 const api = require("../api/locations.js");
-const migration = await readFile(new URL("../supabase/migrations/20260810000100_locations_v1.sql", import.meta.url), "utf8");
+const migration = await readFile(new URL("../supabase/migrations/20260810173058_locations_v1.sql", import.meta.url), "utf8");
 const picker = await readFile(new URL("../js/momentum-location-picker.js", import.meta.url), "utf8");
 const home = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const together = await readFile(new URL("../together.html", import.meta.url), "utf8");
@@ -59,6 +59,7 @@ test("le référentiel commun protège les lieux privés par RLS", () => {
 test("les lieux publics sont dédupliqués et les objets conservent le texte historique", () => {
   assert.match(migration, /locations_public_identity_idx/);
   assert.match(migration, /locations_public_provider_place_idx/);
+  assert.match(migration, /locations_created_by_idx/);
   assert.match(migration, /on public\.locations\(provider_place_id\)/);
   assert.match(picker, /\.eq\("provider_place_id", location\.provider_place_id\)/);
   for (const relation of [

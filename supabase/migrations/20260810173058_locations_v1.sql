@@ -34,6 +34,9 @@ create index if not exists locations_public_search_idx
   on public.locations(lower(name), lower(city), lower(country_code))
   where visibility = 'public';
 
+create index if not exists locations_created_by_idx
+  on public.locations(created_by);
+
 create unique index if not exists locations_public_provider_place_idx
   on public.locations(provider_place_id)
   where visibility = 'public' and provider_place_id is not null;
