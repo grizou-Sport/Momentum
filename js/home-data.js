@@ -19,10 +19,20 @@ const ACTIVITY_HOME_FIT_FIELDS = [
   "device_manufacturer", "device_model"
 ].join(",");
 
-const ACTIVITY_HOME_FIELDS =
+const ACTIVITY_HOME_STRUCTURED_LOCATION_FIELDS = "location_id";
+
+const ACTIVITY_HOME_FIT_COMPAT_FIELDS =
   `${ACTIVITY_HOME_LEGACY_FIELDS},${ACTIVITY_HOME_FIT_FIELDS}`;
 
+const ACTIVITY_HOME_FIELDS =
+  `${ACTIVITY_HOME_FIT_COMPAT_FIELDS},${ACTIVITY_HOME_STRUCTURED_LOCATION_FIELDS}`;
+
 let preferredActivityHomeFields = ACTIVITY_HOME_FIELDS;
+const MOMENT_HOME_LEGACY_FIELDS =
+  "id,title,description,moment_type,status,start_at,end_at,location_name,club_id,created_at";
+const MOMENT_HOME_FIELDS =
+  `id,title,description,moment_type,status,start_at,end_at,location_id,location_name,club_id,created_at`;
+let preferredMomentHomeFields = MOMENT_HOME_FIELDS;
 
 function isUnavailableFitFieldError(error) {
   if (!error) return false;
@@ -37,12 +47,30 @@ function isUnavailableFitFieldError(error) {
 }
 
 async function queryActivitiesWithFieldFallback(queryFactory) {
-  const result = await queryFactory(preferredActivityHomeFields);
+  let result = await queryFactory(preferredActivityHomeFields);
 
   if (
     preferredActivityHomeFields !== ACTIVITY_HOME_LEGACY_FIELDS &&
     isUnavailableFitFieldError(result.error)
   ) {
+    const description = [result.error?.message, result.error?.details, result.error?.hint]
+      .filter(Boolean)
+      .join(" ");
+
+    if (
+      preferredActivityHomeFields === ACTIVITY_HOME_FIELDS &&
+      /location_id/i.test(description)
+    ) {
+      console.warn(
+        "HOME : lieux structurés indisponibles, utilisation du schéma FIT compatible.",
+        result.error
+      );
+      preferredActivityHomeFields = ACTIVITY_HOME_FIT_COMPAT_FIELDS;
+      result = await queryFactory(preferredActivityHomeFields);
+    }
+
+    if (!result.error) return result;
+
     console.warn(
       "HOME : colonnes FIT indisponibles, utilisation du schéma historique.",
       result.error
@@ -51,6 +79,18 @@ async function queryActivitiesWithFieldFallback(queryFactory) {
     return queryFactory(ACTIVITY_HOME_LEGACY_FIELDS);
   }
 
+  return result;
+}
+
+async function queryMomentsWithLocationFallback(queryFactory) {
+  const result = await queryFactory(preferredMomentHomeFields);
+  if (
+    preferredMomentHomeFields === MOMENT_HOME_FIELDS &&
+    isUnavailableFitFieldError(result.error)
+  ) {
+    preferredMomentHomeFields = MOMENT_HOME_LEGACY_FIELDS;
+    return queryFactory(preferredMomentHomeFields);
+  }
   return result;
 }
 
@@ -95,6 +135,7 @@ function mapActivityRow(row) {
     rpe: row.rpe,
     gear: row.gear || "",
     comment: row.notes || "",
+    locationId: row.location_id || null,
     locationName: row.location_name || "",
     placeName: row.location_name || "",
     routeSummary: row.route_summary || null,
@@ -130,6 +171,7 @@ function mapSharedMomentRow(row, today = iso(new Date())) {
     momentType: row.moment_type || "OTHER",
     startAt: row.start_at,
     endAt: row.end_at || null,
+    locationId: row.location_id || null,
     locationName: row.location_name || "",
     placeName: row.location_name || "",
     comment: row.description || "",
@@ -191,16 +233,14 @@ async function loadActivitiesForHome(
       .lte("activity_date", iso(rangeEnd))
       .order("activity_date", { ascending: true })
       .order("created_at", { ascending: true })),
-    window.momentumDB
+    queryMomentsWithLocationFallback((fields) => window.momentumDB
       .from("moments")
-      .select(
-        "id,title,description,moment_type,status,start_at,end_at,location_name,club_id,created_at"
-      )
+      .select(fields)
       .in("status", ["CONFIRMED", "ONGOING", "COMPLETED", "CANCELLED"])
       .not("start_at", "is", null)
       .gte("start_at", momentRangeStart)
       .lt("start_at", momentRangeEnd)
-      .order("start_at", { ascending: true })
+      .order("start_at", { ascending: true }))
   ]);
 
   if (activitiesResult.error) {

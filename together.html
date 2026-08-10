@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/navigation.css" />
   <link rel="stylesheet" href="css/together.css" />
+  <link rel="stylesheet" href="css/location-picker.css" />
 </head>
 <body class="together-body" data-momentum-page="together">
   <div data-momentum-navigation></div>
@@ -57,7 +58,7 @@
         <label class="wide">Titre<input name="title" required maxlength="120" placeholder="Soirée Padel" /></label>
         <label>Type<select name="moment_type"><option value="SPORT">Sport</option><option value="ADVENTURE">Aventure</option><option value="TRAVEL">Voyage</option><option value="SOCIAL">Rencontre</option><option value="OTHER">Autre</option></select></label>
         <label>Date et heure<input name="start_at" type="datetime-local" /></label>
-        <label>Lieu<input name="location_name" placeholder="Bienne" /></label>
+        <label>Lieu<momentum-location-picker id="momentLocationPicker" name="location_name" location-id-name="location_id"></momentum-location-picker></label>
         <label>Capacité<input name="capacity" type="number" min="1" placeholder="8" /></label>
         <label>Visibilité<select name="visibility" id="momentVisibility"><option value="PRIVATE">Privé</option><option value="CIRCLE">Cercle</option><option value="CLUB">Club</option></select></label>
         <label id="momentClubField" hidden>Club<select name="club_id" id="momentClub"><option value="">Choisir un Club</option></select></label>
@@ -86,7 +87,7 @@
       <div class="together-form-grid">
         <label class="wide">Nom<input name="name" required maxlength="80" placeholder="Padel Club Bienne" /></label>
         <label>Sport<select name="category" id="clubSport" required><option value="">Choisir un sport</option></select></label>
-        <label>Lieu principal<input name="location_name" required placeholder="Bienne" /></label>
+        <label>Lieu principal<momentum-location-picker id="clubLocationPicker" name="location_name" location-id-name="default_location_id" required></momentum-location-picker></label>
         <label class="wide club-logo-field">Logo du Club
           <span class="club-logo-picker"><span id="clubLogoPreview" class="club-logo-preview">△</span><span><input id="clubLogo" name="logo" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" /><small>PNG, JPG, WebP ou SVG · 5 Mo maximum</small></span></span>
         </label>
@@ -114,6 +115,7 @@
   <script src="js/momentum-moments.js"></script>
   <script src="js/momentum-duration-picker.js"></script>
   <script src="js/momentum-empty-state.js"></script>
+  <script src="js/momentum-location-picker.js"></script>
   <script src="js/together.js"></script>
 </body>
 </html>

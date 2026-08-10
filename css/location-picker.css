@@ -1,0 +1,38 @@
+/* MOMENTUM — LocationPicker */
+
+momentum-location-picker{display:block;position:relative;width:100%;text-align:left;text-transform:none;letter-spacing:0;font-weight:600;color:#171b18}
+.location-picker-shell{position:relative;width:100%}
+.location-picker-input{width:100%;min-height:48px;padding-right:44px!important}
+.location-picker-clear{position:absolute;z-index:3;top:7px;right:8px;width:34px;height:34px;border:0;border-radius:50%;background:#ece9e2;color:#555951;font-size:19px;line-height:1;cursor:pointer}
+.location-picker-status{min-height:0;margin:6px 2px 0!important;color:#7c7a73!important;font-size:11px!important;font-weight:600!important;line-height:1.35;text-transform:none!important;letter-spacing:0!important}
+.location-picker-results{position:absolute;z-index:30;top:calc(100% + 8px);left:0;right:0;max-height:330px;overflow:auto;padding:8px;border:1px solid #d6d1c8;border-radius:18px;background:#fbfaf7;box-shadow:0 20px 50px rgba(24,29,25,.18)}
+.location-picker-results section{display:grid;gap:3px;padding:4px 0 8px}
+.location-picker-results section>span{padding:5px 9px;color:#8a877f;font-size:9px;font-weight:900;letter-spacing:.13em;text-transform:uppercase}
+.location-picker-results button,.location-picker-address-results button{width:100%;display:grid;gap:3px;padding:10px 11px;border:0;border-radius:12px;background:transparent;color:#20251f;text-align:left;cursor:pointer}
+.location-picker-results button:hover,.location-picker-results button:focus-visible,.location-picker-address-results button:hover,.location-picker-address-results button:focus-visible{background:#e8ede7;outline:0}
+.location-picker-results button strong,.location-picker-address-results button strong{font-size:13px}
+.location-picker-results button small,.location-picker-address-results button small{overflow:hidden;color:#777a73;font-size:11px;font-weight:500;text-overflow:ellipsis;white-space:nowrap}
+.location-picker-results .location-picker-add{margin-top:3px;padding:12px;border-top:1px solid #e1ddd5;border-radius:10px;color:#1d4b38;font-weight:850}
+.location-picker-manual{position:relative;z-index:25;display:grid;gap:14px;margin-top:10px;padding:18px;border:1px solid #d6d1c8;border-radius:20px;background:#f4f1eb;box-shadow:0 16px 38px rgba(24,29,25,.12)}
+.location-picker-manual[hidden]{display:none}
+.location-picker-manual-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.location-picker-manual-head>div{display:grid;gap:3px}.location-picker-manual-head span{color:#858178;font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.location-picker-manual-head strong{font-size:17px}
+.location-picker-manual-head>button{width:34px;height:34px;border:0;border-radius:50%;background:#e4e0d8;color:#555951;font-size:20px}
+.location-picker-manual label{position:relative;display:grid!important;gap:7px;color:#696860!important;font-size:10px!important;font-weight:850!important;letter-spacing:.08em!important;text-transform:uppercase!important}
+.location-picker-manual input[type="text"],.location-picker-manual input:not([type]){width:100%}
+.location-picker-manual input:not([type="radio"]){width:100%;min-height:44px;padding:11px 12px!important;border:1px solid #d6d1c8!important;border-radius:13px!important;background:#fff!important;color:#171b18!important;font-size:13px!important;font-weight:600!important;text-transform:none!important;letter-spacing:0!important}
+.location-picker-manual-grid{display:grid;grid-template-columns:.7fr 1.3fr;gap:10px}
+.location-picker-manual fieldset{display:grid;gap:7px;margin:0;padding:12px;border:1px solid #d6d1c8;border-radius:15px;background:#fff}
+.location-picker-manual legend{padding:0 5px;color:#696860;font-size:10px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}
+.location-picker-manual fieldset label{display:flex!important;align-items:flex-start;gap:9px;padding:5px;cursor:pointer}
+.location-picker-manual fieldset input{width:auto!important;margin-top:3px}.location-picker-manual fieldset label>span{display:grid;gap:2px}.location-picker-manual fieldset strong{font-size:12px;text-transform:none;letter-spacing:0}.location-picker-manual fieldset small{color:#858178;font-size:10px;font-weight:500;text-transform:none;letter-spacing:0}
+.location-picker-address-results{position:absolute;z-index:4;top:100%;left:0;right:0;max-height:210px;overflow:auto;padding:6px;border:1px solid #d6d1c8;border-radius:14px;background:#fff;box-shadow:0 14px 32px rgba(24,29,25,.15)}
+.location-picker-manual-error{margin:0!important;color:#a33429!important;font-size:11px!important;text-transform:none!important;letter-spacing:0!important}
+.location-picker-manual-actions{display:flex;justify-content:flex-end;gap:8px}.location-picker-manual-actions button{min-height:40px;padding:0 14px;border:1px solid #cbc5bb;border-radius:999px;background:transparent;color:#565952;font-weight:800}.location-picker-manual-actions button:last-child{border-color:#183d2e;background:#183d2e;color:#fff}
+
+@media(max-width:760px){
+  .location-picker-results{position:fixed;top:auto;bottom:14px;left:12px;right:12px;max-height:min(430px,60svh);border-radius:24px;padding:10px;box-shadow:0 22px 80px rgba(15,20,17,.35)}
+  .location-picker-manual{padding:15px}.location-picker-manual-grid{grid-template-columns:1fr}.location-picker-manual-actions{align-items:stretch;flex-direction:column-reverse}.location-picker-manual-actions button{width:100%;min-height:46px}
+}
+
+@media(prefers-reduced-motion:reduce){momentum-location-picker *{transition:none!important}}

@@ -521,7 +521,13 @@ async function openEditActivityDialog(activityId) {
   setFormValue(form, "avg_hr", session.hr);
   setFormValue(form, "rpe", session.rpe);
   setFormValue(form, "gear", session.gear);
-  setFormValue(form, "location_name", session.locationName);
+  if (session.locationName) {
+    setActivityLocation(form, {
+      id:session.locationId || null,
+      name:session.locationName,
+      structured:Boolean(session.locationId)
+    });
+  }
   setFormValue(form, "notes", session.comment);
   updateExperienceVisibility(form);
 
@@ -592,6 +598,15 @@ function setFormValue(form, name, value) {
   field.value = value;
 }
 
+function setActivityLocation(form, location) {
+  if (!location?.name) return;
+  const picker = typeof document === "undefined"
+    ? null
+    : document.getElementById("activityLocationPicker");
+  if (picker) picker.setLocation(location);
+  else setFormValue(form, "location_name", location.name);
+}
+
 function fillActivityForm(data) {
   const form = $("#activityForm");
 
@@ -655,11 +670,12 @@ function fillActivityForm(data) {
     data.avgHr
   );
 
-  setFormValue(
-    form,
-    "location_name",
-    data.locationName
-  );
+  if (data.locationName) {
+    setActivityLocation(form, {
+      name:data.locationName,
+      structured:false
+    });
+  }
 
   form.dataset.routeSummary =
     data.routeSummary
@@ -889,6 +905,8 @@ async function saveActivity(event) {
       ?.files?.[0] || null;
 
   let uploadedFile = null;
+  let locationResolution = null;
+  let activityWriteSucceeded = false;
   const editingId = form.dataset.editActivityId || "";
   let persistedActivityId = editingId;
   const existingSourceFileUrl =
@@ -899,6 +917,11 @@ async function saveActivity(event) {
     form.dataset.existingGpxUrl || "";
 
   try {
+    locationResolution = await window.MomentumLocations.resolveForSave(
+      document.getElementById("activityLocationPicker"),
+      user.id
+    );
+
     if (file) {
       setActivityMessage(
         "Téléversement du fichier…"
@@ -975,11 +998,14 @@ async function saveActivity(event) {
             )
           : null,
 
-      location_name:
-        String(
-          values.get("location_name") ||
-          ""
-        ).trim() || null,
+      location_name:String(
+        locationResolution.location?.name ||
+        values.get("location_name") ||
+        ""
+      ).trim() || null,
+
+      location_id:
+        locationResolution.location?.id || null,
 
       notes:
         String(
@@ -1059,6 +1085,7 @@ async function saveActivity(event) {
     if (error) {
       throw error;
     }
+    activityWriteSucceeded = true;
     persistedActivityId = savedActivity?.id || editingId;
     if (persistedActivityId) form.dataset.editActivityId = persistedActivityId;
 
@@ -1136,6 +1163,10 @@ async function saveActivity(event) {
       await removeUploadedActivityFile(
         uploadedFile.path
       );
+    }
+
+    if (locationResolution?.created && !activityWriteSucceeded) {
+      await window.MomentumLocations.rollbackCreated(locationResolution);
     }
 
     setActivityMessage(window.MomentumUI.errorMessage(error, "save"), true);

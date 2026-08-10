@@ -27,7 +27,9 @@ const elements = {
   momentClubField: document.getElementById("momentClubField"),
   momentParticipantPicker: document.getElementById("momentParticipantPicker"),
   momentParticipantOptions: document.getElementById("momentParticipantOptions"),
+  momentLocationPicker: document.getElementById("momentLocationPicker"),
   clubForm: document.getElementById("clubForm"),
+  clubLocationPicker: document.getElementById("clubLocationPicker"),
   momentClub: document.getElementById("momentClub"),
   clubSport: document.getElementById("clubSport"),
   clubLogo: document.getElementById("clubLogo"),
@@ -126,7 +128,13 @@ function openMomentForm(moment = null, options = {}) {
     elements.momentForm.elements.title.value = duplicate ? `Copie — ${moment.title}` : moment.title;
     elements.momentForm.elements.moment_type.value = moment.moment_type || "OTHER";
     elements.momentForm.elements.start_at.value = localDateTimeValue(moment.start_at);
-    elements.momentForm.elements.location_name.value = moment.location_name || "";
+    if (moment.location_name) {
+      elements.momentLocationPicker.setLocation({
+        id:moment.location_id || null,
+        name:moment.location_name,
+        structured:Boolean(moment.location_id)
+      });
+    }
     elements.momentForm.elements.capacity.value = moment.capacity || "";
     elements.momentForm.elements.description.value = moment.description || "";
     elements.momentVisibility.value = moment.club_id ? "CLUB" : moment.visibility === "CIRCLE" ? "CIRCLE" : "PRIVATE";
@@ -160,7 +168,13 @@ function openClubForm(club = null) {
   if (club) {
     elements.clubForm.elements.name.value = club.name || "";
     elements.clubForm.elements.category.value = club.category || "";
-    elements.clubForm.elements.location_name.value = club.location_name || "";
+    if (club.location_name) {
+      elements.clubLocationPicker.setLocation({
+        id:club.default_location_id || null,
+        name:club.location_name,
+        structured:Boolean(club.default_location_id)
+      });
+    }
     elements.clubForm.elements.visibility.value = club.visibility || "PRIVATE";
     elements.clubForm.elements.description.value = club.description || "";
     const logo = TOGETHER.logoUrls.get(club.id);
@@ -488,7 +502,7 @@ async function confirmDateOption(moment, optionId) {
   if (!option) return;
   const { error: optionError } = await window.momentumDB.from("moment_date_options").update({ is_selected: true }).eq("id", optionId);
   if (optionError) return setStatus(`Créneau non confirmé : ${optionError.message}`, true);
-  const { error } = await window.momentumDB.from("moments").update({ start_at: option.start_at, end_at: option.end_at, location_name: option.location_name || moment.location_name, status: "CONFIRMED", updated_at: new Date().toISOString() }).eq("id", moment.id);
+  const { error } = await window.momentumDB.from("moments").update({ start_at: option.start_at, end_at: option.end_at, location_id: option.location_id || moment.location_id || null, location_name: option.location_name || moment.location_name, status: "CONFIRMED", updated_at: new Date().toISOString() }).eq("id", moment.id);
   if (error) return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
   elements.momentDetailDialog.close(); setStatus("Le créneau est confirmé."); await loadTogether();
 }
@@ -577,6 +591,15 @@ async function syncMomentParticipants(momentId, selectedIds) {
 async function createMoment(form) {
   const values = Object.fromEntries(new FormData(form));
   const editingId = values.moment_id || null;
+  let locationResolution;
+  try {
+    locationResolution = await window.MomentumLocations.resolveForSave(
+      elements.momentLocationPicker,
+      TOGETHER.user.id
+    );
+  } catch (locationError) {
+    return setStatus(window.MomentumUI.errorMessage(locationError, "save"), true);
+  }
   const proposedDates = [values.start_at, ...Array.from(form.querySelectorAll('[name="date_option"]')).map((input) => input.value)].filter(Boolean);
   const participantIds = new FormData(form).getAll("participant_ids");
   const payload = {
@@ -586,7 +609,8 @@ async function createMoment(form) {
     title: values.title.trim(), description: values.description.trim() || null,
     moment_type: values.moment_type,
     start_at: proposedDates.length === 1 || editingId ? (proposedDates[0] ? new Date(proposedDates[0]).toISOString() : null) : null,
-    location_name: values.location_name.trim() || null,
+    location_id: locationResolution.location?.id || null,
+    location_name: locationResolution.location?.name || String(values.location_name || "").trim() || null,
     capacity: values.capacity ? Number(values.capacity) : null,
     visibility: values.visibility === "CLUB" ? "PARTICIPANTS" : values.visibility,
   };
@@ -594,20 +618,26 @@ async function createMoment(form) {
     delete payload.user_id;
     delete payload.created_by;
     const { data, error } = await window.momentumDB.from("moments").update({ ...payload, updated_at: new Date().toISOString() }).eq("id", editingId).select().single();
-    if (error) return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
+    if (error) {
+      await window.MomentumLocations.rollbackCreated(locationResolution);
+      return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
+    }
     const participantError = await syncMomentParticipants(data.id, participantIds);
     if (participantError) return setStatus(`Moment modifié, mais invitations incomplètes : ${participantError.message}`, true);
     form.reset(); elements.momentDialog.close(); setStatus("Le Moment a été modifié."); await loadTogether(); return;
   }
   payload.status = proposedDates.length === 1 ? "CONFIRMED" : "PLANNING";
   const { data, error } = await window.momentumDB.from("moments").insert(payload).select().single();
-  if (error) return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
+  if (error) {
+    await window.MomentumLocations.rollbackCreated(locationResolution);
+    return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
+  }
   const participantResult = await window.momentumDB.from("moment_participants").insert({ moment_id: data.id, user_id: TOGETHER.user.id, role: "OWNER", invitation_status: "ACCEPTED", participation_status: "REGISTERED" });
   if (participantResult.error) return setStatus("Moment créé, mais sa mise à jour est incomplète. Réessaie dans un instant.", true);
   const inviteError = await syncMomentParticipants(data.id, participantIds);
   if (inviteError) return setStatus(`Moment créé, mais invitations incomplètes : ${inviteError.message}`, true);
   if (proposedDates.length) {
-    const { error: optionsError } = await window.momentumDB.from("moment_date_options").insert(proposedDates.map((date, index) => ({ moment_id: data.id, start_at: new Date(date).toISOString(), location_name: payload.location_name, created_by: TOGETHER.user.id, is_selected: proposedDates.length === 1 && index === 0 })));
+    const { error: optionsError } = await window.momentumDB.from("moment_date_options").insert(proposedDates.map((date, index) => ({ moment_id: data.id, start_at: new Date(date).toISOString(), location_id: payload.location_id, location_name: payload.location_name, created_by: TOGETHER.user.id, is_selected: proposedDates.length === 1 && index === 0 })));
     if (optionsError) return setStatus(`Moment créé, mais créneaux non enregistrés : ${optionsError.message}`, true);
   }
   form.reset(); elements.momentDialog.close(); setStatus(participantIds.length ? "Le Moment a été créé et les invitations ont été envoyées." : "Le Moment a été créé."); await loadTogether();
@@ -625,22 +655,37 @@ async function uploadClubLogo(clubId, file) {
 
 async function createClub(form) {
   const values = Object.fromEntries(new FormData(form));
-  const payload = { owner_id: TOGETHER.user.id, name: values.name.trim(), slug: `${slugify(values.name)}-${crypto.randomUUID().slice(0, 6)}`, category: values.category, location_name: values.location_name.trim(), visibility: values.visibility, description: values.description.trim() || null };
+  let locationResolution;
+  try {
+    locationResolution = await window.MomentumLocations.resolveForSave(
+      elements.clubLocationPicker,
+      TOGETHER.user.id
+    );
+  } catch (locationError) {
+    return setStatus(window.MomentumUI.errorMessage(locationError, "save"), true);
+  }
+  const payload = { owner_id: TOGETHER.user.id, name: values.name.trim(), slug: `${slugify(values.name)}-${crypto.randomUUID().slice(0, 6)}`, category: values.category, default_location_id: locationResolution.location?.id || null, location_name: locationResolution.location?.name || String(values.location_name || "").trim(), visibility: values.visibility, description: values.description.trim() || null };
   if (values.club_id) {
     const existingClub = TOGETHER.clubs.find((club) => club.id === values.club_id);
     if (!existingClub) return setStatus("Club introuvable.", true);
-    const updatePayload = { name: payload.name, category: payload.category, location_name: payload.location_name, visibility: payload.visibility, description: payload.description, updated_at: new Date().toISOString() };
+    const updatePayload = { name: payload.name, category: payload.category, default_location_id: payload.default_location_id, location_name: payload.location_name, visibility: payload.visibility, description: payload.description, updated_at: new Date().toISOString() };
     const logo = elements.clubLogo?.files?.[0];
     if (logo) {
       try { updatePayload.logo_url = await uploadClubLogo(existingClub.id, logo); }
       catch (logoError) { return setStatus(`Logo non enregistré : ${logoError.message}`, true); }
     }
     const { error: updateError } = await window.momentumDB.from("clubs").update(updatePayload).eq("id", existingClub.id);
-    if (updateError) return setStatus(`Club non modifié : ${updateError.message}`, true);
+    if (updateError) {
+      await window.MomentumLocations.rollbackCreated(locationResolution);
+      return setStatus(`Club non modifié : ${updateError.message}`, true);
+    }
     form.reset(); elements.clubDialog.close(); setStatus("Le Club a été modifié."); await loadTogether(); return;
   }
   const { data: club, error } = await window.momentumDB.from("clubs").insert(payload).select().single();
-  if (error) return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
+  if (error) {
+    await window.MomentumLocations.rollbackCreated(locationResolution);
+    return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
+  }
   const logo = elements.clubLogo?.files?.[0];
   if (logo) {
     try {
