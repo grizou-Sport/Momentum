@@ -82,16 +82,21 @@ async function locationsHandler(request, response) {
     parameters.set("bias", `proximity:${longitude},${latitude}`);
   }
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 9000);
+
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 6500);
     const upstream = await fetch(`${GEOAPIFY_AUTOCOMPLETE_URL}?${parameters}`, {
       headers: { Accept: "application/geo+json, application/json" },
       signal: controller.signal
     });
-    clearTimeout(timeout);
 
     if (!upstream.ok) {
+      console.warn("[locations] Geoapify response rejected", {
+        status: upstream.status,
+        queryLength: text.length,
+        hasProximity: parameters.has("bias")
+      });
       return response.status(502).json({ error: "La recherche de lieux est momentanément indisponible." });
     }
 
@@ -105,11 +110,19 @@ async function locationsHandler(request, response) {
     return response.status(200).json({ results });
   } catch (error) {
     const timedOut = error?.name === "AbortError";
+    console.error("[locations] Geoapify request failed", {
+      errorName: error?.name || "Error",
+      queryLength: text.length,
+      hasProximity: parameters.has("bias"),
+      timedOut
+    });
     return response.status(timedOut ? 504 : 502).json({
       error: timedOut
         ? "La recherche de lieux a pris trop de temps."
         : "La recherche de lieux est momentanément indisponible."
     });
+  } finally {
+    clearTimeout(timeout);
   }
 }
 

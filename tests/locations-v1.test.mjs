@@ -43,6 +43,8 @@ test("Geoapify est appelé côté serveur et normalisé dans le modèle MOMENTUM
   assert.match(api.toString(), /lang: "fr"/);
   assert.match(api.toString(), /limit: "5"/);
   assert.match(api.toString(), /proximity:/);
+  assert.match(api.toString(), /9000/);
+  assert.match(api.toString(), /\[locations\] Geoapify request failed/);
   assert.doesNotMatch(picker, /GEOAPIFY_API_KEY|apiKey=/);
 });
 
@@ -76,6 +78,7 @@ test("les lieux publics sont dédupliqués et les objets conservent le texte his
 test("LocationPicker privilégie MOMENTUM, attend 3 caractères et propose la création manuelle", () => {
   assert.match(picker, /const MINIMUM_QUERY_LENGTH = 3/);
   assert.match(picker, /const SEARCH_DELAY = 350/);
+  assert.match(picker, /attempt < 2/);
   assert.match(picker, /Mes lieux/);
   assert.match(picker, /Lieux MOMENTUM/);
   assert.match(picker, /Résultats/);

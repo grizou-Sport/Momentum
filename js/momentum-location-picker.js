@@ -102,16 +102,34 @@
       parameters.set("latitude", String(proximity.latitude));
       parameters.set("longitude", String(proximity.longitude));
     }
-    const response = await fetch(`/api/locations?${parameters}`, {
-      headers: { Accept: "application/json" }
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(payload.error || "Recherche externe indisponible.");
-    return (payload.results || []).map((location) => normalizeLocation({
-      ...location,
-      visibility: "private",
-      structured: true
-    }));
+    let lastError = null;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        const response = await fetch(`/api/locations?${parameters}`, {
+          headers: { Accept: "application/json" }
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          const error = new Error(payload.error || "Recherche externe indisponible.");
+          error.status = response.status;
+          throw error;
+        }
+        return (payload.results || []).map((location) => normalizeLocation({
+          ...location,
+          visibility: "private",
+          structured: true
+        }));
+      } catch (error) {
+        lastError = error;
+        const retryable = !error?.status || error.status === 429 || error.status >= 500;
+        if (attempt === 0 && retryable) {
+          await new Promise((resolve) => setTimeout(resolve, 250));
+          continue;
+        }
+        throw error;
+      }
+    }
+    throw lastError || new Error("Recherche externe indisponible.");
   }
 
   async function momentumSearch(text) {
@@ -290,7 +308,7 @@
         this._status.textContent = "";
       } catch {
         this._status.textContent = !known.length
-          ? "La recherche externe est indisponible. Tu peux créer le lieu manuellement."
+          ? "Geoapify ne répond pas pour le moment. Réessaie ou crée le lieu manuellement."
           : "";
       }
     }
