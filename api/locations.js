@@ -1,4 +1,5 @@
 const GEOAPIFY_AUTOCOMPLETE_URL = "https://api.geoapify.com/v1/geocode/autocomplete";
+const GEOAPIFY_REVERSE_URL = "https://api.geoapify.com/v1/geocode/reverse";
 
 function cleanText(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -58,8 +59,11 @@ async function locationsHandler(request, response) {
 
   const query = requestQuery(request);
   const text = cleanText(query.text);
+  const latitude = finiteCoordinate(query.latitude, -90, 90);
+  const longitude = finiteCoordinate(query.longitude, -180, 180);
+  const reverseLookup = text.length < 3 && latitude !== null && longitude !== null;
 
-  if (text.length < 3) {
+  if (!reverseLookup && text.length < 3) {
     return response.status(400).json({ error: "Saisis au moins 3 caractères." });
   }
 
@@ -69,16 +73,20 @@ async function locationsHandler(request, response) {
   }
 
   const parameters = new URLSearchParams({
-    text,
     lang: "fr",
-    limit: "5",
+    limit: reverseLookup ? "1" : "5",
     format: "geojson",
     apiKey
   });
 
-  const latitude = finiteCoordinate(query.latitude, -90, 90);
-  const longitude = finiteCoordinate(query.longitude, -180, 180);
-  if (latitude !== null && longitude !== null) {
+  if (reverseLookup) {
+    parameters.set("lat", String(latitude));
+    parameters.set("lon", String(longitude));
+  } else {
+    parameters.set("text", text);
+  }
+
+  if (!reverseLookup && latitude !== null && longitude !== null) {
     parameters.set("bias", `proximity:${longitude},${latitude}`);
   }
 
@@ -86,7 +94,8 @@ async function locationsHandler(request, response) {
   const timeout = setTimeout(() => controller.abort(), 9000);
 
   try {
-    const upstream = await fetch(`${GEOAPIFY_AUTOCOMPLETE_URL}?${parameters}`, {
+    const endpoint = reverseLookup ? GEOAPIFY_REVERSE_URL : GEOAPIFY_AUTOCOMPLETE_URL;
+    const upstream = await fetch(`${endpoint}?${parameters}`, {
       headers: { Accept: "application/geo+json, application/json" },
       signal: controller.signal
     });
@@ -95,7 +104,8 @@ async function locationsHandler(request, response) {
       console.warn("[locations] Geoapify response rejected", {
         status: upstream.status,
         queryLength: text.length,
-        hasProximity: parameters.has("bias")
+        hasProximity: parameters.has("bias"),
+        mode: reverseLookup ? "reverse" : "autocomplete"
       });
       return response.status(502).json({ error: "La recherche de lieux est momentanément indisponible." });
     }
@@ -104,7 +114,7 @@ async function locationsHandler(request, response) {
     const results = (payload.features || payload.results || [])
       .map(normalizeGeoapifyResult)
       .filter(Boolean)
-      .slice(0, 5);
+      .slice(0, reverseLookup ? 1 : 5);
 
     response.setHeader("Cache-Control", "private, max-age=60");
     return response.status(200).json({ results });
@@ -114,6 +124,7 @@ async function locationsHandler(request, response) {
       errorName: error?.name || "Error",
       queryLength: text.length,
       hasProximity: parameters.has("bias"),
+      mode: reverseLookup ? "reverse" : "autocomplete",
       timedOut
     });
     return response.status(timedOut ? 504 : 502).json({

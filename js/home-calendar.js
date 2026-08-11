@@ -290,6 +290,15 @@ function renderPersonalActivityCard(session, date) {
   const importLabel = activityImportLabel(session);
   const hasRoute = Array.isArray(session.routeSummary?.map_points) &&
     session.routeSummary.map_points.length >= 2;
+  const hasLocationPoint = Number.isFinite(Number(session.locationDetails?.latitude)) &&
+    Number.isFinite(Number(session.locationDetails?.longitude));
+  const locationName = session.locationName || (hasLocationPoint ? "Position GPS" : "");
+  const locationMarkup = locationName
+    ? window.MomentumLocationPopover?.triggerHTML({ ...session.locationDetails, name:session.locationDetails?.name || locationName }, {
+        className:"activity-detail-location",
+        label:"Lieu"
+      }) || `<span class="activity-detail-location">📍 Lieu : ${escapeHtml(locationName)}</span>`
+    : "";
 
   return `
     <article class="day-moment-card activity-detail-card">
@@ -303,9 +312,7 @@ function renderPersonalActivityCard(session, date) {
           ${session.sport
             ? `<span class="activity-detail-sport">${escapeHtml(activitySportLabel(session.sport))}</span>`
             : ""}
-          ${session.locationName
-            ? `<span class="activity-detail-location">📍 Départ : ${escapeHtml(session.locationName)}</span>`
-            : ""}
+          ${locationMarkup}
           <time datetime="${escapeHtml(date)}">${escapeHtml(activityDateLabel(date))}</time>
           ${timeRange ? `<span>${escapeHtml(timeRange)}</span>` : ""}
         </div>

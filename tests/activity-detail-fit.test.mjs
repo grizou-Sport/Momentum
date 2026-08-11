@@ -199,7 +199,7 @@ test("la fiche suit l’ordre En-tête, Indicateurs, Carte, Actions", () => {
   assert.ok(headerIndex < metricsIndex);
   assert.ok(metricsIndex < mapIndex);
   assert.ok(mapIndex < actionsIndex);
-  assert.match(html, /📍 Départ : Kandersteg \(BE\)/);
+  assert.match(html, /📍 Lieu : Kandersteg \(BE\)/);
   assert.match(html, /07:12 → 13:01/);
   assert.match(html, /Import automatique • COROS Apex 2 Pro/);
   assert.doesNotMatch(html, /FICHIER FIT|Fichier FIT/);
@@ -211,10 +211,11 @@ test("la carte est mise en page sans modification de Leaflet", () => {
   assert.doesNotMatch(calendarSource, /L\.map|tileLayer|polyline/);
 });
 
-test("le lieu est résolu pendant l’import et non à l’ouverture de la fiche", () => {
+test("le lieu initial est résolu pendant l’import et la fiche délègue les détails au composant partagé", () => {
   assert.match(importSource, /locationName = await reverseGeocode\(/);
   assert.match(activitiesSource, /location_name:\s*String\(/);
   assert.doesNotMatch(calendarSource, /reverseGeocode|fetch\(/);
+  assert.match(calendarSource, /MomentumLocationPopover/);
 });
 
 test("le Lot A.1 n’ajoute aucune analyse à la fiche", () => {

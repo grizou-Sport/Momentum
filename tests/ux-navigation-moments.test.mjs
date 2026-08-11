@@ -47,12 +47,15 @@ test("tablet landscape content is offset from the fixed desktop rail", () => {
   assert.match(navigationStyles, /@media\(max-width:900px\)[\s\S]*padding-left:0/);
 });
 
-test("the avatar opens YOU directly and account actions are no longer in the rail", async () => {
+test("the avatar opens YOU directly and OFF remains a distinct system action", async () => {
   const you = await readFile(new URL("../js/you.js", import.meta.url), "utf8");
   assert.match(navigation, /data-momentum-user-avatar/);
   assert.match(navigation, /data-momentum-direct/);
   assert.doesNotMatch(navigation, /aria-label="Paramètres, bientôt disponible"/);
-  assert.doesNotMatch(navigation, /aria-label="Déconnexion"/);
+  assert.match(navigation, /data-momentum-logout/);
+  assert.match(navigation, /aria-label="Déconnexion"/);
+  assert.match(navigation, /auth\.signOut\(\{ scope:"local" \}\)/);
+  assert.match(navigationStyles, /momentum-rail-spacer\{display:block;flex:1\}/);
   assert.match(you, /data-account-logout/);
 });
 

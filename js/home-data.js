@@ -182,6 +182,51 @@ function mapSharedMomentRow(row, today = iso(new Date())) {
   };
 }
 
+function routeLocationPoint(routeSummary) {
+  const center = routeSummary?.center;
+  if (Number.isFinite(Number(center?.latitude)) && Number.isFinite(Number(center?.longitude))) {
+    return { latitude:Number(center.latitude), longitude:Number(center.longitude) };
+  }
+  const firstPoint = routeSummary?.map_points?.[0];
+  if (Array.isArray(firstPoint) && Number.isFinite(Number(firstPoint[0])) && Number.isFinite(Number(firstPoint[1]))) {
+    return { latitude:Number(firstPoint[0]), longitude:Number(firstPoint[1]) };
+  }
+  return null;
+}
+
+async function attachStructuredLocations(sessions) {
+  const locationIds = [...new Set(sessions.map((session) => session.locationId).filter(Boolean))];
+  let locations = [];
+
+  if (locationIds.length) {
+    const { data, error } = await window.momentumDB
+      .from("locations")
+      .select("id,name,address,postal_code,city,country,country_code,latitude,longitude")
+      .in("id", locationIds);
+
+    if (error) console.warn("HOME : détails des lieux momentanément indisponibles.", error);
+    else locations = data || [];
+  }
+
+  const locationsById = new Map(locations.map((location) => [location.id, location]));
+  sessions.forEach((session) => {
+    const stored = locationsById.get(session.locationId) || null;
+    const routePoint = routeLocationPoint(session.routeSummary);
+    session.locationDetails = {
+      name: stored?.name || session.locationName || session.placeName || "",
+      address: stored?.address || null,
+      postal_code: stored?.postal_code || null,
+      city: stored?.city || null,
+      country: stored?.country || null,
+      country_code: stored?.country_code || null,
+      latitude: stored?.latitude ?? routePoint?.latitude ?? null,
+      longitude: stored?.longitude ?? routePoint?.longitude ?? null
+    };
+  });
+
+  return sessions;
+}
+
 function monthGridRange(monthDate) {
   const firstDay = startOfMonth(monthDate);
   const mondayIndex = (firstDay.getDay() + 6) % 7;
@@ -267,7 +312,7 @@ async function loadActivitiesForHome(
     .map((row) => mapSharedMomentRow(row))
     .filter(Boolean);
 
-  state.sessions = [...activities, ...sharedMoments];
+  state.sessions = await attachStructuredLocations([...activities, ...sharedMoments]);
 
   return state.sessions;
 }

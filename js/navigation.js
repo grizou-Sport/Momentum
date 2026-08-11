@@ -9,6 +9,7 @@
     progression: '<svg class="momentum-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9"></path><path d="M10 19V5"></path><path d="M16 19v-7"></path><path d="M22 19V3"></path></svg>',
     you: '<svg class="momentum-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>',
     together: '<svg class="momentum-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"></circle><circle cx="17" cy="10" r="2.5"></circle><path d="M3 20a6 6 0 0 1 12 0"></path><path d="M14 15a5 5 0 0 1 7 4.5"></path></svg>',
+    power: '<svg class="momentum-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v10"></path><path d="M6.35 5.65a8 8 0 1 0 11.3 0"></path></svg>',
     close: '<svg class="momentum-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>'
   };
 
@@ -80,6 +81,7 @@
       ${railLink("progression", "progression.html", "Progression")}
       ${youRailLink()}
       <span class="momentum-rail-spacer"></span>
+      <button class="momentum-nav-logout" type="button" data-momentum-logout aria-label="Déconnexion" title="Déconnexion">${icons.power}</button>
     </aside>
     ${Object.entries(sections).map(contextPanel).join("")}
     <button class="momentum-mobile-scrim" type="button" aria-label="Fermer le menu"></button>`;
@@ -314,6 +316,22 @@
 
   window.addEventListener("load", hydrateUserAvatar, { once:true });
   window.addEventListener("momentum:avatar-updated", hydrateUserAvatar);
+
+  mount.querySelector("[data-momentum-logout]")?.addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    if (button.disabled || !window.momentumDB) return;
+    button.disabled = true;
+    button.setAttribute("aria-label", "Déconnexion en cours");
+    try {
+      const { error } = await window.momentumDB.auth.signOut({ scope:"local" });
+      if (error) throw error;
+      window.location.replace("login.html");
+    } catch (error) {
+      console.warn("Navigation : déconnexion momentanément indisponible.", error);
+      button.disabled = false;
+      button.setAttribute("aria-label", "Déconnexion");
+    }
+  });
 
   window.MomentumNavigation = { setSubsection, closeMenu };
 })();

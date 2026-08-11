@@ -147,7 +147,16 @@ function renderActivityList(date, sessions) {
   }
 
   element.innerHTML = sessions
-    .map((session) => `
+    .map((session) => {
+      const hasLocationPoint = Number.isFinite(Number(session.locationDetails?.latitude)) &&
+        Number.isFinite(Number(session.locationDetails?.longitude));
+      const locationName = session.locationName || session.location_name || session.placeName ||
+        (hasLocationPoint ? "Position GPS" : "Lieu à définir");
+      const locationMarkup = window.MomentumLocationPopover?.triggerHTML(
+        { ...session.locationDetails, name:session.locationDetails?.name || locationName },
+        { className:"day-feed-location", label:"Lieu" }
+      ) || `<span class="day-feed-location">📍 Lieu : ${escapeHtml(locationName)}</span>`;
+      return `
       <article class="day-feed-item">
         <div class="day-feed-icon">${sessionIconHtml(session, "day-feed-sport-icon")}</div>
         <div class="day-feed-content">
@@ -172,14 +181,7 @@ function renderActivityList(date, sessions) {
           ${escapeHtml(sessionMeta(session))}
         </p>
 
-        <p class="muted">
-          ${escapeHtml(
-            session.locationName ||
-            session.location_name ||
-            session.placeName ||
-            "Lieu à définir"
-          )}
-        </p>
+        <p class="muted">${locationMarkup}</p>
         ${session.source === "shared_moment" ? `
           <a class="shared-moment-link" href="together.html?moment=${encodeURIComponent(session.momentId)}">
             Ouvrir dans TOGETHER
@@ -187,7 +189,7 @@ function renderActivityList(date, sessions) {
         ` : ""}
         </div>
       </article>
-    `)
+    `;})
     .join("");
 }
 

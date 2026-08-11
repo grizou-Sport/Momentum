@@ -233,19 +233,28 @@ body.has-momentum-navigation{
 }
 
 .momentum-nav-logout{
+  display:grid;
+  place-items:center;
   width:44px;
+  height:44px;
   min-height:44px;
   border:0;
+  border-radius:15px;
   background:transparent;
   color:#111;
   padding:0;
   cursor:pointer;
+  transition:background .18s ease,color .18s ease,transform .18s ease;
 }
 
 .momentum-nav-logout:hover{
   background:rgba(255,255,255,.7);
   color:var(--ink);
+  transform:translateY(-1px);
 }
+
+.momentum-nav-logout:active{color:#a33429;transform:translateY(0)}
+.momentum-nav-logout:disabled{opacity:.42;cursor:wait}
 
 .momentum-mobile-balance{
   width:42px;
@@ -311,7 +320,7 @@ body.has-momentum-navigation{
     inset:auto 8px calc(8px + env(safe-area-inset-bottom,0px));
     display:flex;
     flex-direction:row;
-    justify-content:space-around;
+    justify-content:flex-start;
     width:auto;
     height:60px;
     gap:4px;
@@ -325,8 +334,8 @@ body.has-momentum-navigation{
     pointer-events:auto;
   }
 
-  .momentum-rail .momentum-nav-brand,
-  .momentum-rail-spacer{display:none}
+  .momentum-rail .momentum-nav-brand{display:none}
+  .momentum-rail-spacer{display:block;flex:1}
 
   .momentum-rail-link,
   .momentum-nav-logout{
