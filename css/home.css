@@ -1632,6 +1632,47 @@ momentum-slider[disabled]{opacity:.55}
   gap:8px;
 }
 
+.activity-form-nutrition{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+  margin:18px 0 0;
+  padding:24px 26px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  background:#e7ece4;
+}
+
+.activity-form-nutrition h3{
+  margin:5px 0 6px;
+  font-size:25px;
+  letter-spacing:-.025em;
+}
+
+.activity-form-nutrition p{
+  max-width:520px;
+  margin:0;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.45;
+}
+
+.activity-form-nutrition button{
+  width:auto;
+  min-width:180px;
+  flex:0 0 auto;
+  white-space:nowrap;
+}
+
+.activity-form-nutrition.has-nutrition{
+  border-color:rgba(17,17,17,.24);
+  box-shadow:inset 4px 0 0 var(--ink);
+}
+
+.activity-form-nutrition.is-loading{opacity:.68}
+.activity-form-nutrition.has-error{border-color:rgba(163,52,41,.38);background:#f4e9e5}
+
 .activity-experience{
   display:grid;
   gap:4px;
@@ -1760,6 +1801,8 @@ momentum-slider[disabled]{opacity:.55}
     flex-direction:column-reverse;
   }
 
+  .activity-form-nutrition{align-items:stretch;flex-direction:column;padding:22px 18px}
+  .activity-form-nutrition button{width:100%;min-width:0}
   .activity-experience{padding:20px 16px}
 
   .chart-heading{flex-direction:column}.chart-canvas-wrap{height:290px}.progression-dialog{width:100%;height:100svh;max-height:100svh;margin:0;border-radius:0;padding:70px 20px 28px}.progression-detail-kpis{grid-template-columns:1fr}.progression-subdisciplines p{flex-direction:column;gap:3px}

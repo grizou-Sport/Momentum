@@ -62,6 +62,7 @@ function bindHome() {
   $("#cancelActivity")?.addEventListener("click", closeActivityDialog);
   $("#activityFile")?.addEventListener("change", handleActivityFile);
   $("#activityForm")?.addEventListener("submit", saveActivity);
+  $("#activityNutritionButton")?.addEventListener("click", openActivityFormNutrition);
 
   $("#centerToday")?.addEventListener("click", async () => {
     renderLivingWeek(new Date());

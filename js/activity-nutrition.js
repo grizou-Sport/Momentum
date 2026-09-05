@@ -49,6 +49,8 @@
   let libraryPromise = null;
   let frequencyPromise = null;
   let active = null;
+  let activityFormDraft = null;
+  let activityFormRevision = 0;
 
   function numberValue(value) {
     const number = Number(value);
@@ -149,6 +151,86 @@
       quantities,
       totals:calculateTotals(products, quantities, activity, snapshots)
     };
+  }
+
+  function updateActivityFormNutrition() {
+    const host = document.querySelector("[data-activity-form-nutrition]");
+    const summary = host?.querySelector("[data-activity-form-nutrition-summary]");
+    const button = host?.querySelector("#activityNutritionButton");
+    if (!host || !summary || !button) return;
+
+    const draft = activityFormDraft;
+    host.classList.remove("has-nutrition", "is-loading", "has-error");
+    button.disabled = Boolean(draft?.loading);
+
+    if (draft?.loading) {
+      host.classList.add("is-loading");
+      summary.textContent = "Chargement du ravitaillement…";
+      button.textContent = "Chargement…";
+      return;
+    }
+
+    if (draft?.error) {
+      host.classList.add("has-error");
+      summary.textContent = "Le ravitaillement existant n’a pas pu être chargé.";
+      button.textContent = "Réessayer";
+      button.disabled = false;
+      return;
+    }
+
+    const totals = draft
+      ? calculateTotals(draft.products, draft.quantities, draft.activity, draft.snapshotProducts)
+      : null;
+    const count = totals?.items.length || 0;
+    if (!count) {
+      summary.textContent = "Ajoute ce que tu as consommé pendant ce Moment.";
+      button.textContent = "Ajouter la nutrition";
+      return;
+    }
+
+    host.classList.add("has-nutrition");
+    summary.textContent = `${count} produit${count > 1 ? "s" : ""} · ${formatNumber(totals.carbs_total_g)} g de glucides · ${formatNumber(totals.sodium_total_mg)} mg de sodium`;
+    button.textContent = "Modifier la nutrition";
+  }
+
+  async function beginActivityForm(activity = {}) {
+    const revision = ++activityFormRevision;
+    const activityId = activity.id || "";
+    activityFormDraft = {
+      activityId,
+      activity:{ ...activity },
+      products:[],
+      quantities:new Map(),
+      snapshotProducts:new Map(),
+      dirty:false,
+      loading:Boolean(activityId),
+      error:null
+    };
+    updateActivityFormNutrition();
+    if (!activityId) return;
+
+    await ensureActivities([activity]);
+    if (revision !== activityFormRevision || activityFormDraft?.activityId !== activityId) return;
+
+    const stored = summaries.get(activityId) || { items:[] };
+    const products = stored.products || (stored.items || []).map(productFromSnapshot);
+    activityFormDraft = {
+      activityId,
+      activity:{ ...activity },
+      products:[...products],
+      quantities:new Map(stored.quantities || (stored.items || []).map((item) => [item.product_id, numberValue(item.quantity)])),
+      snapshotProducts:new Map(products.map((product) => [product.id, product])),
+      dirty:false,
+      loading:false,
+      error:stored.error || null
+    };
+    updateActivityFormNutrition();
+  }
+
+  function cancelActivityForm() {
+    activityFormRevision += 1;
+    activityFormDraft = null;
+    updateActivityFormNutrition();
   }
 
   async function ensureActivities(activities = []) {
@@ -443,7 +525,8 @@
       ${totals.caffeine_total_mg > 0 ? `<p class="nutrition-summary-secondary">${escapeHtml(formatNumber(totals.caffeine_total_mg))} mg caféine</p>` : ""}
       <small>${totals.items.length} produit${totals.items.length > 1 ? "s" : ""} sélectionné${totals.items.length > 1 ? "s" : ""}</small>`;
 
-    saveButton.textContent = `Enregistrer — ${formatNumber(totals.carbs_total_g)} g${totals.carbs_per_hour === null ? "" : ` · ${formatNumber(totals.carbs_per_hour)} g/h`}`;
+    const action = active.mode === "activity-form" ? "Valider" : "Enregistrer";
+    saveButton.textContent = `${action} — ${formatNumber(totals.carbs_total_g)} g${totals.carbs_per_hour === null ? "" : ` · ${formatNumber(totals.carbs_per_hour)} g/h`}`;
   }
 
   function customProductForm() {
@@ -486,7 +569,7 @@
           <div>
             <span class="section-kicker">Pendant l’activité</span>
             <h2 id="nutritionDialogTitle">La carte de ravitaillement</h2>
-            <p>Indique ce que tu as réellement consommé. Les calculs suivent.</p>
+            <p>${active.mode === "activity-form" ? "Prépare le ravitaillement avant d’enregistrer le Moment." : "Indique ce que tu as réellement consommé. Les calculs suivent."}</p>
           </div>
           <button type="button" class="nutrition-close" data-nutrition-close aria-label="Fermer">×</button>
         </header>
@@ -556,6 +639,51 @@
     }
   }
 
+  async function openActivityForm(activity = {}) {
+    const dialog = document.getElementById("nutritionDialog");
+    const activityId = activity.id || "";
+    if (!dialog || !window.momentumDB) return;
+
+    if (!activityFormDraft || activityFormDraft.activityId !== activityId || activityFormDraft.error) {
+      await beginActivityForm(activity);
+    }
+    if (!activityFormDraft || activityFormDraft.loading || activityFormDraft.error) return;
+
+    active = {
+      mode:"activity-form",
+      activity:{ ...activityFormDraft.activity, ...activity },
+      date:activity.date || activityFormDraft.activity.date || "",
+      products:[],
+      quantities:new Map(activityFormDraft.quantities),
+      snapshotProducts:new Map(activityFormDraft.snapshotProducts),
+      frequencies:new Map(),
+      category:"favorites",
+      search:""
+    };
+    renderLoading();
+    if (!dialog.open) {
+      if (typeof openHomeDialog === "function") openHomeDialog(dialog);
+      else dialog.showModal();
+    }
+
+    try {
+      const [products, frequencies] = await Promise.all([loadLibrary(), loadFrequencies()]);
+      if (!active || active.mode !== "activity-form") return;
+      const productsById = new Map(products.map((product) => [product.id, product]));
+      activityFormDraft.products.forEach((product) => {
+        if (!productsById.has(product.id)) {
+          productsById.set(product.id, { ...product, category:product.category || "other", is_global:false });
+        }
+      });
+      active.products = [...productsById.values()];
+      active.frequencies = frequencies;
+      renderDialog();
+    } catch (error) {
+      console.error("HOME : impossible de préparer la nutrition du Moment.", error);
+      renderError();
+    }
+  }
+
   function close() {
     const dialog = document.getElementById("nutritionDialog");
     if (typeof closeHomeDialog === "function") closeHomeDialog(dialog);
@@ -584,6 +712,22 @@
     button.textContent = "Enregistrement…";
     if (message) message.textContent = "";
 
+    if (active.mode === "activity-form") {
+      activityFormDraft = {
+        activityId:active.activity.id || "",
+        activity:{ ...active.activity },
+        products:[...active.products],
+        quantities:new Map(active.quantities),
+        snapshotProducts:new Map(active.snapshotProducts),
+        dirty:true,
+        loading:false,
+        error:null
+      };
+      updateActivityFormNutrition();
+      close();
+      return;
+    }
+
     const { data, error } = await window.momentumDB.rpc("save_activity_nutrition", {
       p_activity_id:active.activity.id,
       p_items:payload
@@ -602,6 +746,30 @@
     const activityDate = active.date || active.activity.date;
     close();
     if (activityDate && typeof openDay === "function") await openDay(activityDate);
+  }
+
+  async function saveActivityForm(activityId, activity = {}) {
+    const draft = activityFormDraft;
+    if (!draft) return [];
+    if (!draft.dirty) {
+      cancelActivityForm();
+      return [];
+    }
+    if (!activityId) throw new Error("Le Moment doit être enregistré avant sa nutrition.");
+
+    const payload = [...draft.quantities.entries()]
+      .filter(([, quantity]) => numberValue(quantity) > 0)
+      .map(([product_id, quantity]) => ({ product_id, quantity:numberValue(quantity) }));
+    const { data, error } = await window.momentumDB.rpc("save_activity_nutrition", {
+      p_activity_id:activityId,
+      p_items:payload
+    });
+    if (error) throw error;
+
+    summaries.set(activityId, summaryFromItems(data || [], { ...draft.activity, ...activity, id:activityId }));
+    frequencyPromise = null;
+    cancelActivityForm();
+    return data || [];
   }
 
   async function createCustomProduct(form) {
@@ -671,7 +839,8 @@
         return;
       }
       if (event.target.closest("[data-nutrition-retry]")) {
-        if (active) await open(active.activity, active.date);
+        if (active?.mode === "activity-form") await openActivityForm(active.activity);
+        else if (active) await open(active.activity, active.date);
         return;
       }
       const categoryButton = event.target.closest("[data-nutrition-category]");
@@ -728,12 +897,16 @@
 
   window.MomentumNutrition = {
     STEP,
+    beginActivityForm,
     calculateTotals,
+    cancelActivityForm,
     durationHours,
     ensureActivities,
     formatQuantity,
     open,
+    openActivityForm,
     renderActivitySection,
+    saveActivityForm,
     summaryFromItems
   };
 

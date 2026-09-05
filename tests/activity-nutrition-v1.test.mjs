@@ -5,6 +5,7 @@ import vm from "node:vm";
 
 const nutritionSource = await readFile(new URL("../js/activity-nutrition.js", import.meta.url), "utf8");
 const calendarSource = await readFile(new URL("../js/home-calendar.js", import.meta.url), "utf8");
+const homeActivitiesSource = await readFile(new URL("../js/home-activities.js", import.meta.url), "utf8");
 const homeSource = await readFile(new URL("../js/home.js", import.meta.url), "utf8");
 const indexSource = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const cssSource = await readFile(new URL("../css/home.css", import.meta.url), "utf8");
@@ -105,6 +106,22 @@ test("branche la carte sur la fiche activité et la rafraîchit sans rechargemen
   assert.match(homeSource, /action === "edit-nutrition"/);
   assert.match(nutritionSource, /await openDay\(activityDate\)/);
   assert.match(nutritionSource, /Impossible d’enregistrer le ravitaillement\. Réessayer\./);
+});
+
+test("la nutrition se prépare dans le formulaire avant les indicateurs Flow", () => {
+  const nutritionEntry = indexSource.indexOf('data-activity-form-nutrition');
+  const flowIndicators = indexSource.indexOf('data-activity-experience');
+
+  assert.ok(nutritionEntry > 0);
+  assert.ok(nutritionEntry < flowIndicators);
+  assert.match(indexSource, /id="activityNutritionButton"[\s\S]*Ajouter la nutrition/);
+  assert.match(homeSource, /activityNutritionButton[\s\S]*openActivityFormNutrition/);
+  assert.match(homeActivitiesSource, /MomentumNutrition\?\.beginActivityForm/);
+  assert.match(homeActivitiesSource, /MomentumNutrition\?\.saveActivityForm\([\s\S]*persistedActivityId/);
+  assert.match(nutritionSource, /active\.mode === "activity-form"/);
+  assert.match(nutritionSource, /button\.textContent = "Modifier la nutrition"/);
+  assert.match(nutritionSource, /async function saveActivityForm/);
+  assert.match(cssSource, /\.activity-form-nutrition\s*\{/);
 });
 
 test("la carte expose catégories, recherche, quantités tactiles et produit personnel", () => {

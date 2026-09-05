@@ -105,6 +105,21 @@ function durationMinutesFromForm(values) {
   return raw === null || raw === "" ? null : Number(raw);
 }
 
+function activityNutritionContext(form) {
+  const values = new FormData(form);
+  return {
+    id:form.dataset.editActivityId || "",
+    date:String(values.get("activity_date") || ""),
+    duration:durationMinutesFromForm(values)
+  };
+}
+
+async function openActivityFormNutrition() {
+  const form = $("#activityForm");
+  if (!form) return;
+  await window.MomentumNutrition?.openActivityForm(activityNutritionContext(form));
+}
+
 function updateExperienceVisibility(form) {
   const experience = form.querySelector("[data-activity-experience]");
   if (!experience) return;
@@ -452,6 +467,7 @@ function openActivityDialog(date = null, returnToDay = false) {
   setFormValue(form, "perceived_challenge", "");
   setFormValue(form, "perceived_mastery", "");
   updateExperienceVisibility(form);
+  window.MomentumNutrition?.beginActivityForm(activityNutritionContext(form));
   form.dataset.returnToDay = returnToDay ? selectedDate : "";
 
   const defaultCategory =
@@ -539,6 +555,11 @@ async function openEditActivityDialog(activityId) {
     console.warn("HOME : ressenti du Moment indisponible.", error);
   }
 
+  await window.MomentumNutrition?.beginActivityForm({
+    ...session,
+    duration:session.duration
+  });
+
   const typeFields = {
     sport: "sport_activity_type",
     wellbeing: "wellbeing_activity_type",
@@ -566,6 +587,7 @@ function closeActivityDialog() {
   const dialog = $("#activityDialog");
 
   if (dialog?.open) {
+    window.MomentumNutrition?.cancelActivityForm();
     closeHomeDialog(dialog);
   }
 }
@@ -1090,6 +1112,16 @@ async function saveActivity(event) {
     activityWriteSucceeded = true;
     persistedActivityId = savedActivity?.id || editingId;
     if (persistedActivityId) form.dataset.editActivityId = persistedActivityId;
+
+    await window.MomentumNutrition?.saveActivityForm(
+      persistedActivityId,
+      {
+        ...payload,
+        id:persistedActivityId,
+        date:activityDate,
+        duration:payload.duration_min
+      }
+    );
 
     let timeline = activityTimelineForSave(form, file, completed);
     if (!timeline && completed && hasActivityMetrics && !retainedSourceFileType && payload.activity_time) {
