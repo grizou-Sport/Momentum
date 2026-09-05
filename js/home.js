@@ -146,6 +146,13 @@ function bindHome() {
       return;
     }
 
+    if (action === "edit-nutrition") {
+      const activityId = actionButton.dataset.activityId;
+      const activity = (state.sessions || []).find((session) => session.id === activityId);
+      if (activity) await window.MomentumNutrition?.open(activity, date);
+      return;
+    }
+
     if (action === "edit-moment") {
       const activityId = actionButton.dataset.activityId;
       if (activityId) {

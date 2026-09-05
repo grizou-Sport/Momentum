@@ -326,6 +326,8 @@ function renderPersonalActivityCard(session, date) {
 
       ${renderActivityMetrics(session)}
 
+      ${window.MomentumNutrition?.renderActivitySection(session, date) || ""}
+
       ${hasRoute ? `
         <section class="activity-detail-map" aria-label="Parcours de l’activité">
           <div
@@ -392,6 +394,7 @@ async function openDay(date) {
 
   const sessions = sessionsOn(date);
   const wellbeing = date <= iso(new Date()) ? await loadDailyWellbeing(date) : null;
+  await window.MomentumNutrition?.ensureActivities(sessions);
   dialog.dataset.date = date;
 
   content.querySelectorAll("[data-route-map]")
