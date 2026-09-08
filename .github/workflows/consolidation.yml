@@ -1,0 +1,38 @@
+name: Consolidation CDC
+on:
+  push:
+    branches: [main, feat/cdc-consolidation-2026-09-08]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: consolidation-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Vérification syntaxique JavaScript
+        run: |
+          find js api -type f -name '*.js' -not -path '*/vendor/*' -print0 | xargs -0 -n1 node --check
+      - name: Tests métier
+        run: |
+          if [ -f package.json ]; then npm ci --ignore-scripts; npm test --if-present; fi
+          if [ -d tests/consolidation ]; then node --test tests/consolidation/*.test.cjs; fi
+      - name: Archive reproductible du code (sans données utilisateur)
+        if: always()
+        run: |
+          mkdir -p /tmp/momentum-evidence
+          git archive --format=tar HEAD > /tmp/momentum-evidence/source.tar
+          git rev-parse HEAD > /tmp/momentum-evidence/commit.txt
+      - uses: actions/upload-artifact@v7.0.1
+        if: always()
+        with:
+          name: consolidation-source
+          path: /tmp/momentum-evidence/
+          retention-days: 3
