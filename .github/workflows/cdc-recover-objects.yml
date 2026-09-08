@@ -1,0 +1,37 @@
+name: CDC recover saved objects
+on:
+  push:
+    branches: [feat/cdc-consolidation-2026-09-08]
+    paths: [.github/workflows/cdc-recover-objects.yml]
+permissions:
+  contents: read
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Recover exact Git blobs without executing them
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/cdc-saved
+          python3 - <<'PY'
+          import os,json,base64,hashlib,urllib.request,pathlib
+          shas=['3d848e84d4fa07d88242d342c27c9963dc0d3fc7','1c8086b3b16542590b8487cb8d7c3980a137c873','e283838224ce68c8be00b0391a335a21053db686','b2368ca89914ee8d330103ec47e1d27b7f5781d5','55aecf7772e67b04f6c34e51087a0c4148e82b7d','22cc9df50b5f897cec37be5bd76de28f175dfdaa','365572e02d6316927726b9b3edd91fb5ae27c638']
+          for i,sha in enumerate(shas):
+              req=urllib.request.Request('https://api.github.com/repos/grizou-Sport/Momentum/git/blobs/'+sha,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+              with urllib.request.urlopen(req,timeout=30) as res: obj=json.load(res)
+              data=base64.b64decode(obj['content'])
+              actual=hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
+              assert actual==sha, 'Git object mismatch'
+              pathlib.Path('/tmp/cdc-saved/part-%02d.blob'%i).write_bytes(data)
+              print(i,sha,len(data),hashlib.sha256(data).hexdigest())
+          PY
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: cdc-saved-objects
+          path: /tmp/cdc-saved/
+          retention-days: 3
