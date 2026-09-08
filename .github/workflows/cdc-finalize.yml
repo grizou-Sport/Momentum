@@ -1,0 +1,43 @@
+name: CDC finalization
+on:
+  push:
+    branches: [feat/cdc-consolidation-2026-09-08]
+    paths: [.github/workflows/cdc-finalize.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - name: Extraire le paquet applicatif validé
+        run: |
+          test -f maintenance/cdc-finalize/momentum-finalize.tar.xz
+          tar -xJf maintenance/cdc-finalize/momentum-finalize.tar.xz -C .
+          rm -rf maintenance/cdc-transfer maintenance/cdc-finalize
+          rm -f .github/workflows/cdc-toolchain.yml .github/workflows/cdc-finalize.yml
+      - name: Vérifier la syntaxe JavaScript
+        run: |
+          find js api -type f -name '*.js' -not -path '*/vendor/*' -print0 | xargs -0 -n1 node --check
+      - name: Recette CDC
+        run: |
+          node --test tests/consolidation/*.test.cjs
+      - name: Vérifier les fichiers critiques
+        run: |
+          test -f js/momentum-training-load.js
+          test -f js/momentum-export.js
+          test -f js/momentum-import-rules.js
+          test -f supabase/migrations/20260908000100_cdc_reliability_foundation.sql
+          test -f discover.html
+          test -f invite.html
+          ! test -e maintenance/cdc-transfer
+          ! test -e maintenance/cdc-finalize
+      - name: Produire le commit applicatif propre
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'feat: consolider fiabilité expérience et identité MOMENTUM'
+          git push origin HEAD:feat/cdc-consolidation-2026-09-08
