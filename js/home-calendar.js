@@ -23,6 +23,7 @@ function renderLivingWeek(centerDate = new Date()) {
   if (!container) return;
 
   const today = iso(new Date());
+  const previousScroll = container.scrollLeft;
 
   container.innerHTML = Array.from({ length: 7 }, (_, index) => {
     const date = addDays(centerDate, index - 3);
@@ -63,7 +64,8 @@ function renderLivingWeek(centerDate = new Date()) {
     `;
   }).join("");
 
-  centerLivingWeekOnToday(container);
+  container.scrollLeft = previousScroll;
+  if (!container.dataset.initiallyCentered) { centerLivingWeekOnToday(container); container.dataset.initiallyCentered="true"; }
 }
 
 function centerLivingWeekOnToday(container = $("#livingWeek"), behavior = "auto") {

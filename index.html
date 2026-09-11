@@ -11,12 +11,14 @@
   <link rel="stylesheet" href="css/momentum-hero.css" />
   <link rel="stylesheet" href="css/location-picker.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="css/consolidation.css">
 </head>
 
 <body class="home-body" data-momentum-page="home">
   <div data-momentum-navigation></div>
 
-<main>
+<a class="skip-link" href="#mainContent">Aller au contenu</a>
+<main id="mainContent">
 
   <section id="hero" class="hero momentum-hero" data-nav-theme="light" data-nav-luminance>
 
@@ -24,16 +26,17 @@
 
     <div class="hero-content momentum-hero-content">
 
-      <h1 id="heroTitle"></h1>
+      <h1 id="heroTitle">Chaque Moment<br>compte.</h1>
 
       <p id="heroQuote" class="hero-quote"></p>
 
       <div id="heroDetails" class="mission-pills"></div>
+      <div class="hero-actions"><a class="primary" data-content-link href="#today">Voir ma journée</a><button type="button" data-add-moment>Ajouter un Moment</button></div>
 
     </div>
 
     <a class="scroll-cue" href="#today">
-      Commencer la journée ↓
+      Voir ma journée ↓
     </a>
 
   </section>
@@ -45,6 +48,7 @@
         <p class="lead" id="todayNarrative"></p>
       </div>
 
+      <div class="today-actions"><button class="primary" type="button" data-add-moment>Ajouter un Moment</button><a href="#journal">Retrouver un jour passé</a></div>
       <div class="today-dashboard">
         <article class="home-card weather-card" id="weatherCard"></article>
 
@@ -55,7 +59,7 @@
               <h3 id="dayFeedTitle">Moments</h3>
             </div>
             <button class="round-btn" id="openToday" type="button">
-              Ouvrir
+              Voir ma journée
             </button>
           </div>
           <div id="activityList" class="day-feed-list"></div>
@@ -87,17 +91,21 @@
       <div class="section-head">
         <div>
           <h2 id="monthTitle">Mois</h2>
-          <p>Chaque case est une page. Clique sur un jour pour ouvrir le chapitre.</p>
+          <p>Sélectionne un jour pour retrouver ou ajouter un Moment.</p>
         </div>
 
+        <button id="toggleJournal" class="journal-toggle" type="button" aria-controls="journalContent" aria-expanded="false">Ouvrir le Journal</button>
+      </div>
+      <p id="journalState" class="journal-state" role="status"></p>
+      <div id="journalContent" hidden>
         <div class="calendar-actions">
-          <button class="round-btn" id="prevMonth" type="button">‹</button>
-          <button class="round-btn" id="nextMonth" type="button">›</button>
+          <button class="round-btn" id="prevMonth" type="button" aria-label="Mois précédent">‹</button>
+          <button class="round-btn" id="nextMonth" type="button" aria-label="Mois suivant">›</button>
           <button class="round-btn" id="todayBtn" type="button">Aujourd'hui</button>
         </div>
-      </div>
 
       <div id="monthGrid" class="month-grid"></div>
+      </div>
     </section>
 
     <section id="flow" class="story-section flow-section" aria-labelledby="flowTitle">
@@ -242,336 +250,184 @@
       Un sport, une respiration ou une aventure.
     </p>
 
-    <form
-      id="activityForm"
-      class="activity-form"
-    >
-      <fieldset class="activity-category full">
-        <legend>Quel moment veux-tu ajouter ?</legend>
-
-        <label>
-          <input
-            type="radio"
-            name="activity_category"
-            value="sport"
-            checked
-          />
-          <span><img src="Assets/icons/sports/activity.svg" alt="" aria-hidden="true" />Sport</span>
-        </label>
-
-        <label>
-          <input
-            type="radio"
-            name="activity_category"
-            value="wellbeing"
-          />
-          <span><img src="Assets/icons/wellbeing/wellbeing.svg" alt="" aria-hidden="true" />Bien-être</span>
-        </label>
-
-        <label>
-          <input
-            type="radio"
-            name="activity_category"
-            value="adventure"
-          />
-          <span><img src="Assets/icons/sports/mountain.svg" alt="" aria-hidden="true" />Aventure</span>
-        </label>
-      </fieldset>
-
-      <label
-        id="activityFileZone"
-        class="activity-file-zone full"
-      >
-        <span>Importer un fichier</span>
-        <strong>FIT ou GPX</strong>
-
-        <small>
+<form class="activity-form" id="activityForm"><fieldset class="activity-category full" hidden="">
+<legend>Quel moment veux-tu ajouter ?</legend>
+<label>
+<input checked="" name="activity_category" type="radio" value="sport"/>
+<span><img alt="" aria-hidden="true" src="Assets/icons/sports/activity.svg"/>Sport</span>
+</label>
+<label>
+<input name="activity_category" type="radio" value="wellbeing"/>
+<span><img alt="" aria-hidden="true" src="Assets/icons/wellbeing/wellbeing.svg"/>Bien-être</span>
+</label>
+<label>
+<input name="activity_category" type="radio" value="adventure"/>
+<span><img alt="" aria-hidden="true" src="Assets/icons/sports/mountain.svg"/>Aventure</span>
+</label>
+</fieldset><label class="activity-file-zone full" id="activityFileZone">
+<span>Importer un fichier</span>
+<strong>FIT ou GPX</strong>
+<small>
           Les données reconnues rempliront
           automatiquement le formulaire.
         </small>
-
-        <input
-          id="activityFile"
-          name="activity_file"
-          type="file"
-          accept=".fit,.gpx,application/gpx+xml,application/octet-stream"
-        />
-
-        <small id="existingActivityFile" hidden></small>
-      </label>
-
-      <label>
-        Date
-        <input
-          name="activity_date"
-          type="date"
-          required
-        />
-      </label>
-
-      <label>
-        Heure
-        <input name="activity_time" type="time" />
-      </label>
-
-      <label>
-        Statut
-        <select name="status">
-          <option value="done">
-            Réalisé
-          </option>
-
-          <option value="planned">
-            Prévu
-          </option>
-        </select>
-      </label>
-
-      <!-- SPORT -->
-
-      <label data-activity-category="sport">
+<input accept=".fit,.gpx,application/gpx+xml,application/octet-stream" id="activityFile" name="activity_file" type="file"/>
+<small hidden="" id="existingActivityFile"></small>
+</label><div class="moment-nature full"><label for="momentNature">Nature du Moment</label><input aria-label="Rechercher une pratique" class="nature-filter" data-nature-filter="" placeholder="Rechercher une pratique…" type="search"/><select aria-label="Nature du Moment" data-moment-nature="" id="momentNature" required=""><option value="">Choisir la nature du Moment</option></select><p class="private-note" data-load-requirement=""></p></div><div data-nature-compat="" hidden=""><label data-activity-category="sport">
         Sport
 
         <select name="sport">
-          <option value="">
+<option value="">
             Chargement des sports…
           </option>
-        </select>
-      </label>
-
-      <label data-activity-category="sport">
-        Type d’activité
-
-        <select name="sport_activity_type">
-          <option value="">
-            Choisir
-          </option>
-
-          <option value="Endurance">
-            Endurance
-          </option>
-
-          <option value="Récupération">
-            Récupération
-          </option>
-
-          <option value="Tempo">
-            Tempo
-          </option>
-
-          <option value="Intervalles">
-            Intervalles
-          </option>
-
-          <option value="Sortie longue">
-            Sortie longue
-          </option>
-
-          <option value="Compétition">
-            Compétition
-          </option>
-
-          <option value="Technique">
-            Technique
-          </option>
-
-          <option value="Renforcement">
-            Renforcement
-          </option>
-
-          <option value="Libre">
-            Libre
-          </option>
-        </select>
-      </label>
-
-      <label data-activity-category="sport">
-        Distance km
-
-        <input
-          name="distance_km"
-          type="number"
-          min="0"
-          step="0.01"
-        />
-      </label>
-
-      <label>
-        Durée
-        <duration-picker name="duration_min" aria-label="Durée du Moment"></duration-picker>
-      </label>
-
-      <label data-activity-category="sport">
-        Dénivelé m
-
-        <input
-          name="elevation_m"
-          type="number"
-          min="0"
-          step="1"
-        />
-      </label>
-
-      <label data-activity-category="sport">
-        FC moyenne
-
-        <input
-          name="avg_hr"
-          type="number"
-          min="0"
-          step="1"
-        />
-      </label>
-
-      <label data-activity-category="sport">
-        Matériel
-
-        <input
-          name="gear"
-          type="text"
-        />
-      </label>
-
-      <!-- BIEN-ÊTRE -->
-
-      <label
-        class="full"
-        data-activity-category="wellbeing"
-        hidden
-      >
+</select>
+</label><label class="full" data-activity-category="wellbeing" hidden="">
         Moment de bien-être
 
         <select name="wellbeing_activity_type">
-          <option value="">Choisir</option>
-        </select>
-        <span class="wellbeing-type-preview" data-wellbeing-icon-preview aria-hidden="true"></span>
-      </label>
-
-      <!-- AVENTURE -->
-
-      <label
-        class="full"
-        data-activity-category="adventure"
-        hidden
-      >
+<option value="">Choisir</option>
+</select>
+<span aria-hidden="true" class="wellbeing-type-preview" data-wellbeing-icon-preview=""></span>
+</label><label class="full" data-activity-category="adventure" hidden="">
         Type d’aventure
 
         <select name="adventure_activity_type">
-          <option value="">
+<option value="">
             Choisir
           </option>
-
-          <option value="Exploration">
+<option value="Exploration">
             Exploration
           </option>
-
-          <option value="Voyage">
+<option value="Voyage">
             Voyage
           </option>
-
-          <option value="Micro-aventure">
+<option value="Micro-aventure">
             Micro-aventure
           </option>
-
-          <option value="Road trip">
+<option value="Road trip">
             Road trip
           </option>
-
-          <option value="Week-end">
+<option value="Week-end">
             Week-end
           </option>
-
-          <option value="Expédition">
+<option value="Expédition">
             Expédition
           </option>
-
-          <option value="Découverte">
+<option value="Découverte">
             Découverte
           </option>
-
-          <option value="Autre">
+<option value="Autre">
             Autre
           </option>
-        </select>
-      </label>
+</select>
+</label></div><label>
+        Date
+        <input name="activity_date" required="" type="date"/>
+</label><label>
+        Heure
+        <input name="activity_time" type="time"/>
+</label><label>
+        Statut
+        <select name="status">
+<option value="done">
+            Réalisé
+          </option>
+<option value="planned">
+            Prévu
+          </option>
+</select>
+</label><label>
+        Durée
+        <duration-picker aria-label="Durée du Moment" name="duration_min"></duration-picker>
+</label><fieldset class="qualifier-choices full"><legend>Ce Moment était aussi… <small>facultatif</small></legend><label><input name="qualifiers" type="checkbox" value="adventure"/>Une aventure</label><label><input name="qualifiers" type="checkbox" value="together"/>Avec des proches</label><label><input name="qualifiers" type="checkbox" value="discovery"/>Une découverte</label></fieldset><details class="moment-details full" data-completed-only="" data-experience-details=""><summary>Comment as-tu vécu ce Moment ?</summary><div class="section-fields"><fieldset class="activity-experience full" data-activity-experience="">
+<legend>Comment as-tu vécu ce moment ?</legend>
+<p>Ces réponses sont facultatives. Un souvenir peut se garder sans chiffre.</p>
+<momentum-slider max="10" max-label="Maximal" min="1" min-label="Facile" name="rpe" title="Effort physique"></momentum-slider>
+<momentum-slider max="10" max-label="Extrême" min="1" min-label="Très faible" name="perceived_challenge" title="Défi"></momentum-slider>
+<momentum-slider max="10" max-label="Totale" min="1" min-label="Très faible" name="perceived_mastery" title="Maîtrise"></momentum-slider>
 
-      <label class="full">
+
+</fieldset></div></details><details class="moment-details full" data-completed-only=""><summary>Photos et souvenirs</summary><div class="section-fields"><label class="full">
+<span>Qu’est-ce que tu retiens de ce Moment ?</span>
+<textarea maxlength="2000" name="retained_memory" placeholder="Une sensation, un apprentissage, une image…" rows="3"></textarea>
+</label><label class="full">
+<span>Photo <small>Facultatif · JPG, PNG ou WebP</small></span>
+<input accept="image/jpeg,image/png,image/webp" multiple="" name="activity_photo" type="file"/>
+</label><label class="memorable-choice full"><input name="is_memorable" type="checkbox"/>Garder parmi mes Moments marquants</label></div></details><details class="moment-details full"><summary>Mesures et détails</summary><div class="section-fields"><label data-activity-category="sport">
+        Type d’activité
+
+        <select name="sport_activity_type">
+<option value="">
+            Choisir
+          </option>
+<option value="Endurance">
+            Endurance
+          </option>
+<option value="Récupération">
+            Récupération
+          </option>
+<option value="Tempo">
+            Tempo
+          </option>
+<option value="Intervalles">
+            Intervalles
+          </option>
+<option value="Sortie longue">
+            Sortie longue
+          </option>
+<option value="Compétition">
+            Compétition
+          </option>
+<option value="Technique">
+            Technique
+          </option>
+<option value="Renforcement">
+            Renforcement
+          </option>
+<option value="Libre">
+            Libre
+          </option>
+</select>
+</label><label data-activity-category="sport">
+        Distance km
+
+        <input min="0" name="distance_km" step="0.01" type="number"/>
+</label><label data-activity-category="sport">
+        Dénivelé m
+
+        <input min="0" name="elevation_m" step="1" type="number"/>
+</label><label data-activity-category="sport">
+        FC moyenne
+
+        <input min="0" name="avg_hr" step="1" type="number"/>
+</label><label class="full">
         Lieu
-        <momentum-location-picker
-          id="activityLocationPicker"
-          name="location_name"
-          location-id-name="location_id"
-        ></momentum-location-picker>
-      </label>
-
-      <label class="full">
+        <momentum-location-picker id="activityLocationPicker" location-id-name="location_id" name="location_name"></momentum-location-picker>
+</label><label class="full">
         Notes
 
-        <textarea
-          name="notes"
-          rows="4"
-        ></textarea>
-      </label>
+        <textarea name="notes" rows="4"></textarea>
+</label></div></details><details class="moment-details full"><summary>Matériel</summary><div class="section-fields"><label data-activity-category="sport">
+        Matériel
 
-      <section class="activity-form-nutrition full" data-activity-form-nutrition>
-        <div>
-          <span class="card-label">Pendant l’activité</span>
-          <h3>Nutrition</h3>
-          <p data-activity-form-nutrition-summary>Ajoute ce que tu as consommé pendant ce Moment.</p>
-        </div>
-        <button
-          id="activityNutritionButton"
-          class="secondary"
-          type="button"
-        >
+        <input name="gear" type="text"/>
+</label></div></details><details class="moment-details full"><summary>Nutrition pendant l’activité</summary><div class="section-fields"><section class="activity-form-nutrition full" data-activity-form-nutrition="">
+<div>
+<span class="card-label">Pendant l’activité</span>
+<h3>Nutrition</h3>
+<p data-activity-form-nutrition-summary="">Ajoute ce que tu as consommé pendant ce Moment.</p>
+</div>
+<button class="secondary" id="activityNutritionButton" type="button">
           Ajouter la nutrition
         </button>
-      </section>
-
-      <fieldset class="activity-experience full" data-activity-experience>
-        <legend>Comment as-tu vécu ce moment&nbsp;?</legend>
-        <p>Trois réponses simples pour nourrir tes analyses, sans formulaire FLOW séparé.</p>
-
-        <momentum-slider name="rpe" title="Effort physique" min="1" max="10" min-label="Facile" max-label="Maximal" required></momentum-slider>
-
-        <momentum-slider name="perceived_challenge" title="Défi" min="1" max="10" min-label="Très faible" max-label="Extrême" required></momentum-slider>
-
-        <momentum-slider name="perceived_mastery" title="Maîtrise" min="1" max="10" min-label="Très faible" max-label="Totale" required></momentum-slider>
-
-        <label>
-          <span>Ce que tu souhaites garder</span>
-          <textarea name="retained_memory" rows="3" placeholder="Une sensation, un apprentissage, une image…"></textarea>
-        </label>
-
-        <label class="activity-photo-picker">
-          <span>Photo <small>Facultatif · JPG, PNG ou WebP</small></span>
-          <input name="activity_photo" type="file" accept="image/jpeg,image/png,image/webp" />
-        </label>
-      </fieldset>
-
-      <p
-        id="activityMessage"
-        class="activity-message full"
-      ></p>
-
-      <div class="activity-actions full">
-        <button
-          id="cancelActivity"
-          class="secondary"
-          type="button"
-        >
+</section></div></details><p class="moment-privacy">Privé par défaut. Les qualificatifs ne partagent ni ce Moment, ni ton ressenti, ni tes photos.</p><p aria-live="polite" class="activity-message full" id="activityMessage" role="status"></p><div class="activity-actions full">
+<button class="secondary" id="cancelActivity" type="button">
           Annuler
         </button>
-
-        <button
-          id="saveActivityButton"
-          class="primary"
-          type="submit"
-        >
+<button class="primary" id="saveActivityButton" type="submit">
           Enregistrer le Moment
         </button>
-      </div>
-    </form>
+</div></form>
   </div>
 </dialog>
 
@@ -587,6 +443,8 @@
       <label>FC au repos (bpm)<input name="restHr" type="number" min="20" max="220" step="1"></label>
       <label>VFC (ms)<input name="hrv" type="number" min="0" step="1"></label>
       <label>Qualité du sommeil<select name="sleepQuality"></select></label>
+      <label class="full">Note personnelle<textarea name="day_note" maxlength="10000" rows="3"></textarea></label>
+      <fieldset class="qualifier-choices full"><legend>Contexte déclaré — facultatif et privé</legend><label><input name="context_annotations" type="checkbox" value="illness">Maladie</label><label><input name="context_annotations" type="checkbox" value="vacation">Vacances</label><label><input name="context_annotations" type="checkbox" value="competition">Compétition</label></fieldset>
       <p id="wellbeingDialogMessage" class="activity-message full" aria-live="polite"></p>
       <div class="wellbeing-dialog-actions full">
         <button id="deleteWellbeing" class="danger-link" type="button" hidden>Supprimer</button>
@@ -632,6 +490,11 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script src="js/supabase.js"></script>
+<script src="js/momentum-access.js"></script>
+<script src="js/momentum-session.js"></script>
+<script src="js/momentum-preferences.js"></script>
+<script src="js/momentum-data.js"></script>
+<script src="js/momentum-training-load.js"></script>
 <script src="js/momentum-ui.js"></script>
 <script src="js/guard.js"></script>
 
@@ -652,15 +515,19 @@
 <script src="js/home-core.js"></script>
 <script src="js/home-data.js"></script>
 <script src="js/home-weather.js"></script>
+<script src="js/momentum-wellbeing-data.js"></script>
 <script src="js/home-wellbeing.js"></script>
 <script src="js/home-hero.js"></script>
 <script src="js/activity-nutrition.js"></script>
 <script src="js/home-calendar.js"></script>
 <script src="js/activity-timeline.js"></script>
+<script src="js/momentum-import-rules.js"></script>
 <script src="js/home-import.js"></script>
+<script src="js/momentum-moment-form.js"></script>
 <script src="js/home-activities.js"></script>
 <script src="js/home-flow.js"></script>
 <script src="js/home.js"></script>
 
+<script src="js/momentum-surface.js"></script>
 </body>
 </html>

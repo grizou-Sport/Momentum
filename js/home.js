@@ -5,6 +5,7 @@
    ========================================================= */
 
 async function renderHome() {
+  if (window.momentumPageReady) await window.momentumPageReady;
   const todayDate = new Date();
   const today = iso(todayDate);
 
@@ -47,11 +48,9 @@ async function renderHome() {
     `;
   }
 
-  const livingContexts = await loadLivingWeatherWindow();
-  renderLivingWeekWeather(livingContexts);
+  try { const livingContexts = await loadLivingWeatherWindow();renderLivingWeekWeather(livingContexts);const context=livingContexts[today]||await getContextForDate(today);renderWeatherCard(context); }
+  catch(_){if(weatherCard)weatherCard.innerHTML='<span class="card-label">Météo</span><h2>Contexte indisponible</h2><p>Ton Journal reste disponible. La météo pourra être rechargée plus tard.</p>';}
 
-  const context = livingContexts[today] || await getContextForDate(today);
-  renderWeatherCard(context);
 }
 
 function bindHome() {
@@ -66,14 +65,12 @@ function bindHome() {
 
   $("#centerToday")?.addEventListener("click", async () => {
     renderLivingWeek(new Date());
+    centerLivingWeekOnToday();
     const contexts = await loadLivingWeatherWindow();
     renderLivingWeekWeather(contexts);
   });
 
-  window.addEventListener("pageshow", () => centerLivingWeekOnToday());
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) centerLivingWeekOnToday();
-  });
+  // Deliberate horizontal browsing survives visibility changes and data refreshes.
 
   $("#prevMonth")?.addEventListener("click", async () => {
     visibleMonth = addMonths(visibleMonth, -1);

@@ -40,12 +40,11 @@ function callbackErrorMessage() {
 }
 
 async function destinationForUser(user) {
-  const { data } = await momentumDB
-    .from("passports")
-    .select("personalization")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  return data?.personalization?.onboarding_completed ? "index.html" : "welcome.html";
+  if (!user) throw new Error("Session indisponible.");
+  const { data, error } = await momentumDB.from("passports").select("personalization").eq("user_id", user.id).maybeSingle();
+  if (error) throw error;
+  const target = window.MomentumAccess.safeReturn(new URLSearchParams(location.search).get("returnTo"), location.origin);
+  return window.MomentumAccess.complete(data) ? target : `welcome.html?returnTo=${encodeURIComponent(target)}`;
 }
 
 async function redirectIfLoggedIn() {
@@ -203,4 +202,6 @@ momentumDB.auth.onAuthStateChange((event) => {
 if (new URLSearchParams(window.location.search).get("recovery") === "1") recoveringPassword = true;
 const callbackMessage = callbackErrorMessage();
 if (callbackMessage) setMessage(document.getElementById("authMessage"), callbackMessage, "error");
-redirectIfLoggedIn();
+redirectIfLoggedIn().catch(() => setMessage(document.getElementById("authMessage"), "Impossible de charger ton espace pour le moment. Réessaie avec Continuer.", "error"));
+
+if (new URLSearchParams(location.search).get("mode") === "signup" && !recoveringPassword) showMode("signup");
