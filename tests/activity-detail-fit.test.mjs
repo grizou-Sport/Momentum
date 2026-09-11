@@ -213,7 +213,7 @@ test("la carte est mise en page sans modification de Leaflet", () => {
 
 test("le lieu initial est résolu pendant l’import et la fiche délègue les détails au composant partagé", () => {
   assert.match(importSource, /locationName = await reverseGeocode\(/);
-  assert.match(activitiesSource, /location_name:\s*String\(/);
+  assert.match(activitiesSource, /location_name:location\.location\?\.name \|\| String\(/);
   assert.doesNotMatch(calendarSource, /reverseGeocode|fetch\(/);
   assert.match(calendarSource, /MomentumLocationPopover/);
 });

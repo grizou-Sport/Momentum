@@ -21,9 +21,9 @@
   }
 
   function escapeText(value) {
-    const node = document.createElement("span");
-    node.textContent = String(value || "");
-    return node.innerHTML;
+    return String(value ?? "").replace(/[&<>"'`]/g, character => ({
+      '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;', '`':'&#96;'
+    })[character]);
   }
 
   function escapeAttribute(value) {
@@ -55,5 +55,5 @@
     });
   }
 
-  window.MomentumUI = { errorMessage, confirm: confirmAction, prompt: promptText };
+  window.MomentumUI = { errorMessage, escapeText, escapeAttribute, confirm: confirmAction, prompt: promptText };
 })();

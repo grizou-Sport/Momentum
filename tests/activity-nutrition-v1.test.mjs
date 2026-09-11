@@ -17,6 +17,7 @@ const migrationSource = await readFile(
 function loadNutritionModule() {
   const context = {
     console,
+    addEventListener() {},
     Intl,
     Map,
     window:null,
@@ -104,20 +105,21 @@ test("branche la carte sur la fiche activité et la rafraîchit sans rechargemen
   assert.match(calendarSource, /MomentumNutrition\?\.ensureActivities\(sessions\)/);
   assert.match(calendarSource, /MomentumNutrition\?\.renderActivitySection\(session, date\)/);
   assert.match(homeSource, /action === "edit-nutrition"/);
-  assert.match(nutritionSource, /await openDay\(activityDate\)/);
-  assert.match(nutritionSource, /Impossible d’enregistrer le ravitaillement\. Réessayer\./);
+  assert.match(homeActivitiesSource, /await renderHome\(\)/);
+  assert.match(homeActivitiesSource, /L’enregistrement n’est pas confirmé/);
 });
 
-test("la nutrition se prépare dans le formulaire avant les indicateurs Flow", () => {
+test("la nutrition reste facultative dans le formulaire progressif avec une seule sauvegarde", () => {
   const nutritionEntry = indexSource.indexOf('data-activity-form-nutrition');
   const flowIndicators = indexSource.indexOf('data-activity-experience');
 
   assert.ok(nutritionEntry > 0);
-  assert.ok(nutritionEntry < flowIndicators);
+  assert.ok(flowIndicators > 0);
   assert.match(indexSource, /id="activityNutritionButton"[\s\S]*Ajouter la nutrition/);
   assert.match(homeSource, /activityNutritionButton[\s\S]*openActivityFormNutrition/);
   assert.match(homeActivitiesSource, /MomentumNutrition\?\.beginActivityForm/);
-  assert.match(homeActivitiesSource, /MomentumNutrition\?\.saveActivityForm\([\s\S]*persistedActivityId/);
+  assert.match(homeActivitiesSource, /p_nutrition:window\.MomentumNutrition\?\.draftPayload\(\)/);
+  assert.match(homeActivitiesSource, /rpc\("save_personal_moment"/);
   assert.match(nutritionSource, /active\.mode === "activity-form"/);
   assert.match(nutritionSource, /button\.textContent = "Modifier la nutrition"/);
   assert.match(nutritionSource, /async function saveActivityForm/);

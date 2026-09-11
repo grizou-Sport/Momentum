@@ -6,7 +6,7 @@
 })(typeof window === 'undefined' ? globalThis : window, function () {
   'use strict';
   const fields = { sleep_hours: 'sleep_hours', motivation: 'energy', resting_hr: 'rest_hr', hrv_ms: 'hrv', sleep_quality_value: null };
-  const numeric = v => v != null && String(v).trim() !== '' && Number.isFinite(Number(v)) ? Number(v) : null;
+  const numeric = v => (typeof v === 'string' || typeof v === 'number') && v != null && String(v).trim() !== '' && Number.isFinite(Number(v)) ? Number(v) : null;
   function resolve(daily = {}, day = {}, preferences = {}) {
     daily ||= {}; day ||= {};
     const values = {}, sources = {}, alternatives = {};

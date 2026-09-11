@@ -20,15 +20,22 @@
       "id": "ACC-03",
       "situation": "Nouvel inscrit renseigne seulement le prénom et saute le reste autorisé",
       "expected": "Accès au premier Moment sans biométrie ni objectif chiffré.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs",
+        "specs/cdc/2026-09-11.browser.md"
+      ]
     },
     {
       "id": "ACC-04",
       "situation": "Ancien compte avec onboarding terminé se connecte",
       "expected": "Aucun nouveau parcours obligatoire et aucune donnée effacée.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs"
+      ]
     },
     {
       "id": "ACC-05",
@@ -55,8 +62,12 @@
       "id": "ACC-08",
       "situation": "Onboarding interrompu puis repris, validation répétée",
       "expected": "Reprise correcte et un seul profil.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs",
+        "specs/cdc/2026-09-11.browser.md"
+      ]
     },
     {
       "id": "ACC-09",
@@ -503,29 +514,44 @@
       "id": "PER-01",
       "situation": "YOU ouvert sans mensurations ni compétition",
       "expected": "Aperçu personnel cohérent et non vide artificiellement.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs",
+        "specs/cdc/2026-09-11.browser.md"
+      ]
     },
     {
       "id": "PER-02",
       "situation": "Intention sans date ni distance",
       "expected": "Sauvegarde possible ; aucun compte à rebours ou score fictif.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs"
+      ]
     },
     {
       "id": "PER-03",
       "situation": "Marquer puis retirer un Moment marquant",
       "expected": "Aperçu actualisé ; activité et souvenir inchangés.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs",
+        "specs/cdc/2026-09-11.browser.md"
+      ]
     },
     {
       "id": "PER-04",
       "situation": "Mon Chemin consulté sur plusieurs années",
       "expected": "Pagination, filtres et accès au détail cohérents avec le Journal.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs",
+        "specs/cdc/2026-09-11.browser.md"
+      ]
     },
     {
       "id": "PER-05",
@@ -545,15 +571,21 @@
       "id": "PER-07",
       "situation": "Ravitaillement prévu puis activité réalisée",
       "expected": "Aucune consommation automatique ; reprise explicite du prévu possible.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs"
+      ]
     },
     {
       "id": "PER-08",
       "situation": "Consommation partielle par rapport au prévu",
       "expected": "Totaux séparés et exacts.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs"
+      ]
     },
     {
       "id": "PER-09",
@@ -573,15 +605,21 @@
       "id": "PER-11",
       "situation": "Valeur nutritionnelle inconnue versus zéro explicite",
       "expected": "Statuts distincts et total partiel lorsque nécessaire.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs"
+      ]
     },
     {
       "id": "PER-12",
       "situation": "Bibliothèque modifiée après consommation enregistrée",
       "expected": "Instantané historique inchangé.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs"
+      ]
     },
     {
       "id": "PER-13",
@@ -594,8 +632,12 @@
       "id": "PER-14",
       "situation": "Paramètre de langue, unité, push ou source non opérationnel",
       "expected": "Aucun état de réussite ou d’activation fictif.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs",
+        "specs/cdc/2026-09-11.browser.md"
+      ]
     },
     {
       "id": "SEC-01",
@@ -608,57 +650,84 @@
       "id": "SEC-02",
       "situation": "Invité sans compte ouvre un lien valide",
       "expected": "Aperçu limité et réponse possible sans Passeport.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs",
+        "specs/cdc/2026-09-11.browser.md"
+      ]
     },
     {
       "id": "SEC-03",
       "situation": "Invité répond avec un nom non vérifié",
       "expected": "Réponse clairement externe et à valider, aucune identité certifiée.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs",
+        "specs/cdc/2026-09-11.browser.md"
+      ]
     },
     {
       "id": "SEC-04",
       "situation": "Robot de messagerie prévisualise le lien",
       "expected": "Aucune acceptation ni consommation définitive du lien.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs"
+      ]
     },
     {
       "id": "SEC-05",
       "situation": "Lien expiré, révoqué ou renouvelé",
       "expected": "Ancien accès refusé ; réponse historique préservée.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs",
+        "specs/cdc/2026-09-11.browser.md"
+      ]
     },
     {
       "id": "SEC-06",
       "situation": "Tentative de lire un autre Moment ou un profil via session invitée",
       "expected": "Refus côté serveur et base.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs"
+      ]
     },
     {
       "id": "SEC-07",
       "situation": "Deux validations pour la dernière place",
       "expected": "Une seule confirmation conforme à la capacité, autre état explicite.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs"
+      ]
     },
     {
       "id": "SEC-08",
       "situation": "Date modifiée après réponses ou Moment annulé",
       "expected": "État visible et nouvelle confirmation si nécessaire ; aucune notification fictive.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs"
+      ]
     },
     {
       "id": "SEC-09",
       "situation": "Invité participe ponctuellement",
       "expected": "Aucun ajout automatique au Cercle ou au Club.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs"
+      ]
     },
     {
       "id": "SEC-10",
@@ -678,43 +747,62 @@
       "id": "SEC-12",
       "situation": "Accès direct à un média ou une activité d’un autre compte",
       "expected": "Accès refusé, même en contournant l’interface.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs"
+      ]
     },
     {
       "id": "SEC-13",
       "situation": "Export de F13 avec historique de plusieurs années",
       "expected": "Toutes les données promises sont présentes, compteurs exacts et aucune troncature silencieuse.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs"
+      ]
     },
     {
       "id": "SEC-14",
       "situation": "Export avec médias, notes et consommations",
       "expected": "Manifeste cohérent, fichiers autorisés et aucune donnée privée d’un autre participant.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs"
+      ]
     },
     {
       "id": "SEC-15",
       "situation": "Export interrompu ou page manquante",
       "expected": "Échec ou partialité explicitement signalée, pas de succès complet.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs",
+        "tests/consolidation/export.test.cjs"
+      ]
     },
     {
       "id": "SEC-16",
       "situation": "Export inspecté pour secrets et jetons",
       "expected": "Aucun secret technique, OAuth ou invitation active.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs"
+      ]
     },
     {
       "id": "SEC-17",
       "situation": "Connexion cochée historiquement mais sans autorisation réelle",
       "expected": "Affichage « source déclarée » ou non connectée, jamais synchronisation réussie.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs"
+      ]
     },
     {
       "id": "SEC-18",
@@ -741,8 +829,12 @@
       "id": "SEC-21",
       "situation": "Champs texte malveillants et pièces jointes non autorisées",
       "expected": "Contenu neutralisé ou rejeté, aucune exécution dans les vues ou exports rendus.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-11.implementation.md",
+        "tests/consolidation/database.test.mjs",
+        "tests/consolidation/ui-security.test.cjs"
+      ]
     },
     {
       "id": "LIV-01",

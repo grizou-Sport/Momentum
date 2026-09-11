@@ -556,8 +556,8 @@ function mergeWellbeingDays(dailyRows, legacyRows, start, end) {
     const motivationSource=resolved.values.motivation;
     const motivation=subjectiveValueOutOfTen(motivationSource);
     const motivationScore=normalizeSubjective(motivationSource);
-    const recovery=sleepQualityLevel(daily.sleep_quality_value,daily.sleep_quality_unit);
-    const recoveryScore=sleepQualityScore(daily.sleep_quality_value,daily.sleep_quality_unit);
+    const recovery=sleepQualityLevel(resolved.values.sleep_quality_value,resolved.sleep_quality_unit);
+    const recoveryScore=sleepQualityScore(resolved.values.sleep_quality_value,resolved.sleep_quality_unit);
     const available=[sleepScore,motivationScore,recoveryScore].filter((value)=>value!=null);
     return {date,sleepHours:normalizedSleepHours,sleepTarget,motivation,recovery,summary:available.length?available.reduce((sum,value)=>sum+value,0)/available.length:null,restingHr:resolved.values.resting_hr,hrv:resolved.values.hrv_ms,note:resolved.note||null,source:daily.source_label||"Journal historique",sources:resolved.sources,summaryInputs:available.length};
   });

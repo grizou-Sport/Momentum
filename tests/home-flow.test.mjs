@@ -55,7 +55,7 @@ test("FLOW positions points exclusively from reported challenge and mastery", ()
   assert.match(flowSource, /flowCoordinate\(assessment\.perceived_challenge\)/);
   assert.doesNotMatch(flowSource, /flowCoordinate\([^)]*(?:fit|load|weather|rpe)/i);
   assert.match(flowSource, /function buildFlowAnalysisContext/);
-  assert.match(flowSource, /const exertion = Number\(activity\.rpe/);
+  assert.match(flowSource, /MomentumTrainingLoad\.activityLoad/);
   assert.doesNotMatch(homePage, /Flow Score|Momentum Score/);
 });
 
@@ -65,9 +65,9 @@ test("the three experience questions are part of the single Moment form", () => 
   }
   assert.match(homePage, /data-activity-experience/);
   assert.match(homePage, /Enregistrer le Moment/);
-  assert.match(activitySource, /completed \? numberOrNull\(values, "rpe"\) : null/);
-  assert.match(activitySource, /from\("activity_flow_assessments"\)[\s\S]*\.upsert\(assessmentPayload/);
-  assert.match(activitySource, /\.select\("id"\)\s*\.single\(\)/);
+  assert.match(activitySource, /numberOrNull\(values, "rpe"\) : original\.rpe \?\? null/);
+  assert.match(activitySource, /p_assessment:assessment/);
+  assert.match(activitySource, /rpc\("save_personal_moment", form\._pendingCommand\)/);
   assert.doesNotMatch(homePage, /id="flowAssessmentDialog"/);
   assert.doesNotMatch(activitySource, /offerAssessment/);
 });
@@ -92,7 +92,7 @@ test("FLOW persistence is isolated, constrained and owner-protected", () => {
   assert.match(migration, /activities\.user_id = \(select auth\.uid\(\)\)/);
   assert.match(implementation109Migration, /set rpe = assessment\.perceived_exertion/);
   assert.match(implementation109Migration, /drop column if exists perceived_exertion/);
-  assert.match(activitySource, /rpe:\s*completed \? numberOrNull/);
+  assert.match(activitySource, /rpe:effort/);
   assert.doesNotMatch(flowSource, /update\(\{ rpe:/);
 });
 
@@ -100,8 +100,8 @@ test("all visible duration inputs use the shared minute-based component", () => 
   assert.match(durationSource, /class DurationPicker extends HTMLElement/);
   assert.match(durationSource, /\^\\d\+\$/);
   assert.match(durationSource, /Number\(match\[1\]\) \* 60/);
-  assert.match(homePage, /<duration-picker name="duration_min"/);
-  assert.match(homePage, /<duration-picker name="sleepDuration"/);
+  assert.match(homePage, /<duration-picker\b(?=[^>]*name="duration_min")/);
+  assert.match(homePage, /<duration-picker\b(?=[^>]*name="sleepDuration")/);
   assert.doesNotMatch(homePage, /duration_hours|duration_minutes|sleepHours|sleepMinutes/);
 });
 

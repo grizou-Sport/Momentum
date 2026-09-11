@@ -219,6 +219,7 @@ test("le parseur GPX retient le premier horodatage valide", async () => {
       if (selector !== "trkpt") return [];
       return points.map((point) => ({
         getAttribute(name) { return point[name]; },
+        hasAttribute(name) { return Object.hasOwn(point,name); },
         querySelector(name) {
           return name === "time" ? { textContent: point.time } : null;
         }
@@ -238,7 +239,7 @@ test("le parseur GPX retient le premier horodatage valide", async () => {
   assert.equal(parsed.endTime, "2026-07-20T08:37:00.000Z");
 });
 
-test("une Timeline indisponible ne transforme pas le succès principal en échec", async () => {
+test("une Timeline indisponible signale un échec ciblé et permet la reprise", async () => {
   const warnings = [];
   const context = loadActivityImportFunctions({
     console: {
@@ -254,15 +255,11 @@ test("une Timeline indisponible ne transforme pas le succès principal en échec
     }
   });
 
-  const saved = await context.saveActivityTimelineSafely(
-    "activity-1",
-    "user-1",
-    { events: [{ event_type: "start" }] }
-  );
-
-  assert.equal(saved, false);
+  await assert.rejects(context.saveActivityTimelineSafely(
+    "activity-1", "user-1", { events: [{ event_type: "start" }] }
+  ), /chronologie/);
   assert.equal(warnings.length, 1);
-  assert.match(warnings[0][0], /Moment enregistré sans Timeline/);
+  assert.match(warnings[0][0], /Timeline/i);
 });
 
 test("le repli de schéma retire uniquement les champs FIT normalisés", () => {

@@ -139,7 +139,7 @@ async function hasMissionHistory(userId) {
     .limit(1);
 
   if (error) {
-    console.error("Erreur vérification Mon Chemin:", error);
+    console.error("Erreur vérification Historique des Horizons:", error);
     return false;
   }
 
@@ -381,7 +381,7 @@ async function renderMissionEmpty() {
           showPathButton
             ? `
               <button class="you-secondary-btn" id="openMissionPathBtn" type="button">
-                Mon Chemin
+                Historique des Horizons
               </button>
             `
             : ""
@@ -420,14 +420,14 @@ async function renderMissionCard(mission) {
   if (mission.category) {
     identityItems.push(`
       <span class="mission-meta-label">Catégorie</span>
-      <span>${categoryLabel}</span>
+      <span>${escapeHTML(categoryLabel)}</span>
     `);
   }
 
   if (mission.subcategory) {
     identityItems.push(`
       <span class="mission-meta-label">Intention</span>
-      <span>${intentionLabel}</span>
+      <span>${escapeHTML(intentionLabel)}</span>
     `);
   }
 
@@ -440,7 +440,7 @@ async function renderMissionCard(mission) {
 
     identityItems.push(`
       ${sportIcon}
-      <span>${getMissionSportLabel(mission.sport)}</span>
+      <span>${escapeHTML(getMissionSportLabel(mission.sport))}</span>
     `);
   }
 
@@ -482,7 +482,7 @@ async function renderMissionCard(mission) {
     <section class="you-panel mission-card">
       <div class="mission-cover">
         <p class="section-kicker">Mon Horizon</p>
-        <h2>${mission.title}</h2>
+        <h2>${escapeHTML(mission.title)}</h2>
       </div>
 
       <div class="mission-separator"></div>
@@ -510,7 +510,7 @@ async function renderMissionCard(mission) {
           ? `
             <div class="mission-intention">
               <p class="section-kicker">Pourquoi ?</p>
-              <p>${mission.description}</p>
+              <p>${escapeHTML(mission.description)}</p>
             </div>
           `
           : ""
@@ -529,7 +529,7 @@ async function renderMissionCard(mission) {
           showPathButton
             ? `
               <button class="you-secondary-btn" id="openMissionPathBtn" type="button">
-                Mon Chemin
+                Historique des Horizons
               </button>
             `
             : ""
@@ -567,7 +567,7 @@ async function renderMissionPath() {
       <div class="you-panel-header">
         <div>
           <p class="section-kicker">Mon Horizon</p>
-          <h2>Mon Chemin</h2>
+          <h2>Historique des Horizons</h2>
         </div>
 
         <button class="you-secondary-btn" id="backToMissionBtn" type="button">
@@ -587,10 +587,10 @@ async function renderMissionPath() {
     .order("moved_to_history_at", { ascending: false });
 
   if (error) {
-    console.error("Erreur chargement Mon Chemin:", error);
+    console.error("Erreur chargement Historique des Horizons:", error);
     youDetail.innerHTML = `
       <section class="you-panel">
-        <p class="you-panel-text">Impossible de charger Mon Chemin.</p>
+        <p class="you-panel-text">Impossible de charger Historique des Horizons.</p>
       </section>
     `;
     return;
@@ -603,7 +603,7 @@ async function renderMissionPath() {
       <div class="you-panel-header">
         <div>
           <p class="section-kicker">Mon Horizon</p>
-          <h2>Mon Chemin</h2>
+          <h2>Historique des Horizons</h2>
         </div>
 
         <button class="you-secondary-btn" id="backToMissionBtn" type="button">
@@ -661,7 +661,7 @@ function renderMissionPathItem(mission) {
           className: "mission-inline-icon mission-inline-icon-small",
           decorative: true,
         })}
-        <span>${getMissionSportLabel(mission.sport)}</span>
+        <span>${escapeHTML(getMissionSportLabel(mission.sport))}</span>
       </span>
     `
     : "";
@@ -672,7 +672,7 @@ function renderMissionPathItem(mission) {
         ${closedDate ? `Clos le ${closedDate}` : "Horizon clos"}
       </p>
 
-      <h3>${mission.title}</h3>
+      <h3>${escapeHTML(mission.title)}</h3>
 
       <div class="you-panel-meta mission-path-meta">
         ${
@@ -680,7 +680,7 @@ function renderMissionPathItem(mission) {
             ? `
               <span class="mission-path-meta-item">
                 <span class="mission-meta-label">Catégorie</span>
-                <span>${categoryLabel}</span>
+                <span>${escapeHTML(categoryLabel)}</span>
               </span>
             `
             : ""
@@ -691,7 +691,7 @@ function renderMissionPathItem(mission) {
             ? `
               <span class="mission-path-meta-item">
                 <span class="mission-meta-label">Intention</span>
-                <span>${intentionLabel}</span>
+                <span>${escapeHTML(intentionLabel)}</span>
               </span>
             `
             : ""
@@ -702,7 +702,7 @@ function renderMissionPathItem(mission) {
 
       ${
         mission.description
-          ? `<p class="you-panel-text">${mission.description}</p>`
+          ? `<p class="you-panel-text">${escapeHTML(mission.description)}</p>`
           : ""
       }
 
@@ -710,7 +710,7 @@ function renderMissionPathItem(mission) {
         <button
           class="you-danger-btn"
           type="button"
-          data-delete-history-mission="${mission.id}"
+          data-delete-history-mission="${escapeHTML(mission.id)}"
         >
           Supprimer définitivement
         </button>
@@ -766,7 +766,7 @@ function openMissionModal(mission = null) {
           <input
             id="missionTitleInput"
             type="text"
-            value="${mission?.title || ""}"
+            value="${escapeHTML(mission?.title || "")}"
             placeholder="Ex. Courir les 100 km de Bienne"
             required
           >
@@ -788,7 +788,7 @@ function openMissionModal(mission = null) {
               type="number"
               step="0.1"
               min="0"
-              value="${mission?.distance_km || ""}"
+              value="${escapeHTML(mission?.distance_km || "")}"
               placeholder="Ex. 100"
             >
           </label>
@@ -810,7 +810,7 @@ function openMissionModal(mission = null) {
             id="missionDurationInput"
             type="number"
             min="1"
-            value="${mission?.duration_days || ""}"
+            value="${escapeHTML(mission?.duration_days || "")}"
             placeholder="Nombre de jours"
           >
         </label>
@@ -820,7 +820,7 @@ function openMissionModal(mission = null) {
           <input
             id="missionTargetDateInput"
             type="date"
-            value="${mission?.target_date || ""}"
+            value="${escapeHTML(mission?.target_date || "")}"
           >
         </label>
 
@@ -830,7 +830,7 @@ function openMissionModal(mission = null) {
             id="missionDescriptionInput"
             rows="5"
             placeholder="Ex. Je veux découvrir jusqu’où je suis capable d’aller."
-          >${mission?.description || ""}</textarea>
+          >${escapeHTML(mission?.description || "")}</textarea>
         </label>
 
         <div class="you-form-actions">
@@ -924,7 +924,7 @@ function openCloseMissionModal() {
       </div>
 
       <p class="you-panel-text">
-        Cet horizon rejoindra <strong>Mon Chemin</strong>.
+        Cet horizon rejoindra <strong>Historique des Horizons</strong>.
         Tu pourras ensuite créer un nouvel horizon.
       </p>
 

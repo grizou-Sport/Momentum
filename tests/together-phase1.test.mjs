@@ -43,10 +43,10 @@ test("Circle UI hides empty categories and centers its first actions when everyt
   assert.match(client, /openEmptyCreateClub/);
 });
 
-test("Circle comes before Moments and is the default Together view", () => {
-  assert.match(client, /view: "circle"/);
-  assert.ok(page.indexOf('data-view="circle"') < page.indexOf('data-view="moments"'));
-  assert.match(page, /class="active" data-view="circle"[^>]+aria-selected="true"/);
+test("Moments is the default Together view while Circle remains accessible", () => {
+  assert.match(client, /view: "moments"/);
+  assert.ok(page.indexOf('data-view="moments"') < page.indexOf('data-view="circle"'));
+  assert.match(page, /class="active" data-view="moments"[^>]+aria-selected="true"/);
 });
 
 test("database rules prevent duplicate open invitations and unordered connections", () => {

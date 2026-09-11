@@ -1,6 +1,6 @@
 {
   "id": "CDC-2026-09-08",
-  "status": "recovery-incomplete",
+  "status": "implementation-in-progress",
   "referenceCommit": "dd8b37eb72c4ddc1a255c8f4e3a3f42f9f9fcfa0",
   "requiredFiles": [
     "js/momentum-training-load.js",
@@ -11,7 +11,18 @@
     "tests/consolidation",
     "supabase/migrations/20260911184622_cdc_personal_moment_foundation.sql",
     "supabase/migrations/20260911185216_cdc_nutrition_phases.sql",
-    "supabase/migrations/20260911185612_cdc_daily_observations.sql"
+    "supabase/migrations/20260911185612_cdc_daily_observations.sql",
+    "js/you-story.js",
+    "js/you-account.js",
+    "quality/export-scope.json",
+    "supabase/migrations/20260911190711_cdc_minimal_onboarding.sql",
+    "supabase/migrations/20260911191134_cdc_account_export.sql",
+    "supabase/migrations/20260911192153_cdc_personal_story.sql",
+    "js/momentum-guest-manager.js",
+    "supabase/migrations/20260911194108_cdc_guest_invitations.sql",
+    "supabase/migrations/20260911192914_cdc_shared_moment_privacy.sql",
+    "supabase/migrations/20260911195144_cdc_shared_profile_privacy.sql",
+    "supabase/migrations/20260911194959_cdc_export_guest_responses.sql"
   ],
   "requirements": [
     {

@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="css/navigation.css">
   <link rel="stylesheet" href="css/you.css">
   <link rel="stylesheet" href="css/location-picker.css">
+  <link rel="stylesheet" href="css/consolidation.css">
 </head>
 
 <body class="you-body" data-momentum-page="you">
@@ -29,7 +30,7 @@
         <p id="passportLocation" class="you-location">—</p>
         <p id="passportQuote" class="you-quote">—</p>
 
-        <div class="you-mini-stats">
+        <details class="you-profile-measures"><summary>Repères personnels</summary><div class="you-mini-stats">
           <div>
             <span>Âge</span>
             <strong id="passportAge">—</strong>
@@ -42,13 +43,16 @@
             <span>Poids</span>
             <strong id="passportWeight">—</strong>
           </div>
-        </div>
+        </div></details>
       </aside>
 
       <section class="you-main">
+        <div id="youDetail" class="you-detail"></div>
         <div class="you-menu">
-          <p class="you-menu-heading">Objectifs</p>
-          <button class="you-menu-item active" data-you-section="mission" type="button">
+          <button class="you-menu-item active" data-you-section="overview" type="button"><span>Ton aperçu</span><strong>Ce qui compte pour toi</strong></button>
+          <button class="you-menu-item" data-you-section="path" type="button"><span>Mon Chemin</span><strong>Moments et souvenirs</strong></button>
+          <p class="you-menu-heading">Tes intentions</p>
+          <button class="you-menu-item" data-you-section="mission" type="button">
             <span>Mon Horizon</span>
             <strong id="missionMenuTitle">Horizon non défini</strong>
           </button>
@@ -81,7 +85,6 @@
           </button>
         </div>
 
-        <div id="youDetail" class="you-detail"></div>
       </section>
     </section>
   </main>
@@ -110,6 +113,10 @@
   <script src="js/you-wellbeing.js"></script>
   <script src="js/you-equipment.js"></script>
 
+  <script src="js/momentum-export.js"></script>
+  <script src="js/you-story.js"></script>
+  <script src="js/you-account.js"></script>
   <script src="js/you.js"></script>
+  <script src="js/momentum-surface.js"></script>
 </body>
 </html>

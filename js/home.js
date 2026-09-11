@@ -57,8 +57,8 @@ function bindHome() {
   document.addEventListener("click", (event) => {
     if (event.target.closest("[data-home-retry]")) renderHome();
   });
-  $("#closeActivityDialog")?.addEventListener("click", closeActivityDialog);
-  $("#cancelActivity")?.addEventListener("click", closeActivityDialog);
+  $("#closeActivityDialog")?.addEventListener("click", () => closeActivityDialog());
+  $("#cancelActivity")?.addEventListener("click", () => closeActivityDialog());
   $("#activityFile")?.addEventListener("change", handleActivityFile);
   $("#activityForm")?.addEventListener("submit", saveActivity);
   $("#activityNutritionButton")?.addEventListener("click", openActivityFormNutrition);
@@ -170,9 +170,13 @@ function bindHome() {
 }
 
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   bindHome();
   bindWellbeingCard();
   bindWellbeingDialog();
-  renderHome();
+  await renderHome();
+  const entry = new URLSearchParams(location.search);
+  if (entry.get("import") === "1") { openActivityDialog(); $("#activityFile")?.focus(); }
+  const activityId = entry.get("activity");
+  if (/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(activityId || "")) await openEditActivityDialog(activityId);
 });

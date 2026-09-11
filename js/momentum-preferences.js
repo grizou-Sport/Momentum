@@ -2,8 +2,8 @@
   'use strict';
   let owner = null, values = {}, generation = 0;
   async function load(userId) {
-    const attempt = ++generation; owner = userId;
-    const { data, error } = await window.momentumDB.from('user_settings').select('experience_preferences').eq('user_id', userId).maybeSingle();
+    const attempt = ++generation; owner = userId; values = {};
+    const { data, error } = await Promise.resolve(window.momentumDB.from('user_settings').select('experience_preferences').eq('user_id', userId).maybeSingle()).catch(() => ({error:true}));
     if (attempt !== generation || owner !== userId) return;
     if (error) { window.dispatchEvent(new Event('momentum:preferences-unavailable')); return; }
     values = data?.experience_preferences || {};

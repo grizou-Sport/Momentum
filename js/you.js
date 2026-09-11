@@ -17,7 +17,13 @@ const YOU = {
   pendingAvatarBlob: null,
   loadErrors: {},
   loading: true,
+  loadGeneration: 0,
+  activeSection: "overview",
+  memories: [],
+  media: [],
 };
+
+function escapeHTML(value) { return window.MomentumUI.escapeText(value); }
 
 function safe(value, fallback = "—") {
   return value === null || value === undefined || value === "" ? fallback : value;
@@ -55,11 +61,14 @@ function setActiveSection(section) {
 }
 
 function renderSection(section) {
+  YOU.activeSection = section;
   setActiveSection(section);
 
   if (YOU.loadErrors[section]) return renderYouSectionError(section);
 
-  if (section === "mission") return loadMission();
+  if (section === "overview") return renderPersonalOverview();
+  if (section === "path") return renderPersonalPath();
+  if (section === "mission") return renderPersonalHorizon();
   if (section === "sports") return renderSports();
   if (section === "wellbeing") return renderWellbeing();
   if (section === "equipment") return renderEquipment();
@@ -83,29 +92,20 @@ function renderMenuPreviews() {
   setText("sportsMenuSummary", activeSports || "Tes pratiques apparaîtront ici");
   setText(
     "wellbeingMenuSummary",
-    `${YOU.passport?.weight_kg || "—"} kg · VO₂ ${YOU.wellbeingProfile?.vo2max || "—"}`
+    "Tes repères personnels, facultatifs"
   );
   setText("equipmentMenuSummary", activeEquipment || "Ajouter ton matériel");
+  setText("missionMenuTitle", YOU.passport?.personalization?.open_intention || "Tes intentions et objectifs");
   setText("passportMenuName", YOU.passport?.display_name || "Ton passeport");
 }
 
 async function loadYou() {
   YOU.loading = true;
   if (YOU.detail && !YOU.passport) YOU.detail.innerHTML = '<div class="you-note-box" role="status"><span>Chargement</span><p>Ton histoire se prépare…</p></div>';
-  const { data, error } = await window.momentumDB.auth.getSession();
-
-  if (error) {
-    console.error("Erreur session:", error);
-    window.location.href = "login.html";
-    return;
-  }
-
-  YOU.currentUser = data.session?.user;
-
-  if (!YOU.currentUser) {
-    window.location.href = "login.html";
-    return;
-  }
+  YOU.currentUser = await window.momentumPageReady;
+  const generation = ++YOU.loadGeneration;
+  if (!YOU.currentUser) return;
+  const settle = promise => Promise.resolve(promise).catch(() => ({data:null,error:{code:'LOAD_FAILED'}}));
 
   const [
     passportResult,
@@ -116,6 +116,8 @@ async function loadYou() {
     wellbeingResult,
     settingsResult,
     locationResult,
+    memoriesResult,
+    mediaResult,
   ] = await Promise.all([
     window.momentumDB
       .from("passports")
@@ -128,12 +130,7 @@ async function loadYou() {
       .select("*, sports(*)")
       .eq("user_id", YOU.currentUser.id),
 
-    window.momentumDB
-      .from("activities")
-      .select("sport,activity_type,activity_date,status")
-      .eq("user_id", YOU.currentUser.id)
-      .gte("activity_date", new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10))
-      .order("activity_date", { ascending: false }),
+    window.MomentumData.history(YOU.currentUser.id, {refresh:true}),
 
     window.momentumDB
       .from("equipment_categories")
@@ -163,9 +160,15 @@ async function loadYou() {
       .select("city,country,latitude,longitude,timezone")
       .eq("user_id", YOU.currentUser.id)
       .maybeSingle(),
-  ]);
+    window.MomentumData.all(() => window.momentumDB.from("activity_flow_assessments").select("id,activity_id,retained_memory", {count:"exact"}).eq("user_id",YOU.currentUser.id).order("id")),
+    window.MomentumData.all(() => window.momentumDB.from("activity_media").select("id,activity_id,file_path", {count:"exact"}).eq("user_id",YOU.currentUser.id).order("id")),
+  ].map(settle));
+  if (generation !== YOU.loadGeneration || !YOU.currentUser) return;
 
   YOU.loadErrors = {
+    overview: passportResult.error || userSportsResult.error || activitiesResult.error || memoriesResult.error || null,
+    path: activitiesResult.error || memoriesResult.error || mediaResult.error || null,
+    mission: passportResult.error || null,
     about: passportResult.error || locationResult.error || null,
     sports: userSportsResult.error || activitiesResult.error || null,
     equipment: equipmentCategoriesResult.error || userEquipmentResult.error || null,
@@ -173,7 +176,7 @@ async function loadYou() {
     account: settingsResult.error || null,
   };
   Object.entries(YOU.loadErrors).forEach(([section, sectionError]) => {
-    if (sectionError) console.error(`YOU : chargement ${section} interrompu.`, sectionError);
+    if (sectionError) console.warn(`YOU : chargement ${section} interrompu.`);
   });
 
   if (!passportResult.error) YOU.passport = passportResult.data;
@@ -185,138 +188,30 @@ async function loadYou() {
   if (!wellbeingResult.error) YOU.wellbeingProfile = wellbeingResult.data || null;
   if (!settingsResult.error) YOU.userSettings = settingsResult.data || null;
   if (!locationResult.error) YOU.userLocation = locationResult.data || null;
+  if (!memoriesResult.error) YOU.memories = memoriesResult.data || [];
+  if (!mediaResult.error) YOU.media = mediaResult.data || [];
   YOU.loading = false;
 
   renderPassportCard();
   renderMenuPreviews();
   const requestedSection = new URLSearchParams(window.location.search).get("section");
-  renderSection(["mission", "sports", "wellbeing", "equipment", "about", "account"].includes(requestedSection) ? requestedSection : "mission");
+  renderSection(YOU_SECTIONS.includes(requestedSection) ? requestedSection : "overview");
 }
 
-YOU.buttons.forEach((button) => {
-  button.addEventListener("click", () => {
-    const section = button.dataset.youSection;
-    renderSection(section);
-    window.history.replaceState({}, "", `you.html?section=${section}`);
-    window.MomentumNavigation?.setSubsection(section);
-  });
+const YOU_SECTIONS = ["overview", "path", "mission", "sports", "wellbeing", "equipment", "about", "account"];
+function navigateYou(section, push = true) {
+  if (!YOU_SECTIONS.includes(section)) return;
+  if (push) window.history.pushState({}, "", `you.html?section=${section}`);
+  renderSection(section);
+  YOU.detail.tabIndex = -1; YOU.detail.focus();
+  window.MomentumNavigation?.setSubsection(section);
+}
+YOU.buttons.forEach(button => button.addEventListener("click", () => navigateYou(button.dataset.youSection)));
+window.addEventListener("popstate", () => navigateYou(new URLSearchParams(location.search).get("section") || "overview", false));
+window.addEventListener("momentum:session-cleared", () => {
+  YOU.loadGeneration++; YOU.currentUser = null; YOU.passport = null; YOU.activities = []; YOU.memories = []; YOU.media = [];
+  YOU.userSports = []; YOU.sportProfile = []; YOU.userEquipment = []; YOU.userSettings = null; YOU.wellbeingProfile = null; YOU.userLocation = null; YOU.pendingAvatarBlob = null;
+  YOU.detail?.replaceChildren();
+  document.querySelectorAll("#passportAvatar, #passportName, #passportQuote, #passportLocation, #passportAge, #passportHeight, #passportWeight").forEach(node => node.replaceChildren());
 });
-
-YOU.detail?.addEventListener("click", async (event) => {
-  if (event.target.closest("[data-account-logout]")) {
-    await window.momentumDB.auth.signOut({ scope:"local" });
-    window.location.href = "login.html";
-  }
-
-  if (event.target.closest("[data-account-export]")) exportAccountData();
-});
-
 loadYou();
-
-function renderAccount() {
-  const settings = YOU.userSettings || {};
-  const notifications = settings.notifications || {};
-  const sources = YOU.passport?.connected_sources || {};
-  const connectionNames = ["COROS", "Garmin", "Strava"];
-
-  YOU.detail.innerHTML = `
-    <p class="section-kicker">Mon compte</p>
-    <h2>À ta façon</h2>
-    <p class="you-detail-lead">Tes préférences, tes connexions et tes données sont réunies ici.</p>
-
-    <form id="accountForm" class="you-account-form">
-      <section class="you-account-section">
-        <div><span class="you-kicker">Notifications</span><h3>Rester dans le mouvement</h3></div>
-        <label class="you-account-toggle"><span>Notifications par e-mail</span><input name="notification_email" type="checkbox" ${notifications.email !== false ? "checked" : ""}></label>
-        <label class="you-account-toggle"><span>Notifications push</span><input name="notification_push" type="checkbox" ${notifications.push !== false ? "checked" : ""}></label>
-        <label class="you-account-toggle"><span>Rappels d’aventure</span><input name="adventure_reminders" type="checkbox" ${notifications.adventure_reminders !== false ? "checked" : ""}></label>
-      </section>
-
-      <section class="you-account-section">
-        <div><span class="you-kicker">Paramètres</span><h3>Langue & unités</h3></div>
-        <label>Langue<select name="language"><option value="fr" ${settings.language === "fr" ? "selected" : ""}>Français</option><option value="en" ${settings.language === "en" ? "selected" : ""}>English</option></select></label>
-        <label>Unités<select name="units"><option value="METRIC" ${settings.units !== "IMPERIAL" ? "selected" : ""}>Kilomètres</option><option value="IMPERIAL" ${settings.units === "IMPERIAL" ? "selected" : ""}>Miles</option></select></label>
-      </section>
-
-      <section class="you-account-section">
-        <div><span class="you-kicker">Connexions</span><h3>Services sportifs</h3></div>
-        ${connectionNames.map((name) => `<label class="you-account-toggle"><span>${name}</span><input name="connection_${name.toLowerCase()}" type="checkbox" ${sources[name] || sources[name.toLowerCase()] ? "checked" : ""}></label>`).join("")}
-      </section>
-
-      <section class="you-account-section you-account-links">
-        <div><span class="you-kicker">Confidentialité</span><h3>Tes données</h3></div>
-        <a href="confidentialite.html">Lire la politique de confidentialité</a>
-        <button type="button" data-account-export>Exporter mes données</button>
-      </section>
-
-      <div class="you-account-actions">
-        <button class="login-primary" type="submit">Enregistrer les paramètres</button>
-        <p id="accountMessage" class="login-message"></p>
-      </div>
-    </form>
-
-    <section class="you-account-danger">
-      <div><span class="you-kicker">Session</span><h3>Déconnexion</h3></div>
-      <button class="secondary" type="button" data-account-logout>Se déconnecter</button>
-    </section>`;
-
-  document.getElementById("accountForm")?.addEventListener("submit", saveAccount);
-}
-
-async function saveAccount(event) {
-  event.preventDefault();
-  const form = new FormData(event.currentTarget);
-  const message = document.getElementById("accountMessage");
-  message.textContent = "Sauvegarde…";
-
-  const notifications = {
-    email:form.has("notification_email"),
-    push:form.has("notification_push"),
-    adventure_reminders:form.has("adventure_reminders")
-  };
-  const connectedSources = {
-    ...(YOU.passport?.connected_sources || {}),
-    COROS:form.has("connection_coros"),
-    Garmin:form.has("connection_garmin"),
-    Strava:form.has("connection_strava")
-  };
-
-  try {
-    const [{ data:settings, error:settingsError }, { data:passport, error:passportError }] = await Promise.all([
-      window.momentumDB.from("user_settings").upsert({
-        user_id:YOU.currentUser.id,
-        language:form.get("language") || "fr",
-        units:form.get("units") || "METRIC",
-        notifications,
-        updated_at:new Date().toISOString()
-      }, { onConflict:"user_id" }).select().single(),
-      window.momentumDB.from("passports").update({ connected_sources:connectedSources, updated_at:new Date().toISOString() }).eq("user_id", YOU.currentUser.id).select().single()
-    ]);
-    if (settingsError) throw settingsError;
-    if (passportError) throw passportError;
-    YOU.userSettings = settings;
-    YOU.passport = passport;
-    message.textContent = "Paramètres enregistrés.";
-  } catch (error) {
-    console.error("YOU : sauvegarde du compte interrompue.", error);
-    message.textContent = window.MomentumUI.errorMessage(error, "save");
-  }
-}
-
-function exportAccountData() {
-  const data = {
-    exported_at:new Date().toISOString(),
-    profile:YOU.passport,
-    settings:YOU.userSettings,
-    sports:YOU.userSports,
-    activities:YOU.activities,
-    equipment:YOU.userEquipment,
-    wellbeing:YOU.wellbeingProfile
-  };
-  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type:"application/json" }));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `momentum-export-${new Date().toISOString().slice(0, 10)}.json`;
-  link.click();
-  URL.revokeObjectURL(url);
-}
