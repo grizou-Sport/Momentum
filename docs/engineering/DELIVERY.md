@@ -38,6 +38,8 @@ Le fichier `quality/main-ruleset.json` décrit cette configuration. **Un fichier
 
 Le CDC complet reste distinct de la réparation de sa chaîne de livraison. Le contrôle `npm run check:cdc` échoue tant que ses sources, ses tests et ses preuves ne sont pas réunis. Les branches dont le nom contient `cdc-consolidation` ou `cdc-recovery` le lancent automatiquement. Les contrôles métier et d'intégrité de base s'exécutent sur **toutes** les branches et PR.
 
+Le contrôle général détecte aussi la présence des nouveaux fichiers du CDC ou un changement de son état de livraison : il impose alors `check:cdc`, même si la branche a un autre nom. Un dossier de tests vide ne suffit pas à passer ce contrôle.
+
 Ne pas renommer une branche pour contourner une recette. Une PR qui annonce le CDC comme livré doit présenter le résultat de `check:cdc`, quel que soit son nom. Passer un chapitre à `verified` nécessite des preuves versionnées et adaptées : tests fonctionnels, recette navigateur ou compte rendu de validation. Les validations humaines prévues au CDC ne peuvent pas être remplacées par une assertion automatique.
 
 ## Retour arrière et données

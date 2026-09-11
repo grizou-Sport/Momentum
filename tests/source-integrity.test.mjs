@@ -25,6 +25,7 @@ test('missing scripts and styles block a delivery, including references with cac
   write(dir, 'index.html', '<script src="js/missing.js?v=1"></script><link href="css/missing.css" rel="stylesheet">');
   const failures = inspectSource(dir, empty());
   assert.equal(failures.length, 2);
+  assert.match(failures.join('\n'), /in index\.html:/);
   assert.match(failures.join('\n'), /missing\.js/);
   assert.match(failures.join('\n'), /missing\.css/);
 });

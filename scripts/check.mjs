@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, resolve, relative } from 'node:path';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { root, files, readJSON, localPath } from './lib.mjs';
@@ -23,7 +23,7 @@ export function inspectSource(base, contract) {
     const clean = decodeURIComponent(reference.split(/[?#]/)[0]);
     if (!clean) return;
     const target = clean.startsWith('/') ? join(base, clean) : resolve(dirname(path), clean);
-    if (!existsSync(target)) errors.push(`Broken local reference in ${path.slice(base.length + 1)}: ${reference}`);
+    if (!existsSync(target)) errors.push(`Broken local reference in ${relative(base, path)}: ${reference}`);
   };
   for (const path of all.filter(path => /\.(html|css)$/.test(path) && !path.includes('/recovery/'))) {
     const source = readFileSync(path, 'utf8');
@@ -35,6 +35,11 @@ export function inspectSource(base, contract) {
 
 if (process.argv[1] && resolve(process.argv[1]) === resolve(root, 'scripts/check.mjs')) {
   const errors = inspectSource(root, readJSON('quality/source-contract.json'));
+  const cdc = readJSON('specs/cdc/2026-09-08.delivery.json');
+  if (cdc.status !== 'recovery-incomplete' || cdc.requiredFiles.some(path => existsSync(join(root, path)))) {
+    const checked = spawnSync(process.execPath, [join(root, 'scripts/check-cdc.mjs')], { encoding: 'utf8' });
+    if (checked.status !== 0) errors.push(`CDC delivery is incomplete:\n${checked.stderr || checked.error || 'CDC check failed'}`);
+  }
   const scripts = files(root).filter(path => /\.(?:js|mjs|cjs)$/.test(path) && !localPath(path).startsWith('recovery/'));
   for (const path of scripts) {
     const checked = spawnSync(process.execPath, ['--check', path], { encoding: 'utf8' });
