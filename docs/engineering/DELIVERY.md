@@ -26,7 +26,7 @@ Le rangement des sources de l'application reste compatible avec ses liens exista
 
 `npm run build` vérifie les fichiers obligatoires, toutes les références locales HTML/CSS, la syntaxe des scripts externes et intégrés, les empreintes des migrations historiques, puis lance tous les tests. Il produit les seuls fichiers statiques utiles dans `dist/`, avec un `version.json` qui associe le commit et les empreintes des fichiers. Les fonctions de `api/` restent gérées séparément par l'hébergeur.
 
-Le workflow publie une preuve de construction uniquement après succès. Il n'écrit jamais dans les branches. La sortie `dist/` est prête pour un futur branchement explicite de l'hébergement ; sa création ne signifie pas que la configuration Vercel ou GitHub Pages a été modifiée.
+Le workflow publie une preuve de construction uniquement après succès. Il n'écrit jamais dans les branches. `vercel.json` impose la même installation, la même vérification et la publication de `dist/` sur Vercel. Les fonctions de `api/` restent à la racine conformément au fonctionnement du runtime Vercel. La configuration GitHub Pages n'est pas modifiée par ce fichier.
 
 ## Règles de la branche principale
 
