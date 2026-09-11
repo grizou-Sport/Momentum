@@ -1,0 +1,156 @@
+[
+  {
+    "path": ".gitignore",
+    "sha256": "3e18451594b804e8d33523bfc442d59c23102031e469aedec0428c6df9fd7d73",
+    "expected": "3e18451594b804e8d33523bfc442d59c23102031e469aedec0428c6df9fd7d73",
+    "verified": true,
+    "source": "sha256-verified patch"
+  },
+  {
+    "path": "css/consolidation.css",
+    "sha256": "f09d404480b40fed29dd7096a236a0de8a032d17344947ad79ac5a007c84e8bd",
+    "expected": "f09d404480b40fed29dd7096a236a0de8a032d17344947ad79ac5a007c84e8bd",
+    "verified": true,
+    "source": "sha256-verified patch"
+  },
+  {
+    "path": "css/discover.css",
+    "sha256": "933196154d6a88c6e49a091857206d62815d7fea8e101cfec9a6b54d8249582a",
+    "expected": "933196154d6a88c6e49a091857206d62815d7fea8e101cfec9a6b54d8249582a",
+    "verified": true,
+    "source": "sha256-verified patch"
+  },
+  {
+    "path": "css/invitation.css",
+    "sha256": "e39d64aadea04882d9ca3060dbd4a5cf5166873ec3579ddf1791d70e61761917",
+    "expected": "e39d64aadea04882d9ca3060dbd4a5cf5166873ec3579ddf1791d70e61761917",
+    "verified": true,
+    "source": "sha256-verified patch"
+  },
+  {
+    "path": "discover.html",
+    "sha256": "cb9ad8b1cd29b846d31d4ef6a076ac2bc62d734d238c240be219c1b8f389508b",
+    "expected": "cb9ad8b1cd29b846d31d4ef6a076ac2bc62d734d238c240be219c1b8f389508b",
+    "verified": true,
+    "source": "sha256-verified patch"
+  },
+  {
+    "path": "index.html",
+    "sha256": "de6f3d758214b2996c32eca83400569203fbc8554a3ca11f81c80df88b1567e1",
+    "expected": "de6f3d758214b2996c32eca83400569203fbc8554a3ca11f81c80df88b1567e1",
+    "verified": true,
+    "source": "sha256-verified patch"
+  },
+  {
+    "path": "invite.html",
+    "sha256": "ca5977868cf5bb2458124c5facea08d0ce2398c223d75acdaa5691aa3168a860",
+    "expected": "ca5977868cf5bb2458124c5facea08d0ce2398c223d75acdaa5691aa3168a860",
+    "verified": true,
+    "source": "sha256-verified patch"
+  },
+  {
+    "path": "js/activity-nutrition.js",
+    "sha256": "8d96cadf533090ef36fb734bf735a53986c8e4c3648df03802310216f16303eb",
+    "expected": "8d96cadf533090ef36fb734bf735a53986c8e4c3648df03802310216f16303eb",
+    "verified": true,
+    "source": "sha256-verified patch"
+  },
+  {
+    "path": "js/auth.js",
+    "sha256": "ee23ffdc53e8acffbe574f723c2be83a170bae0c1ebbb3f2b8ebe1cd44a40870",
+    "expected": "ee23ffdc53e8acffbe574f723c2be83a170bae0c1ebbb3f2b8ebe1cd44a40870",
+    "verified": true,
+    "source": "sha256-verified patch"
+  },
+  {
+    "path": "js/guard.js",
+    "sha256": "c57110a17f53e6bf37b1aea2dfd7c53b196f7a5a38a345a7960cba757d9d0480",
+    "expected": "c57110a17f53e6bf37b1aea2dfd7c53b196f7a5a38a345a7960cba757d9d0480",
+    "verified": true,
+    "source": "sha256-verified patch"
+  },
+  {
+    "path": "js/guest-invitation.js",
+    "sha256": "14c16a1978b28d30f604d03000aa4d520fb6a03c4dd475aff8e6a7dfa59535ab",
+    "expected": "14c16a1978b28d30f604d03000aa4d520fb6a03c4dd475aff8e6a7dfa59535ab",
+    "verified": true,
+    "source": "sha256-verified patch"
+  },
+  {
+    "path": "js/home-activities.js",
+    "sha256": "eeb08d688b6d32301cdedf27698adc309f6039062a731982b2ce2b4b30188ec8",
+    "expected": "eeb08d688b6d32301cdedf27698adc309f6039062a731982b2ce2b4b30188ec8",
+    "verified": true,
+    "source": "sha256-verified patch"
+  },
+  {
+    "path": "js/home-calendar.js",
+    "sha256": "17599da10692c10ec5cdf704224459cb2b2d010b7d1523fc50b736caa72e3806",
+    "expected": "17599da10692c10ec5cdf704224459cb2b2d010b7d1523fc50b736caa72e3806",
+    "verified": true,
+    "source": "sha256-verified patch"
+  },
+  {
+    "path": "js/home-core.js",
+    "sha256": "e1c8e5656f7b38c6e4f39244fe64977e25566e5889d3128ca2c59d7226251865",
+    "expected": "e1c8e5656f7b38c6e4f39244fe64977e25566e5889d3128ca2c59d7226251865",
+    "verified": true,
+    "source": "sha256-verified patch"
+  },
+  {
+    "path": "js/home-data.js",
+    "sha256": "da1a34adac812377a1f802b9dbc5bf300d74c1c7b6cc32a999e21c444999c327",
+    "expected": "da1a34adac812377a1f802b9dbc5bf300d74c1c7b6cc32a999e21c444999c327",
+    "verified": true,
+    "source": "sha256-verified patch"
+  },
+  {
+    "path": "js/home-flow.js",
+    "sha256": "993f24cd18dcb44e7bf9ad562567405453c1b70edaedfda8cd2524a285ac9b5c",
+    "expected": "993f24cd18dcb44e7bf9ad562567405453c1b70edaedfda8cd2524a285ac9b5c",
+    "verified": true,
+    "source": "sha256-verified patch"
+  },
+  {
+    "path": "js/home-import.js",
+    "sha256": "ddc17c62fc7d01830b81b5c4bea990798d5eb574fbaf19b88a1a4df743b13403",
+    "expected": "ddc17c62fc7d01830b81b5c4bea990798d5eb574fbaf19b88a1a4df743b13403",
+    "verified": true,
+    "source": "sha256-verified patch"
+  },
+  {
+    "path": "js/home-progression.js",
+    "sha256": "7883ed71d41f28abf3e94abe4aa9df81c2422ceaff055514ff1e33db616cb0c8",
+    "expected": "7883ed71d41f28abf3e94abe4aa9df81c2422ceaff055514ff1e33db616cb0c8",
+    "verified": true,
+    "source": "sha256-verified patch"
+  },
+  {
+    "path": "js/home-wellbeing.js",
+    "sha256": "5962305300c8d4f3bbf8bc662ebfa198c5cd00f06625002ab3bd375106b07132",
+    "expected": "5962305300c8d4f3bbf8bc662ebfa198c5cd00f06625002ab3bd375106b07132",
+    "verified": true,
+    "source": "sha256-verified patch"
+  },
+  {
+    "path": "js/home.js",
+    "sha256": "30c726739c81e932de5d1f83119384da9ccc3e8c0b93e5575161eb29019d5935",
+    "expected": "30c726739c81e932de5d1f83119384da9ccc3e8c0b93e5575161eb29019d5935",
+    "verified": true,
+    "source": "sha256-verified patch"
+  },
+  {
+    "path": "js/momentum-access.js",
+    "sha256": "f030d482a59786a959539b754a6acdeace10b7c717ffa3f6e2b216274f09318a",
+    "expected": "f030d482a59786a959539b754a6acdeace10b7c717ffa3f6e2b216274f09318a",
+    "verified": true,
+    "source": "sha256-verified patch"
+  },
+  {
+    "path": "js/momentum-data.js",
+    "sha256": "4ad268bd2535dc868f53d32513303db9019e64473cae63f3ea16c33d8584e829",
+    "expected": "4ad268bd2535dc868f53d32513303db9019e64473cae63f3ea16c33d8584e829",
+    "verified": true,
+    "source": "sha256-verified patch"
+  }
+]

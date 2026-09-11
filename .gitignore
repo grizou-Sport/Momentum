@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.DS_Store
+.vercel/
+.browser-evidence/
+coverage/
+test-results/
+playwright-report/
+
+# Source code must be committed directly, never reconstructed from transfer packets.
+maintenance/cdc-transfer/
+maintenance/cdc-finalize/
