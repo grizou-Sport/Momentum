@@ -1,0 +1,797 @@
+{
+  "specification": "specs/CDC_MOMENTUM_Consolidation_Experience_V1_2026-09-08.md",
+  "sha256": "dcbfbb557bb1f3fe3ef1c1f81fa0128eeabf5561ba55e1573daceb342cb4fa72",
+  "scenarios": [
+    {
+      "id": "ACC-01",
+      "situation": "Nouveau visiteur ouvre la découverte",
+      "expected": "Promesse compréhensible, exemple fictif accessible et création de compte visible.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "ACC-02",
+      "situation": "Visiteur utilise la démonstration",
+      "expected": "Aucune écriture métier, aucune donnée privée, aucun succès simulé.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "ACC-03",
+      "situation": "Nouvel inscrit renseigne seulement le prénom et saute le reste autorisé",
+      "expected": "Accès au premier Moment sans biométrie ni objectif chiffré.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "ACC-04",
+      "situation": "Ancien compte avec onboarding terminé se connecte",
+      "expected": "Aucun nouveau parcours obligatoire et aucune donnée effacée.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "ACC-05",
+      "situation": "Compte avec Passeport existant subit une erreur de lecture",
+      "expected": "Écran récupérable, pas de renvoi erroné vers un nouveau Passeport.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "ACC-06",
+      "situation": "Session réellement absente ou expirée confirmée",
+      "expected": "Redirection vers connexion, retour interne conservé après authentification.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "ACC-07",
+      "situation": "URL de retour externe injectée dans les paramètres",
+      "expected": "Refus ou remplacement par destination interne sûre.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "ACC-08",
+      "situation": "Onboarding interrompu puis repris, validation répétée",
+      "expected": "Reprise correcte et un seul profil.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "ACC-09",
+      "situation": "Récupération de mot de passe ouverte via lien",
+      "expected": "Fonctionnement préservé malgré les nouvelles routes publiques.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "ACC-10",
+      "situation": "Vérification d’accès ne répond pas",
+      "expected": "État accessible et possibilité de réessayer, pas d’écran invisible permanent.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "UX-01",
+      "situation": "Toucher chacun des quatre territoires sur téléphone",
+      "expected": "Navigation directe homogène, sans menu intermédiaire imposé.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "UX-02",
+      "situation": "Navigation au clavier sur ordinateur",
+      "expected": "Focus visible, destinations identifiables, aucun survol indispensable.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "UX-03",
+      "situation": "Ouverture d’un ancien lien de sous-section",
+      "expected": "Bonne rubrique affichée ; précédent/suivant du navigateur cohérents.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "UX-04",
+      "situation": "Première ouverture puis rotation du téléphone",
+      "expected": "Aujourd’hui centré dans la fenêtre, aucun décalage vers le dernier jour futur.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "UX-05",
+      "situation": "Déplacement manuel de la fenêtre puis actualisation de données",
+      "expected": "Position volontaire préservée ; recentrage seulement à la demande.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "UX-06",
+      "situation": "Ouverture de HOME sans préférence puis de `#journal`",
+      "expected": "Calendrier replié dans le premier cas, développé dans le second.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "UX-07",
+      "situation": "Ajout depuis une date passée sélectionnée",
+      "expected": "Le formulaire conserve cette date.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "UX-08",
+      "situation": "Accès direct au contenu choisi dans YOU",
+      "expected": "Hero conservé mais non imposé au retour ; lien profond prioritaire.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "UX-09",
+      "situation": "Hero affiché sur petit téléphone, paysage et texte agrandi",
+      "expected": "Texte et actions non coupés, pas de minimum fixe inadapté.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "UX-10",
+      "situation": "Fonds photographiques clairs/sombres et image absente",
+      "expected": "Navigation et texte lisibles avec traitement de secours.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "UX-11",
+      "situation": "Mode de réduction des animations activé",
+      "expected": "Valeurs et graphiques directement visibles, aucune parallaxe obligatoire.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "UX-12",
+      "situation": "Largeurs de recette, zoom et reflow",
+      "expected": "Aucun débordement global, contrôles accessibles et unités lisibles.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "UX-13",
+      "situation": "Échec de la météo",
+      "expected": "Journée, Journal et ajout de Moment restent utilisables.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "UX-14",
+      "situation": "Ouverture puis fermeture d’un dialogue au clavier",
+      "expected": "Focus contenu dans le dialogue puis rendu au déclencheur.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "UX-15",
+      "situation": "Déconnexion du compte A puis connexion du compte B",
+      "expected": "Aucun avatar, réglage ou brouillon privé du compte A visible.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "MOM-01",
+      "situation": "Enregistrer un Moment simple avec champs essentiels",
+      "expected": "Aucun complément obligatoire inutile ; statut et nature exacts.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "MOM-02",
+      "situation": "Ouvrir puis enregistrer sans toucher les sliders",
+      "expected": "RPE et axes FLOW restent null, aucun 5 implicite.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "MOM-03",
+      "situation": "Modifier seulement défi et maîtrise",
+      "expected": "RPE inchangé ; point mis à jour sans changer l’effort officiel.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "MOM-04",
+      "situation": "Modifier seulement le RPE",
+      "expected": "Charge recalculée ; coordonnées FLOW inchangées.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "MOM-05",
+      "situation": "Effacer un axe tout en conservant un souvenir",
+      "expected": "Souvenir préservé ; point retiré ; aucune suppression globale.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "MOM-06",
+      "situation": "Ajouter « Aventure » et « Avec des proches » à une randonnée",
+      "expected": "Une seule activité, aucune publication automatique, charge selon pratique.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "MOM-07",
+      "situation": "Saisir `1:20` dans le composant de durée",
+      "expected": "80 minutes, format cohérent dans tous les écrans.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "MOM-08",
+      "situation": "Préparer une nutrition dans le formulaire puis annuler le Moment",
+      "expected": "Aucun ravitaillement rattaché à une activité créée par erreur.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "MOM-09",
+      "situation": "Enregistrer activité et photo, avec échec de photo simulé",
+      "expected": "État exact de sauvegarde, reprise ciblée, pas de succès global trompeur.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "MOM-10",
+      "situation": "Fermer une édition modifiée ou changer de Moment pendant une requête",
+      "expected": "Confirmation adaptée ; une vieille réponse ne remplace pas le nouveau formulaire.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "MOM-11",
+      "situation": "Import FIT horodaté autour de minuit",
+      "expected": "Heure préremplie et date locale vérifiées avec le fuseau documenté.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "MOM-12",
+      "situation": "Import GPX sans heure ou mesures",
+      "expected": "Null conservé pour l’absence ; aucune fausse valeur fabriquée.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "MOM-13",
+      "situation": "Import du même fichier deux fois, y compris concurrent",
+      "expected": "Une seule activité et proposition d’ouvrir l’existant.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "MOM-14",
+      "situation": "Fichiers différents représentant un doublon probable",
+      "expected": "Comparaison explicite, aucun écrasement ou fusion automatique.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "MOM-15",
+      "situation": "Réimport après ajout de photos, ressenti et RPE manuel",
+      "expected": "Enrichissements conservés et remplacements contrôlés.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "MOM-16",
+      "situation": "Coupure réseau après écriture puis nouvel essai",
+      "expected": "Reprise idempotente, aucun doublon.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "MOM-17",
+      "situation": "Fichier corrompu, trop volumineux ou type non permis",
+      "expected": "Erreur compréhensible, aucune activité vide créée.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "MOM-18",
+      "situation": "Souvenir seul sans axes chiffrés dans la base migrée",
+      "expected": "Texte sauvegardé sans valeurs artificielles ; affichage sans point.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "MOM-19",
+      "situation": "Suppression d’une photo ou d’une activité",
+      "expected": "Mise à jour des vues, accès retiré et nettoyage de stockage traçable.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "MOM-20",
+      "situation": "Création d’une activité datée dans le futur",
+      "expected": "Statut prévu ; aucune contribution aux réalisés ni à la charge observée.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-01",
+      "situation": "F01 : 60 minutes, RPE 6",
+      "expected": "60 unités avant arrondi ; formule et source vérifiables.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-02",
+      "situation": "F02 : massage 60 minutes",
+      "expected": "Temps conservé au volume ; aucune charge sportive ni erreur de RPE manquant.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-03",
+      "situation": "F03 : durée connue, effort absent",
+      "expected": "Charge individuelle null, raison `missing_rpe`, pas de remplacement par zéro ou 5 ; aucune courbe fictive si aucune charge n’est calculable.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-04",
+      "situation": "Une séance calculable et une inconnue le même jour",
+      "expected": "Somme connue correcte et charge complète inconnue ; couverture partielle affichée.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-05",
+      "situation": "Pratique indéterminée",
+      "expected": "Exclusion du calcul automatique et statut à préciser distinct d’un soin passif.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-06",
+      "situation": "RPE historique 5 d’origine incertaine",
+      "expected": "Valeur préservée ; provenance non inventée.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-07",
+      "situation": "Même historique, date et version dans FLOW et Progression",
+      "expected": "Résultats identiques avant arrondi.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-08",
+      "situation": "Changement de période d’affichage",
+      "expected": "Les valeurs des dates communes ne changent pas ; début de calcul stable.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-09",
+      "situation": "Nouveau compte sans activité",
+      "expected": "Aucun profil physiologique fictif ni charge chronique personnalisée.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-10",
+      "situation": "Passage du 41e au 42e jour",
+      "expected": "Aucune promesse de fiabilité totale ou de personnalisation complète.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-11",
+      "situation": "Semaine sans activité après historique existant",
+      "expected": "Courbes consultables, état « aucune activité enregistrée » exact.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-12",
+      "situation": "Période contenant des dates futures",
+      "expected": "Pas de charges observées ni de fraîcheur simulée dans le futur.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-13",
+      "situation": "RPE corrigé rétroactivement ou doublon supprimé",
+      "expected": "Historique et caches recalculés, anciennes données source préservées.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-14",
+      "situation": "Échec d’une page de chargement d’historique",
+      "expected": "Pas de nouveau modèle calculé sur une liste tronquée présentée complète.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-15",
+      "situation": "Plusieurs milliers d’activités",
+      "expected": "Pagination complète et temps de calcul maîtrisé.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-16",
+      "situation": "Première ouverture sans préférence, puis préférence existante",
+      "expected": "7 derniers jours par défaut ; préférence explicite existante conservée.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-17",
+      "situation": "Fenêtres de 7 jours, 28 jours, semaine, mois et personnalisé",
+      "expected": "Bornes exactes, flèches cohérentes et granularité adaptée.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-18",
+      "situation": "Temps incluant soin, puis passage en Distance",
+      "expected": "Totaux du bon périmètre ; pratiques sans distance clairement exclues de ce mode seulement.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-19",
+      "situation": "Sélection d’une date dans Charge puis Bien-être",
+      "expected": "Même date mise en évidence, unités et échelles distinctes.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-20",
+      "situation": "Sélection d’une semaine agrégée",
+      "expected": "Détail de la semaine, pas une moyenne présentée comme mesure quotidienne.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-21",
+      "situation": "Mesure quotidienne absente ou chargement en erreur",
+      "expected": "Ni zéro fabriqué ni continuité graphique trompeuse.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-22",
+      "situation": "Deux sources de bien-être à la même date",
+      "expected": "Priorité documentée et provenance visible, pas de moyenne arbitraire.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-23",
+      "situation": "Note « Je ne suis pas malade »",
+      "expected": "Aucune annotation automatique Maladie.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-24",
+      "situation": "Plusieurs points FLOW superposés, navigation clavier",
+      "expected": "Choix d’une activité possible via liste ou contrôle accessible.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-25",
+      "situation": "Changements rapides de période avec réponses réseau inversées",
+      "expected": "La dernière période choisie reste la seule affichée.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "DAT-26",
+      "situation": "Tableau accessible d’un graphique",
+      "expected": "Même données, unités, période et états partiels que le graphique.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "PER-01",
+      "situation": "YOU ouvert sans mensurations ni compétition",
+      "expected": "Aperçu personnel cohérent et non vide artificiellement.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "PER-02",
+      "situation": "Intention sans date ni distance",
+      "expected": "Sauvegarde possible ; aucun compte à rebours ou score fictif.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "PER-03",
+      "situation": "Marquer puis retirer un Moment marquant",
+      "expected": "Aperçu actualisé ; activité et souvenir inchangés.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "PER-04",
+      "situation": "Mon Chemin consulté sur plusieurs années",
+      "expected": "Pagination, filtres et accès au détail cohérents avec le Journal.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "PER-05",
+      "situation": "Période sans souvenir déclaré",
+      "expected": "Aucune émotion inventée ; invitation discrète ou simple résumé factuel.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "PER-06",
+      "situation": "Synthèse d’une période partielle",
+      "expected": "Bornes et couverture indiquées, pas de comparaison trompeuse avec une période complète.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "PER-07",
+      "situation": "Ravitaillement prévu puis activité réalisée",
+      "expected": "Aucune consommation automatique ; reprise explicite du prévu possible.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "PER-08",
+      "situation": "Consommation partielle par rapport au prévu",
+      "expected": "Totaux séparés et exacts.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "PER-09",
+      "situation": "Durée écoulée et durée d’effort différentes",
+      "expected": "Calcul horaire sur base annoncée, charge sur sa propre durée définie.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "PER-10",
+      "situation": "Durée de ravitaillement absente",
+      "expected": "Total disponible, valeur horaire non calculable et non infinie.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "PER-11",
+      "situation": "Valeur nutritionnelle inconnue versus zéro explicite",
+      "expected": "Statuts distincts et total partiel lorsque nécessaire.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "PER-12",
+      "situation": "Bibliothèque modifiée après consommation enregistrée",
+      "expected": "Instantané historique inchangé.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "PER-13",
+      "situation": "Échec de chargement des produits historiques",
+      "expected": "Pas d’écrasement du ravitaillement par une liste vide.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "PER-14",
+      "situation": "Paramètre de langue, unité, push ou source non opérationnel",
+      "expected": "Aucun état de réussite ou d’activation fictif.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "SEC-01",
+      "situation": "TOGETHER ouvert par un compte sans Cercle",
+      "expected": "Proposition d’un Moment accessible sans construire d’abord un réseau.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "SEC-02",
+      "situation": "Invité sans compte ouvre un lien valide",
+      "expected": "Aperçu limité et réponse possible sans Passeport.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "SEC-03",
+      "situation": "Invité répond avec un nom non vérifié",
+      "expected": "Réponse clairement externe et à valider, aucune identité certifiée.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "SEC-04",
+      "situation": "Robot de messagerie prévisualise le lien",
+      "expected": "Aucune acceptation ni consommation définitive du lien.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "SEC-05",
+      "situation": "Lien expiré, révoqué ou renouvelé",
+      "expected": "Ancien accès refusé ; réponse historique préservée.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "SEC-06",
+      "situation": "Tentative de lire un autre Moment ou un profil via session invitée",
+      "expected": "Refus côté serveur et base.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "SEC-07",
+      "situation": "Deux validations pour la dernière place",
+      "expected": "Une seule confirmation conforme à la capacité, autre état explicite.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "SEC-08",
+      "situation": "Date modifiée après réponses ou Moment annulé",
+      "expected": "État visible et nouvelle confirmation si nécessaire ; aucune notification fictive.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "SEC-09",
+      "situation": "Invité participe ponctuellement",
+      "expected": "Aucun ajout automatique au Cercle ou au Club.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "SEC-10",
+      "situation": "Moment collectif accepté puis activité personnelle liée",
+      "expected": "Pas de double charge ni de réalisation sportive automatique.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "SEC-11",
+      "situation": "Partage d’un Moment avec photo et lieu sélectionnés",
+      "expected": "Aperçu exact ; RPE, santé, FLOW et souvenirs privés non inclus par défaut.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "SEC-12",
+      "situation": "Accès direct à un média ou une activité d’un autre compte",
+      "expected": "Accès refusé, même en contournant l’interface.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "SEC-13",
+      "situation": "Export de F13 avec historique de plusieurs années",
+      "expected": "Toutes les données promises sont présentes, compteurs exacts et aucune troncature silencieuse.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "SEC-14",
+      "situation": "Export avec médias, notes et consommations",
+      "expected": "Manifeste cohérent, fichiers autorisés et aucune donnée privée d’un autre participant.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "SEC-15",
+      "situation": "Export interrompu ou page manquante",
+      "expected": "Échec ou partialité explicitement signalée, pas de succès complet.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "SEC-16",
+      "situation": "Export inspecté pour secrets et jetons",
+      "expected": "Aucun secret technique, OAuth ou invitation active.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "SEC-17",
+      "situation": "Connexion cochée historiquement mais sans autorisation réelle",
+      "expected": "Affichage « source déclarée » ou non connectée, jamais synchronisation réussie.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "SEC-18",
+      "situation": "Connecteur révoqué ou import fournisseur en erreur",
+      "expected": "État réel et repli vers import manuel, historique personnel préservé.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "SEC-19",
+      "situation": "Suppression de compte en présence de fichiers et de Moments collectifs",
+      "expected": "Nettoyage propre et droits des autres préservés ; état final annoncé exact.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "SEC-20",
+      "situation": "Journaux et événements d’observabilité inspectés",
+      "expected": "Absence de textes privés, traces GPS brutes et secrets.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "SEC-21",
+      "situation": "Champs texte malveillants et pièces jointes non autorisées",
+      "expected": "Contenu neutralisé ou rejeté, aucune exécution dans les vues ou exports rendus.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "LIV-01",
+      "situation": "Migrations exécutées sur une copie représentative puis réexécutées selon leur contrat",
+      "expected": "Résultat prévu, aucune perte, incompatibilités identifiées avant production.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "LIV-02",
+      "situation": "Ancienne session navigateur rencontre le nouveau schéma",
+      "expected": "Compatibilité ou demande de rechargement propre, aucune réintroduction de données artificielles.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "LIV-03",
+      "situation": "Version de repli testée après création de nouvelles données",
+      "expected": "Fonctionnement compatible sans suppression de nouveaux souvenirs ou réponses.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "LIV-04",
+      "situation": "Tests de performance avant/après sous mêmes conditions",
+      "expected": "Mesures documentées, pas de régression critique masquée par un changement de protocole.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "LIV-05",
+      "situation": "Tests qualitatifs sur les tâches principales",
+      "expected": "Résultats et hésitations consignés ; problèmes répétés corrigés.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "LIV-06",
+      "situation": "Déploiement de la version validée",
+      "expected": "Commit et migrations concordants, état prêt vérifié, parcours essentiel testé sur l’URL publiée.",
+      "result": "not-run",
+      "evidence": []
+    },
+    {
+      "id": "LIV-07",
+      "situation": "Revue finale de la matrice de couverture",
+      "expected": "Chaque point possède une réalisation et une preuve ou une dépendance explicite, pas d’omission silencieuse.",
+      "result": "not-run",
+      "evidence": []
+    }
+  ]
+}

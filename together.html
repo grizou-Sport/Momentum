@@ -7,6 +7,7 @@
   <link rel="icon" href="Assets/icons/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/navigation.css" />
+  <link rel="stylesheet" href="css/consolidation.css" />
   <link rel="stylesheet" href="css/together.css" />
   <link rel="stylesheet" href="css/location-picker.css" />
 </head>
@@ -20,17 +21,17 @@
         <h1>TOGETHER</h1>
         <p class="together-lead">Organiser le futur. Vivre le présent. Garder quelques traces du passé.</p>
       </div>
-      <button class="together-primary" id="primaryTogetherAction" type="button">Inviter dans mon Cercle</button>
+      <button class="together-primary" id="primaryTogetherAction" type="button">Proposer un Moment</button>
     </section>
 
     <div class="together-tabs" role="tablist" aria-label="Sections Together">
-      <button id="circleTab" class="active" data-view="circle" role="tab" aria-selected="true" aria-controls="circleView" tabindex="0" type="button">CERCLE</button>
-      <button id="momentsTab" data-view="moments" role="tab" aria-selected="false" aria-controls="momentsView" tabindex="-1" type="button">MOMENTS</button>
+      <button id="momentsTab" class="active" data-view="moments" role="tab" aria-selected="true" aria-controls="momentsView" tabindex="0" type="button">MOMENTS</button>
+      <button id="circleTab" data-view="circle" role="tab" aria-selected="false" aria-controls="circleView" tabindex="-1" type="button">CERCLE</button>
     </div>
 
     <section id="togetherStatus" class="together-status" aria-live="polite"></section>
-    <section id="circleView" class="together-view" role="tabpanel" aria-labelledby="circleTab" tabindex="0"></section>
-    <section id="momentsView" class="together-view" role="tabpanel" aria-labelledby="momentsTab" tabindex="0" hidden></section>
+    <section id="momentsView" class="together-view" role="tabpanel" aria-labelledby="momentsTab" tabindex="0"></section>
+    <section id="circleView" class="together-view" role="tabpanel" aria-labelledby="circleTab" tabindex="0" hidden></section>
   </main>
 
   <dialog id="circleInviteDialog" class="together-dialog circle-invite-dialog">
@@ -109,6 +110,9 @@
   <script src="js/navigation.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
+  <script src="js/momentum-access.js"></script>
+  <script src="js/momentum-session.js"></script>
+  <script src="js/momentum-preferences.js"></script>
   <script src="js/momentum-ui.js"></script>
   <script src="js/guard.js"></script>
   <script src="js/momentum-sports.js"></script>

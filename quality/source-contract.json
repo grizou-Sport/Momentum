@@ -85,7 +85,10 @@
     "tests/progression-v1.test.mjs",
     "tests/together-phase1.test.mjs",
     "tests/ux-navigation-moments.test.mjs",
-    "tests/source-integrity.test.mjs"
+    "tests/source-integrity.test.mjs",
+    "tests/consolidation/training-load.test.cjs",
+    "tests/consolidation/import-wellbeing.test.cjs",
+    "tests/consolidation/database.test.mjs"
   ],
   "migrations": {
     "supabase/migrations/202607120001_together_mvp.sql": "6538a7bae3bb38cfb395d17c8ec3f6d8f1d4f040041e98555d1014a61f4e0a1f",

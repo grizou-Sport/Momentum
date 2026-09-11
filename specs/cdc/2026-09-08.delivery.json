@@ -6,10 +6,12 @@
     "js/momentum-training-load.js",
     "js/momentum-export.js",
     "js/momentum-import-rules.js",
-    "supabase/migrations/20260908000100_cdc_reliability_foundation.sql",
     "discover.html",
     "invite.html",
-    "tests/consolidation"
+    "tests/consolidation",
+    "supabase/migrations/20260911184622_cdc_personal_moment_foundation.sql",
+    "supabase/migrations/20260911185216_cdc_nutrition_phases.sql",
+    "supabase/migrations/20260911185612_cdc_daily_observations.sql"
   ],
   "requirements": [
     {
@@ -177,5 +179,7 @@
       "status": "unverified",
       "evidence": []
     }
-  ]
+  ],
+  "specification": "specs/CDC_MOMENTUM_Consolidation_Experience_V1_2026-09-08.md",
+  "acceptance": "specs/cdc/2026-09-08.acceptance.json"
 }

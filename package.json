@@ -2,12 +2,17 @@
   "name": "momentum",
   "version": "0.1.0",
   "private": true,
-  "engines": { "node": ">=22 <25" },
+  "engines": {
+    "node": ">=22 <25"
+  },
   "scripts": {
     "test": "node scripts/test.mjs",
     "check": "node scripts/check.mjs",
     "verify": "npm run check && npm test",
     "build": "npm run verify && node scripts/build.mjs",
     "check:cdc": "node scripts/check-cdc.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.8"
   }
 }

@@ -13,3 +13,6 @@ playwright-report/
 # Source code must be committed directly, never reconstructed from transfer packets.
 maintenance/cdc-transfer/
 maintenance/cdc-finalize/
+
+# Local Supabase CLI state
+supabase/.temp/
