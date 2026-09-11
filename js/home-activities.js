@@ -1019,7 +1019,8 @@ async function uploadActivityPhoto(file, activityId, userId) {
     .from("activity_media")
     .insert({ activity_id:activityId, user_id:userId, file_path:path });
   if (mediaError) {
-    await window.momentumDB.storage.from("activity-media").remove([path]);
+    const { error:cleanupError } = await window.momentumDB.rpc("discard_uploaded_file", {p_bucket:"activity-media",p_path:path});
+    if (cleanupError) throw new Error("La photo n’est pas rattachée au Moment. Son fichier sera vérifié par le nettoyage automatique après 24 heures.");
     throw mediaError;
   }
 }
@@ -1042,30 +1043,19 @@ async function deleteActivity(activityId, activityDate) {
   dialog?.classList.add("is-busy");
 
   try {
-    const { data:media } = await window.momentumDB
-      .from("activity_media")
-      .select("file_path")
-      .eq("activity_id", activityId);
-
-    const { error } = await window.momentumDB
-      .from("activities")
-      .delete()
-      .eq("id", activityId);
-
+    const { data:result, error } = await window.momentumDB.rpc("delete_personal_activity", {
+      p_id:activityId, p_expected_revision:session.revision
+    });
     if (error) throw error;
-
-    if (session.sourceFileUrl) {
-      await removeUploadedActivityFile(session.sourceFileUrl);
-    }
-    const photoPaths = (media || []).map((item) => item.file_path).filter(Boolean);
-    if (photoPaths.length) {
-      const { error:photoError } = await window.momentumDB.storage.from("activity-media").remove(photoPaths);
-      if (photoError) console.warn("HOME : photos du Moment non supprimées du stockage.", photoError);
-    }
 
     window.dispatchEvent(new Event("momentum:activities-changed"));
     await renderHome();
     openDay(activityDate);
+    const notice=document.createElement('p');notice.setAttribute('role','status');
+    notice.textContent=result.pending_files
+      ? "Moment retiré. Le nettoyage de ses fichiers est en cours et sera repris automatiquement si nécessaire."
+      : "Moment supprimé.";
+    $("#dayDialogContent")?.prepend(notice);
   } catch (error) {
     console.error("HOME : suppression impossible.", error);
     setActivityMessage(window.MomentumUI.errorMessage(error, "delete"), true);

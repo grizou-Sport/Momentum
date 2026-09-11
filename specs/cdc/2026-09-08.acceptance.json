@@ -815,8 +815,17 @@
       "id": "SEC-19",
       "situation": "Suppression de compte en présence de fichiers et de Moments collectifs",
       "expected": "Nettoyage propre et droits des autres préservés ; état final annoncé exact.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "tests/consolidation/account-deletion.test.mjs",
+        "tests/consolidation/account-handler.test.mjs",
+        "tests/consolidation/storage-cleanup.test.mjs",
+        "tests/consolidation/storage-worker.test.mjs",
+        "tests/consolidation/cleanup-schedule.test.mjs",
+        "docs/engineering/ACCOUNT-DELETION.md",
+        "docs/engineering/STORAGE-CLEANUP.md"
+      ],
+      "notes": "153 tests de la suite passent. Recette locale SQL avec 72 clés étrangères et services HTTP simulés. Les services Supabase réels et le nouveau parcours navigateur restent non vérifiés."
     },
     {
       "id": "SEC-20",

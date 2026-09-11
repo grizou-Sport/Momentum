@@ -7,6 +7,11 @@ declare actor uuid:=auth.uid(); progress public.onboarding_progress%rowtype; pas
 begin
   if actor is null then raise exception 'Authentication required' using errcode='42501'; end if;
   if p_step not between 1 and 3 or p_step is null or p_operation_id is null or p_values is null or jsonb_typeof(p_values)<>'object' then raise exception 'Invalid setup step' using errcode='22023'; end if;
+  if exists(select 1 from jsonb_object_keys(p_values) k where not k=any(case p_step when 1 then array['display_name'] when 2 then array['skipped','sport_ids'] else array['intention'] end))
+    or (p_step=1 and jsonb_typeof(p_values->'display_name') is distinct from 'string')
+    or (p_step=2 and p_values ? 'skipped' and jsonb_typeof(p_values->'skipped') is distinct from 'boolean')
+    or (p_step=2 and p_values ? 'sport_ids' and jsonb_typeof(p_values->'sport_ids') is distinct from 'array')
+    or (p_step=3 and p_values ? 'intention' and jsonb_typeof(p_values->'intention') not in ('string','null')) then raise exception 'Invalid setup values' using errcode='22023'; end if;
   perform pg_advisory_xact_lock(hashtextextended(actor::text,3));
   select * into passport from public.passports where user_id=actor for update;
   if passport.personalization->>'onboarding_completed'='true' or coalesce((passport.personalization->>'minimal_onboarding_version')::int,0)>=1 then return jsonb_build_object('complete',true); end if;
@@ -28,6 +33,7 @@ begin
   elsif p_step=2 and coalesce((p_values->>'skipped')::boolean,false)=false then
     if not p_values ? 'sport_ids' or jsonb_typeof(p_values->'sport_ids')<>'array' or jsonb_array_length(p_values->'sport_ids')>100 then raise exception 'Invalid practices' using errcode='22023'; end if;
     select coalesce(array_agg(value::uuid),'{}') into chosen from jsonb_array_elements_text(p_values->'sport_ids');
+    if cardinality(chosen)<>(select count(distinct value) from unnest(chosen) value) then raise exception 'Duplicate practice' using errcode='22023'; end if;
     if exists(select from unnest(chosen) c where not exists(select from public.sports where id=c)) then raise exception 'Practice unavailable' using errcode='22023'; end if;
     update public.user_sports set active=false where user_id=actor and not sport_id=any(chosen);
     insert into public.user_sports(user_id,sport_id,active) select actor,c,true from unnest(chosen) c

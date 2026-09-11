@@ -96,3 +96,8 @@ create policy "moments visible to authorized users" on public.moments for select
 create policy "organizers update moments" on public.moments for update to authenticated using (((user_id = ( SELECT auth.uid() AS uid)) OR (created_by = ( SELECT auth.uid() AS uid)) OR ((club_id IS NOT NULL) AND private.can_manage_club(club_id)))) with check ((((user_id = ( SELECT auth.uid() AS uid)) AND (created_by = ( SELECT auth.uid() AS uid))) OR ((club_id IS NOT NULL) AND private.can_manage_club(club_id))));
 create policy "owners delete moments" on public.moments for delete to authenticated using (((user_id = ( SELECT auth.uid() AS uid)) OR (created_by = ( SELECT auth.uid() AS uid)) OR ((club_id IS NOT NULL) AND private.can_manage_club(club_id))));
 create policy "users create moments" on public.moments for insert to authenticated with check (((user_id = ( SELECT auth.uid() AS uid)) AND (created_by = ( SELECT auth.uid() AS uid)) AND ((club_id IS NULL) OR private.can_manage_club(club_id))));
+-- Date-option policies captured from the existing project on 2026-09-11.
+create policy "date options visible with moment" on public.moment_date_options for select to authenticated using(private.can_access_moment(moment_id));
+create policy "organizers add date options" on public.moment_date_options for insert to authenticated with check(private.can_manage_moment(moment_id));
+create policy "organizers delete date options" on public.moment_date_options for delete to authenticated using(private.can_manage_moment(moment_id));
+create policy "organizers update date options" on public.moment_date_options for update to authenticated using(private.can_manage_moment(moment_id)) with check(private.can_manage_moment(moment_id));

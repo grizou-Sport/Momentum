@@ -3,19 +3,16 @@ import http from 'node:http';
 import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {PGlite} from '@electric-sql/pglite';
+import {fixture} from './database-fixture.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 const port=8877, origin=`http://127.0.0.1:${port}`,A='11111111-1111-4111-8111-111111111111';
-const db=new PGlite();
+const db=await fixture();await db.exec('reset role');
 const read=name=>readFile(path.join(root,name),'utf8');
-await db.exec(await read('tests/consolidation/baseline.sql'));
+
 const schema=JSON.parse(await read('specs/cdc/2026-09-08.schema-before.json')).tables;
 const category=schema.find(table=>table.table_name==='equipment_categories');
 await db.exec('create table if not exists public.equipment_categories ('+category.columns.map(c=>'"'+c.name+'" '+c.type+(c.default?' default '+c.default:'')).join(',')+'); grant select on public.equipment_categories to authenticated;');
 const dates=new Map(schema.map(table=>[table.table_name,table.columns.filter(c=>c.type==='date').map(c=>c.name)]));
-await db.exec(await read('supabase/migrations/20260905100319_activity_nutrition_v1.sql'));
-await db.exec(`insert into auth.users values ('${A}');`);
-for(const name of ['20260911184622_cdc_personal_moment_foundation','20260911185216_cdc_nutrition_phases','20260911185612_cdc_daily_observations','20260911190711_cdc_minimal_onboarding','20260911191134_cdc_account_export','20260911192153_cdc_personal_story','20260911192914_cdc_shared_moment_privacy','20260911194108_cdc_guest_invitations','20260911194959_cdc_export_guest_responses','20260911195144_cdc_shared_profile_privacy']){ if(name==='20260911192914_cdc_shared_moment_privacy')await db.exec(await read('tests/consolidation/sharing-policies.sql')); await db.exec(await read(`supabase/migrations/${name}.sql`)); }
 await db.query('insert into private.guest_allowed_origins(origin) values ($1)',[origin]);
 const demoMoment={id:'cccccccc-cccc-4ccc-8ccc-cccccccccccc',title:'Randonnée fictive',start_at:new Date(Date.now()+7*86400000).toISOString(),location_name:'Adresse privée fictive',moment_date_options:[]};
 await db.query("insert into public.moments(id,user_id,created_by,title,status,start_at,location_name,capacity) values ($1,$2,$2,$3,'CONFIRMED',$4,$5,2)",[demoMoment.id,A,demoMoment.title,demoMoment.start_at,demoMoment.location_name]);

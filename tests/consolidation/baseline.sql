@@ -1,5 +1,5 @@
 -- Representative pre-CDC columns captured from production; synthetic users only.
-create role anon nologin; create role authenticated nologin;
+create role service_role nologin bypassrls; create role anon nologin; create role authenticated nologin;
 create schema auth; create schema private;
 create table auth.users(id uuid primary key);
 create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
@@ -549,3 +549,13 @@ create policy own_rows on public.wellbeing_profile to authenticated using (user_
 create table public.equipment_categories ("id" uuid default gen_random_uuid(),"name" text,"slug" text,"order_index" integer default 0,"created_at" timestamp with time zone default now(),"icon" text);
 alter table public.equipment_categories enable row level security;
 grant select on public.equipment_categories to authenticated;
+
+-- Storage metadata only; object bytes are simulated separately by the cleanup worker tests.
+create schema storage;
+create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text not null,name text not null,owner uuid,owner_id text,created_at timestamptz default now(),unique(bucket_id,name));
+alter table storage.objects enable row level security;
+grant usage on schema storage to authenticated, service_role;
+grant select,insert,update,delete on storage.objects to authenticated;
+create policy own_storage on storage.objects to authenticated using(coalesce(owner_id,owner::text)=auth.uid()::text) with check(coalesce(owner_id,owner::text)=auth.uid()::text);
+alter table public.activity_media add constraint activity_media_activity_id_fkey foreign key(activity_id) references public.activities(id) on delete cascade;
+alter table public.moment_media add constraint moment_media_moment_id_fkey foreign key(moment_id) references public.moments(id) on delete cascade;

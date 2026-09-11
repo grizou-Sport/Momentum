@@ -442,16 +442,10 @@ async function answerMomentInvitation(momentId, answer) {
 
 async function deleteMoment(moment) {
   if (!await window.MomentumUI.confirm({ title:"Supprimer ce Moment ?", message:`« ${moment.title} » et ses invitations seront supprimés. Les activités personnelles des participants seront conservées.`, confirmLabel:"Supprimer", danger:true })) return;
-  const { data: media } = await window.momentumDB.from("moment_media").select("file_path").eq("moment_id", moment.id);
   const { error } = await window.momentumDB.from("moments").delete().eq("id", moment.id);
   if (error) return setStatus(window.MomentumUI.errorMessage(error, "delete"), true);
-  const paths = (media || []).map((item) => item.file_path).filter(Boolean);
-  if (paths.length) {
-    const { error: storageError } = await window.momentumDB.storage.from("moment-media").remove(paths);
-    if (storageError) console.warn("MOMENTUM: fichiers du Moment non nettoyés", storageError);
-  }
   elements.momentDetailDialog.close();
-  setStatus("Le Moment a été supprimé.");
+  setStatus("Moment retiré. Ses photos sont confiées au nettoyage automatique ; les activités personnelles sont conservées.");
   await loadTogether();
 }
 
@@ -464,7 +458,10 @@ async function addMomentPhoto(momentId, file) {
   const { error: uploadError } = await window.momentumDB.storage.from("moment-media").upload(path, file, { contentType: file.type, cacheControl: "3600", upsert: false });
   if (uploadError) return setStatus(window.MomentumUI.errorMessage(uploadError, "upload"), true);
   const { error } = await window.momentumDB.from("moment_media").insert({ moment_id: momentId, user_id: TOGETHER.user.id, file_path: path, caption });
-  if (error) return setStatus(window.MomentumUI.errorMessage(error, "upload"), true);
+  if (error) {
+    const {error:cleanupError}=await window.momentumDB.rpc("discard_uploaded_file",{p_bucket:"moment-media",p_path:path});
+    return setStatus(cleanupError?"Photo non ajoutée. Son fichier sera vérifié par le nettoyage automatique après 24 heures.":"Photo non ajoutée. Son fichier attend le nettoyage automatique.",true);
+  }
   setStatus("La photo a été ajoutée."); await openMomentDetail(momentId);
 }
 

@@ -1012,18 +1012,8 @@ async function uploadActivityFile(
 
 async function removeUploadedActivityFile(path) {
   if (!path) return;
-
-  const { error } = await window.momentumDB
-    .storage
-    .from(ACTIVITY_BUCKET)
-    .remove([path]);
-
-  if (error) {
-    console.warn(
-      "HOME : fichier non supprimé après échec.",
-      error
-    );
-  }
+  const { error } = await window.momentumDB.rpc("discard_uploaded_file", {p_bucket:ACTIVITY_BUCKET,p_path:path});
+  if (error) throw new Error("Le nettoyage du fichier n’est pas encore confirmé. Les fichiers sans activité sont vérifiés automatiquement après 24 heures.");
 }
 
 async function handleActivityFile(event) {

@@ -22,7 +22,18 @@
     "supabase/migrations/20260911194108_cdc_guest_invitations.sql",
     "supabase/migrations/20260911192914_cdc_shared_moment_privacy.sql",
     "supabase/migrations/20260911195144_cdc_shared_profile_privacy.sql",
-    "supabase/migrations/20260911194959_cdc_export_guest_responses.sql"
+    "supabase/migrations/20260911194959_cdc_export_guest_responses.sql",
+    "supabase/migrations/20260911201444_cdc_storage_cleanup.sql",
+    "supabase/functions/storage-cleanup/index.mjs",
+    "supabase/functions/storage-cleanup/worker.mjs",
+    "supabase/config.toml",
+    "supabase/migrations/20260911202220_cdc_cleanup_schedule.sql",
+    "supabase/migrations/20260911202513_cdc_account_deletion.sql",
+    "supabase/functions/account-deletion/index.mjs",
+    "supabase/functions/account-deletion/handler.mjs",
+    "supabase/functions/storage-cleanup/accounts.mjs",
+    "js/momentum-account-deletion.js",
+    "account-deletion-status.html"
   ],
   "requirements": [
     {

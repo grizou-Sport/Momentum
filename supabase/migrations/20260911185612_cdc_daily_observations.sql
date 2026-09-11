@@ -14,7 +14,7 @@ declare actor uuid := auth.uid(); daily public.daily_wellbeing%rowtype; day_row 
   previous_sources jsonb; key text; value jsonb;
 begin
   if actor is null then raise exception 'Authentication required' using errcode='42501'; end if;
-  if p_date is null or jsonb_typeof(p_values) <> 'object' or length(p_note)>10000 or p_context is null
+  if p_date is null or p_values is null or jsonb_typeof(p_values) <> 'object' or length(p_note)>10000 or p_context is null
     or not p_context <@ array['illness','vacation','competition']::text[] then raise exception 'Invalid observations' using errcode='22023'; end if;
   for key,value in select * from jsonb_each(p_values) loop
     if key not in ('sleep_hours','motivation','resting_hr','hrv_ms','sleep_quality_value')

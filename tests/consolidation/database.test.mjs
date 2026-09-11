@@ -1,34 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { PGlite } from '@electric-sql/pglite';
+import { fixture } from './database-fixture.mjs';
 
 const read = path => readFile(new URL(path, import.meta.url), 'utf8');
 const A = '11111111-1111-4111-8111-111111111111', B = '22222222-2222-4222-8222-222222222222';
 const ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', OP = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const moment = (changes = {}) => ({ id: ID, user_id: A, activity_date: '2026-07-01', status: 'done', activity_category: 'sport', activity_type: 'running', sport: 'running', duration_min: 60, rpe: null, ...changes });
 const command = (db, payload, assessment = null, nutrition = null, operation = OP, revision = null) => db.query('select public.save_personal_moment($1,$2,$3,$4,$5) result', [operation, JSON.stringify(payload), assessment == null ? null : JSON.stringify(assessment), nutrition == null ? null : JSON.stringify(nutrition), revision]);
-async function fixture() {
-  const db = new PGlite();
-  await db.exec(await read('./baseline.sql'));
-  await db.exec(await read('../../supabase/migrations/20260905100319_activity_nutrition_v1.sql'));
-  await db.exec(`insert into auth.users values ('${A}'),('${B}');`);
-  await db.exec(await read('../../supabase/migrations/20260911184622_cdc_personal_moment_foundation.sql'));
-  await db.exec(await read('../../supabase/migrations/20260911185216_cdc_nutrition_phases.sql'));
-  await db.exec(await read('../../supabase/migrations/20260911185612_cdc_daily_observations.sql'));
-  await db.exec(await read('../../supabase/migrations/20260911190711_cdc_minimal_onboarding.sql'));
-  await db.exec(await read('../../supabase/migrations/20260911191134_cdc_account_export.sql'));
-  await db.exec(await read('../../supabase/migrations/20260911192153_cdc_personal_story.sql'));
-  await db.exec(await read('./sharing-policies.sql'));
-  await db.exec(await read('../../supabase/migrations/20260911192914_cdc_shared_moment_privacy.sql'));
-  await db.exec(await read('../../supabase/migrations/20260911194108_cdc_guest_invitations.sql'));
-  await db.exec(await read('../../supabase/migrations/20260911194959_cdc_export_guest_responses.sql'));
-  await db.exec(await read('../../supabase/migrations/20260911195144_cdc_shared_profile_privacy.sql'));
-  await db.query("select set_config('request.headers',$1,false)",[JSON.stringify({origin:'https://momentum-alpha-rho.vercel.app','x-forwarded-for':'192.0.2.10'})]);
-  await db.query("select set_config('request.jwt.claim.sub',$1,false)", [A]);
-  await db.exec('set role authenticated');
-  return db;
-}
+
 
 test('MOM-02/16/18, SEC-12: atomic save, replay and ownership run in PostgreSQL', async t => {
   const db = await fixture(); t.after(() => db.close());
@@ -85,6 +65,16 @@ test('DAT-22/23: explicit observation corrections retain source data and protect
   assert.equal(cleared.daily.raw_data.manual_corrections.sleep_hours, null);
   assert.equal(cleared.daily.raw_data.previous_corrections.length, 1);
   assert.equal(cleared.day.note, input[3]);
+});
+
+test('ACC-03/DAT-22: malformed onboarding and absent observation payloads cannot write partial data',async t=>{
+ const db=await fixture();t.after(()=>db.close());
+ await assert.rejects(db.query("select public.save_daily_observations('2026-09-01',null,'{}',null)"),e=>e.code==='22023');
+ assert.equal((await db.query('select count(*) from public.daily_wellbeing')).rows[0].count,0);
+ for(const values of [{display_name:true},{display_name:['Camille']},{display_name:'Camille',estimated_weight:60}]){
+  await assert.rejects(db.query('select public.save_minimal_onboarding(1,$1,$2)',[JSON.stringify(values),OP]),e=>e.code==='22023');
+ }
+ assert.equal((await db.query('select count(*) from public.passports')).rows[0].count,0);
 });
 
 test('ACC-03/04/08: minimal onboarding is resumable, idempotent and preserves legacy profiles', async t => {
@@ -168,6 +158,7 @@ test('SEC-02/03/04/05/07/09: guest scope, confirmation, capacity, revocation and
  const db=await fixture();t.after(()=>db.close());
  const M='cccccccc-cccc-4ccc-8ccc-cccccccccccc';
  await db.query("insert into public.moments(id,user_id,created_by,title,status,capacity,start_at,location_name) values ($1,$2,$2,'Sortie fictive','CONFIRMED',1,now()+interval '7 days','Adresse privée fictive')",[M,A]);
+ await db.query("insert into public.moment_date_options(id,moment_id,created_by,start_at) values($1,$2,$3,now()+interval '7 days')",[OP,M,A]);
  const call=async(sql,args=[])=> (await db.query(sql,args)).rows[0].result;
  const created=await call("select public.create_guest_invitation($1,$2,'Invité fictif','Au plaisir de marcher ensemble',false) result",[M,ID]);
  assert.match(created.secret,/^[a-f0-9]{64}$/);assert.equal(created.view.location,null);assert.equal('participants' in created.view,false);
@@ -178,6 +169,7 @@ test('SEC-02/03/04/05/07/09: guest scope, confirmation, capacity, revocation and
  const exchanged=await call('select public.exchange_guest_invitation($1) result',[created.secret]);assert.match(exchanged.session,/^[a-f0-9]{64}$/);assert.equal(exchanged.view.response_state,'unanswered');
  assert.equal((await call('select public.exchange_guest_invitation($1) result',[created.secret])).view.response_state,'unanswered');
  const args=[exchanged.session,'Alex','yes','{}',0];const answer=()=>call('select public.respond_guest_invitation($1,$2,$3,$4,$5) result',args);
+ assert.equal((await call('select public.respond_guest_invitation($1,$2,$3,$4,$5) result',[exchanged.session,'Alex','yes',JSON.stringify({[OP]:null}),0])).error,'invalid_response');
  const response=await answer();assert.equal(response.view.response_state,'pending_validation');assert.deepEqual(await answer(),response);
  await db.exec('reset role; set role authenticated');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[A]);
  const confirmed=await call("select public.manage_guest_invitation('confirm',$1,$2) result",[ID,response.view.response_revision]);assert.equal(confirmed.view.response_state,'confirmed');

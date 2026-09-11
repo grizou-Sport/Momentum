@@ -1,0 +1,9 @@
+[functions.storage-cleanup]
+entrypoint = "./functions/storage-cleanup/index.mjs"
+# Custom constant-work credential check is mandatory in the handler; no browser access.
+verify_jwt = false
+
+[functions.account-deletion]
+entrypoint = "./functions/account-deletion/index.mjs"
+# Current JWT + password are checked explicitly for begin; status requires the private receipt.
+verify_jwt = false

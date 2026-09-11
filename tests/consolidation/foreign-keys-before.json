@@ -1,0 +1,362 @@
+[
+  {
+    "table_name": "activities",
+    "conname": "activities_location_id_fkey",
+    "definition": "FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE SET NULL"
+  },
+  {
+    "table_name": "activities",
+    "conname": "activities_moment_id_fkey",
+    "definition": "FOREIGN KEY (moment_id) REFERENCES moments(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "activities",
+    "conname": "activities_sport_id_fkey",
+    "definition": "FOREIGN KEY (sport_id) REFERENCES sports(id)"
+  },
+  {
+    "table_name": "activities",
+    "conname": "activities_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "activity_equipment",
+    "conname": "activity_equipment_activity_id_fkey",
+    "definition": "FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "activity_equipment",
+    "conname": "activity_equipment_equipment_id_fkey",
+    "definition": "FOREIGN KEY (equipment_id) REFERENCES user_equipment(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "activity_flow_assessments",
+    "conname": "activity_flow_assessments_activity_id_fkey",
+    "definition": "FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "activity_flow_assessments",
+    "conname": "activity_flow_assessments_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "activity_media",
+    "conname": "activity_media_activity_id_fkey",
+    "definition": "FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "activity_media",
+    "conname": "activity_media_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "activity_nutrition_items",
+    "conname": "activity_nutrition_items_activity_id_fkey",
+    "definition": "FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "activity_nutrition_items",
+    "conname": "activity_nutrition_items_product_id_fkey",
+    "definition": "FOREIGN KEY (product_id) REFERENCES nutrition_products(id) ON DELETE RESTRICT"
+  },
+  {
+    "table_name": "activity_timeline",
+    "conname": "activity_timeline_activity_id_fkey",
+    "definition": "FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "activity_timeline",
+    "conname": "activity_timeline_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "blocked_users",
+    "conname": "blocked_users_blocked_id_fkey",
+    "definition": "FOREIGN KEY (blocked_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "blocked_users",
+    "conname": "blocked_users_blocker_id_fkey",
+    "definition": "FOREIGN KEY (blocker_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "circle_preferences",
+    "conname": "circle_preferences_circle_member_id_fkey",
+    "definition": "FOREIGN KEY (circle_member_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "circle_preferences",
+    "conname": "circle_preferences_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "circle_relationships",
+    "conname": "circle_relationships_recipient_id_fkey",
+    "definition": "FOREIGN KEY (recipient_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "circle_relationships",
+    "conname": "circle_relationships_requester_id_fkey",
+    "definition": "FOREIGN KEY (requester_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "club_member_preferences",
+    "conname": "club_member_preferences_club_id_fkey",
+    "definition": "FOREIGN KEY (club_id) REFERENCES clubs(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "club_member_preferences",
+    "conname": "club_member_preferences_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "club_members",
+    "conname": "club_members_club_id_fkey",
+    "definition": "FOREIGN KEY (club_id) REFERENCES clubs(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "club_members",
+    "conname": "club_members_invited_by_fkey",
+    "definition": "FOREIGN KEY (invited_by) REFERENCES auth.users(id) ON DELETE SET NULL"
+  },
+  {
+    "table_name": "club_members",
+    "conname": "club_members_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "clubs",
+    "conname": "clubs_default_location_id_fkey",
+    "definition": "FOREIGN KEY (default_location_id) REFERENCES locations(id) ON DELETE SET NULL"
+  },
+  {
+    "table_name": "clubs",
+    "conname": "clubs_owner_id_fkey",
+    "definition": "FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE RESTRICT"
+  },
+  {
+    "table_name": "connections",
+    "conname": "connections_created_from_invitation_id_fkey",
+    "definition": "FOREIGN KEY (created_from_invitation_id) REFERENCES invitations(id) ON DELETE SET NULL"
+  },
+  {
+    "table_name": "connections",
+    "conname": "connections_user_high_id_fkey",
+    "definition": "FOREIGN KEY (user_high_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "connections",
+    "conname": "connections_user_low_id_fkey",
+    "definition": "FOREIGN KEY (user_low_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "daily_wellbeing",
+    "conname": "daily_wellbeing_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "days",
+    "conname": "days_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "invitations",
+    "conname": "invitations_accepted_by_fkey",
+    "definition": "FOREIGN KEY (accepted_by) REFERENCES auth.users(id) ON DELETE SET NULL"
+  },
+  {
+    "table_name": "invitations",
+    "conname": "invitations_inviter_id_fkey",
+    "definition": "FOREIGN KEY (inviter_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "invitations",
+    "conname": "invitations_recipient_user_id_fkey",
+    "definition": "FOREIGN KEY (recipient_user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "locations",
+    "conname": "locations_created_by_fkey",
+    "definition": "FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE RESTRICT"
+  },
+  {
+    "table_name": "locations",
+    "conname": "locations_owner_user_id_fkey",
+    "definition": "FOREIGN KEY (owner_user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "moment_activities",
+    "conname": "moment_activities_activity_id_fkey",
+    "definition": "FOREIGN KEY (activity_id) REFERENCES activities(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "moment_activities",
+    "conname": "moment_activities_added_by_fkey",
+    "definition": "FOREIGN KEY (added_by) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "moment_activities",
+    "conname": "moment_activities_moment_id_fkey",
+    "definition": "FOREIGN KEY (moment_id) REFERENCES moments(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "moment_availability",
+    "conname": "moment_availability_date_option_id_fkey",
+    "definition": "FOREIGN KEY (date_option_id) REFERENCES moment_date_options(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "moment_availability",
+    "conname": "moment_availability_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "moment_date_options",
+    "conname": "moment_date_options_created_by_fkey",
+    "definition": "FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE RESTRICT"
+  },
+  {
+    "table_name": "moment_date_options",
+    "conname": "moment_date_options_location_id_fkey",
+    "definition": "FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE SET NULL"
+  },
+  {
+    "table_name": "moment_date_options",
+    "conname": "moment_date_options_moment_id_fkey",
+    "definition": "FOREIGN KEY (moment_id) REFERENCES moments(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "moment_media",
+    "conname": "moment_media_moment_id_fkey",
+    "definition": "FOREIGN KEY (moment_id) REFERENCES moments(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "moment_media",
+    "conname": "moment_media_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "moment_participants",
+    "conname": "moment_participants_moment_id_fkey",
+    "definition": "FOREIGN KEY (moment_id) REFERENCES moments(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "moment_participants",
+    "conname": "moment_participants_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "moments",
+    "conname": "moments_club_id_fkey",
+    "definition": "FOREIGN KEY (club_id) REFERENCES clubs(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "moments",
+    "conname": "moments_created_by_fkey",
+    "definition": "FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE RESTRICT"
+  },
+  {
+    "table_name": "moments",
+    "conname": "moments_day_id_fkey",
+    "definition": "FOREIGN KEY (day_id) REFERENCES days(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "moments",
+    "conname": "moments_location_id_fkey",
+    "definition": "FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE SET NULL"
+  },
+  {
+    "table_name": "moments",
+    "conname": "moments_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "nutrition_products",
+    "conname": "nutrition_products_created_by_fkey",
+    "definition": "FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "onboarding_progress",
+    "conname": "onboarding_progress_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "passports",
+    "conname": "passports_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "profiles",
+    "conname": "profiles_id_fkey",
+    "definition": "FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "reactions",
+    "conname": "reactions_moment_id_fkey",
+    "definition": "FOREIGN KEY (moment_id) REFERENCES moments(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "reactions",
+    "conname": "reactions_preset_message_id_fkey",
+    "definition": "FOREIGN KEY (preset_message_id) REFERENCES preset_messages(id) ON DELETE SET NULL"
+  },
+  {
+    "table_name": "reactions",
+    "conname": "reactions_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "user_equipment",
+    "conname": "user_equipment_category_id_fkey",
+    "definition": "FOREIGN KEY (category_id) REFERENCES equipment_categories(id) ON DELETE SET NULL"
+  },
+  {
+    "table_name": "user_equipment",
+    "conname": "user_equipment_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "user_goals",
+    "conname": "user_goals_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "user_load_estimates",
+    "conname": "user_load_estimates_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "user_locations",
+    "conname": "user_locations_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "user_missions",
+    "conname": "user_missions_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "user_settings",
+    "conname": "user_settings_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "user_sport_preferences",
+    "conname": "user_sport_preferences_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "user_sports",
+    "conname": "user_sports_sport_id_fkey",
+    "definition": "FOREIGN KEY (sport_id) REFERENCES sports(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "user_sports",
+    "conname": "user_sports_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  },
+  {
+    "table_name": "wellbeing_profile",
+    "conname": "wellbeing_profile_user_id_fkey",
+    "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+  }
+]
