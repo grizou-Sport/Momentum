@@ -1,0 +1,181 @@
+{
+  "id": "CDC-2026-09-08",
+  "status": "recovery-incomplete",
+  "referenceCommit": "dd8b37eb72c4ddc1a255c8f4e3a3f42f9f9fcfa0",
+  "requiredFiles": [
+    "js/momentum-training-load.js",
+    "js/momentum-export.js",
+    "js/momentum-import-rules.js",
+    "supabase/migrations/20260908000100_cdc_reliability_foundation.sql",
+    "discover.html",
+    "invite.html",
+    "tests/consolidation"
+  ],
+  "requirements": [
+    {
+      "id": "chapter-01",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-02",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-03",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-04",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-05",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-06",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-07",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-08",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-09",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-10",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-11",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-12",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-13",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-14",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-15",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-16",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-17",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-18",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-19",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-20",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-21",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-22",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-23",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-24",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-25",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-26",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-27",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-28",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-29",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-30",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-31",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-32",
+      "status": "unverified",
+      "evidence": []
+    },
+    {
+      "id": "chapter-33",
+      "status": "unverified",
+      "evidence": []
+    }
+  ]
+}

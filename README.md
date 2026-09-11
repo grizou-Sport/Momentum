@@ -22,3 +22,14 @@ Servir le dépôt avec un serveur web local, puis ouvrir `index.html`. Une conne
 ## Contribution
 
 Lire [`AGENTS.md`](AGENTS.md) avant toute modification automatisée ou assistée par IA.
+
+## Vérifier et livrer
+
+Avec Node.js 22 : `npm ci --ignore-scripts`, puis `npm run build`.
+Cette commande vérifie les sources, exécute tous les tests et produit `dist/` avec l'identité du commit et les empreintes des fichiers.
+
+- [Organisation et procédure de livraison](docs/engineering/DELIVERY.md)
+- [Incident et récupération du CDC du 8 septembre](docs/incidents/2026-09-08-cdc-transfer.md)
+- [Couverture du CDC](specs/cdc/2026-09-08.delivery.json)
+
+Le contrôle du CDC complet s'exécute avec `npm run check:cdc`. Il échoue tant que les sources et preuves nécessaires restent manquantes ; un contrôle général vert ne signifie pas que ce CDC est livré.
