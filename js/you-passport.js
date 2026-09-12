@@ -5,7 +5,7 @@ function renderPassportCard() {
   document.getElementById("passportLocation").textContent =
     [YOU.passport?.city, YOU.passport?.country].filter(Boolean).join(", ") || "—";
   document.getElementById("passportQuote").textContent =
-    `“${YOU.passport?.quote || "Écris la prochaine ligne."}”`;
+    YOU.passport?.quote ? `“${YOU.passport.quote}”` : "Une phrase à toi, quand tu le souhaites.";
 
   document.getElementById("passportAge").textContent =
     calculateAge(YOU.passport?.birth_date, YOU.passport?.birth_year);
@@ -38,7 +38,7 @@ function renderAbout() {
 
     <form id="passportForm" class="you-form">
       <label>Nom complet
-        <input name="display_name" value="${YOU.passport?.display_name || ""}" />
+        <input name="display_name" value="${escapeHTML(YOU.passport?.display_name || "")}" />
       </label>
 
       <label class="full">Lieu de référence
@@ -49,7 +49,7 @@ function renderAbout() {
       </label>
 
       <label>Date de naissance
-        <input name="birth_date" type="date" value="${YOU.passport?.birth_date || ""}" />
+        <input name="birth_date" type="date" value="${escapeHTML(YOU.passport?.birth_date || "")}" />
       </label>
 
       <label>Sexe
@@ -57,32 +57,32 @@ function renderAbout() {
       </label>
 
       <label>Taille cm
-        <input name="height_cm" type="number" value="${YOU.passport?.height_cm || ""}" />
+        <input name="height_cm" type="number" value="${escapeHTML(YOU.passport?.height_cm || "")}" />
       </label>
 
       <label>Poids kg
-        <input name="weight_kg" type="number" step="0.1" value="${YOU.passport?.weight_kg || ""}" />
+        <input name="weight_kg" type="number" step="0.1" value="${escapeHTML(YOU.passport?.weight_kg || "")}" />
       </label>
 
       <div class="full you-form-divider"><span class="section-kicker">Profil sportif</span></div>
       <label>Niveau déclaré
         <select name="sport_level"><option value="">Choisir</option><option value="BEGINNER" ${YOU.passport?.sport_level === "BEGINNER" ? "selected" : ""}>Débutant</option><option value="RETURNING" ${YOU.passport?.sport_level === "RETURNING" ? "selected" : ""}>Reprise</option><option value="REGULAR" ${YOU.passport?.sport_level === "REGULAR" ? "selected" : ""}>Régulier</option><option value="COMPETITOR" ${YOU.passport?.sport_level === "COMPETITOR" ? "selected" : ""}>Compétiteur</option><option value="EXPERT" ${YOU.passport?.sport_level === "EXPERT" ? "selected" : ""}>Expert</option></select>
       </label>
-      <label>Séances moyennes par semaine<input name="weekly_sessions" type="number" min="0" max="30" value="${YOU.passport?.habits?.weekly_sessions ?? ""}" /></label>
-      <label>Heures moyennes par semaine<input name="weekly_hours" type="number" min="0" max="100" step="0.5" value="${YOU.passport?.habits?.weekly_hours ?? ""}" /></label>
-      <label>Jours favoris<input name="favorite_days" value="${(YOU.passport?.habits?.favorite_days || []).join(", ")}" placeholder="Mardi, jeudi, dimanche" /></label>
+      <label>Séances moyennes par semaine<input name="weekly_sessions" type="number" min="0" max="30" value="${escapeHTML(YOU.passport?.habits?.weekly_sessions ?? "")}" /></label>
+      <label>Heures moyennes par semaine<input name="weekly_hours" type="number" min="0" max="100" step="0.5" value="${escapeHTML(YOU.passport?.habits?.weekly_hours ?? "")}" /></label>
+      <label>Jours favoris<input name="favorite_days" value="${escapeHTML((YOU.passport?.habits?.favorite_days || []).join(", "))}" placeholder="Mardi, jeudi, dimanche" /></label>
 
       <div class="full you-form-divider"><span class="section-kicker">Objectifs & sources</span></div>
       <label>Objectif principal<select name="primary_objective"><option value="">Choisir</option>${["Santé","Performance","Compétition","Aventure","Plaisir"].map((item) => `<option ${YOU.passport?.objectives?.primary === item ? "selected" : ""}>${item}</option>`).join("")}</select></label>
-      <label>Sources déclarées<input name="connected_sources" value="${Object.keys(YOU.passport?.connected_sources || {}).filter((key) => YOU.passport.connected_sources[key]).join(", ")}" placeholder="COROS, Garmin, Strava…" /></label>
+      <label>Sources déclarées<input name="connected_sources" value="${escapeHTML(Object.keys(YOU.passport?.connected_sources || {}).filter((key) => YOU.passport.connected_sources[key]).join(", "))}" placeholder="COROS, Garmin, Strava…" /></label>
 
       <label class="full">Phrase
-        <textarea name="quote" rows="3">${YOU.passport?.quote || ""}</textarea>
+        <textarea name="quote" rows="3">${escapeHTML(YOU.passport?.quote || "")}</textarea>
       </label>
 
       <div class="full you-avatar-field">
         <div class="you-avatar-form-preview" data-avatar-form-preview>
-          ${YOU.passport?.avatar_url ? `<img src="${YOU.passport.avatar_url}" alt="" />` : `<span>${nameInitials(YOU.passport?.display_name || YOU.currentUser?.email)}</span>`}
+          ${YOU.passport?.avatar_url ? `<img src="${escapeHTML(YOU.passport.avatar_url)}" alt="" />` : `<span>${escapeHTML(nameInitials(YOU.passport?.display_name || YOU.currentUser?.email))}</span>`}
         </div>
         <label>Photo de profil
           <span class="you-avatar-help">Choisis une image, puis zoome et déplace-la pour définir le cadrage.</span>
@@ -153,18 +153,7 @@ async function prepareAvatarCrop(event) {
 async function uploadAvatar(file) {
   if (!file) return YOU.passport?.avatar_url || null;
 
-  const fileName = `${YOU.currentUser.id}-${Date.now()}.jpg`;
-  const filePath = `${YOU.currentUser.id}/${fileName}`;
-
-  const { error } = await window.momentumDB.storage
-    .from("avatars")
-    .upload(filePath, file, {
-      cacheControl: "3600",
-      contentType: "image/jpeg",
-      upsert: false,
-    });
-
-  if (error) throw error;
+  const {path:filePath}=await window.MomentumUploads.upload(file,{bucket:"avatars",resource:YOU.currentUser.id});
 
   const { data } = window.momentumDB.storage
     .from("avatars")

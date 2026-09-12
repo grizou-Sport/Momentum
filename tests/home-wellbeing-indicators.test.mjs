@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import vm from "node:vm";
+import load from "../js/momentum-training-load.js";
+import wellbeing from "../js/momentum-wellbeing-data.js";
 
 const progressionSource = await readFile(new URL("../js/home-progression.js", import.meta.url), "utf8");
 const progressionPage = await readFile(new URL("../progression.html", import.meta.url), "utf8");
@@ -9,6 +11,8 @@ const progressionPage = await readFile(new URL("../progression.html", import.met
 function loadWellbeingFunctions() {
   const context = {
     console,
+    MomentumTrainingLoad:load,
+    MomentumWellbeingData:wellbeing,
     document: { addEventListener() {} },
     sleepQualityLevel(value) {
       if (value == null) return null;

@@ -19,10 +19,10 @@ test("the triangle is the shared brand and the contextual rail has protected the
 test("legacy topbar styles are gone and settings live inside YOU", () => {
   const styles = ["css/style.css","css/home.css","css/you.css","css/together.css"].map(read).join("\n");
   const navigation = read("js/navigation.js");
-  const you = read("js/you.js");
+  const you = read("js/you-account.js");
   assert.doesNotMatch(styles, /\.topbar\b/);
   assert.doesNotMatch(navigation, /Paramètres bientôt disponibles/);
-  assert.match(you, /<span class="you-kicker">Paramètres<\/span>/);
+  assert.match(you, /data-arrival/);
 });
 
 test("Progression exposes accessible tables, definitions and persisted preferences", () => {

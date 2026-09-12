@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import vm from "node:vm";
+import load from "../js/momentum-training-load.js";
 
 const source = await readFile(new URL("../js/home-progression.js", import.meta.url), "utf8");
 
@@ -10,6 +11,7 @@ function loadFunctions() {
     console,
     document:{ addEventListener() {} },
     window:{
+      MomentumTrainingLoad:load,
       MomentumMoments:{ isCompletedActivity:(activity) => activity.status === "done" },
       MomentumSportVisuals:{ getGroup:(sport, category) => ({ id:category === "wellbeing" ? "wellbeing" : sport, label:sport, color:"#273c31" }) },
       MomentumSports:{ getLabel:(_sport, type) => type }
@@ -90,10 +92,12 @@ test("load computation starts at the first completed activity in full history", 
   const { progressionState, buildLoadSeries } = loadFunctions();
   progressionState.periodStart="2026-07-01";
   progressionState.periodEnd="2026-07-07";
+  progressionState.historyComplete=true;
+  progressionState.calculationDate="2026-07-07";
   progressionState.passport={habits:{weekly_hours:3,weekly_sessions:3}};
   progressionState.historyActivities=[
-    {status:"done",activity_date:"2026-05-01",duration_min:60,rpe:5},
-    {status:"done",activity_date:"2026-07-03",duration_min:60,rpe:6}
+    {id:"first",sport:"running",status:"done",activity_date:"2026-05-01",duration_min:60,rpe:5},
+    {id:"last",sport:"running",status:"done",activity_date:"2026-07-03",duration_min:60,rpe:6}
   ];
   const series=buildLoadSeries();
   assert.equal(series[0].date,"2026-05-01");
@@ -106,7 +110,7 @@ test("important recorded events are exposed without changing activity data", () 
   const events=buildProgressionEvents([
     {activity_date:"2026-07-01",activity_category:"adventure",activity_type:"Traversée"},
     {activity_date:"2026-07-02",activity_category:"wellbeing",activity_type:"Massage"}
-  ],[{day_date:"2026-07-03",note:"Début des vacances"}]);
+  ],[{day_date:"2026-07-03",note:"Début des vacances",context_annotations:["vacation"]}]);
   assert.match(events.get("2026-07-01")[0],/Aventure/);
   assert.match(events.get("2026-07-02")[0],/Massage/);
   assert.deepEqual(Array.from(events.get("2026-07-03")),["Vacances"]);

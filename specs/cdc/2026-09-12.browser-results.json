@@ -1,0 +1,622 @@
+{
+  "scope": "Local browser with real restored Supabase services and fictitious accounts",
+  "sourceParent": "f0691179ce1c267ae6c220fa6a7faaffd502d015",
+  "gpxImport": {
+    "scenario": "Local browser GPX import",
+    "status": "passed",
+    "durationMinutes": 80,
+    "rpe": null,
+    "sourceInstant": "2026-09-12T06:00:00.000Z",
+    "sourceTimezone": "Europe/Zurich",
+    "localTime": "08:00:00",
+    "originalSha256": "da9654b583e96f0e0e633605205b53e52833318d1908bea7a20301e57c97b00a",
+    "originalBytesPreserved": true,
+    "retainedMemory": "Recette fictive : GPX de 80 minutes, sans effort déclaré."
+  },
+  "guestBrowser": {
+    "anonymousPreview": true,
+    "unverifiedNameExplained": true,
+    "responsePendingBeforeOwnerConfirmation": true,
+    "confirmationVisibleToGuest": true,
+    "revocationHidesInvitation": true,
+    "historicalAnswerPreserved": true
+  },
+  "fallback": {
+    "commit": "f0691179ce1c267ae6c220fa6a7faaffd502d015",
+    "originalSourceAndMemoryReadable": true,
+    "nullEffortPreserved": true,
+    "confirmedRevokedGuestAnswerReadable": true,
+    "historicalPreCDCClientNotCertified": true
+  },
+  "layouts": [
+    {
+      "page": "index.html",
+      "bodyWidth": 360,
+      "documentWidth": 360,
+      "height": 900,
+      "viewport": 360
+    },
+    {
+      "page": "index.html",
+      "bodyWidth": 390,
+      "documentWidth": 390,
+      "height": 900,
+      "viewport": 390
+    },
+    {
+      "page": "index.html",
+      "bodyWidth": 430,
+      "documentWidth": 430,
+      "height": 900,
+      "viewport": 430
+    },
+    {
+      "page": "index.html",
+      "bodyWidth": 768,
+      "documentWidth": 768,
+      "height": 900,
+      "viewport": 768
+    },
+    {
+      "page": "index.html",
+      "bodyWidth": 1024,
+      "documentWidth": 1024,
+      "height": 900,
+      "viewport": 1024
+    },
+    {
+      "page": "index.html",
+      "bodyWidth": 1440,
+      "documentWidth": 1440,
+      "height": 900,
+      "viewport": 1440
+    },
+    {
+      "page": "index.html",
+      "bodyWidth": 320,
+      "documentWidth": 320,
+      "height": 900,
+      "viewport": 320
+    },
+    {
+      "page": "you.html",
+      "bodyWidth": 360,
+      "documentWidth": 360,
+      "height": 900,
+      "viewport": 360
+    },
+    {
+      "page": "you.html",
+      "bodyWidth": 390,
+      "documentWidth": 390,
+      "height": 900,
+      "viewport": 390
+    },
+    {
+      "page": "you.html",
+      "bodyWidth": 430,
+      "documentWidth": 430,
+      "height": 900,
+      "viewport": 430
+    },
+    {
+      "page": "you.html",
+      "bodyWidth": 768,
+      "documentWidth": 768,
+      "height": 900,
+      "viewport": 768
+    },
+    {
+      "page": "you.html",
+      "bodyWidth": 1024,
+      "documentWidth": 1024,
+      "height": 900,
+      "viewport": 1024
+    },
+    {
+      "page": "you.html",
+      "bodyWidth": 1440,
+      "documentWidth": 1440,
+      "height": 900,
+      "viewport": 1440
+    },
+    {
+      "page": "you.html",
+      "bodyWidth": 320,
+      "documentWidth": 320,
+      "height": 900,
+      "viewport": 320
+    },
+    {
+      "page": "together.html",
+      "bodyWidth": 360,
+      "documentWidth": 360,
+      "height": 900,
+      "viewport": 360
+    },
+    {
+      "page": "together.html",
+      "bodyWidth": 390,
+      "documentWidth": 390,
+      "height": 900,
+      "viewport": 390
+    },
+    {
+      "page": "together.html",
+      "bodyWidth": 430,
+      "documentWidth": 430,
+      "height": 900,
+      "viewport": 430
+    },
+    {
+      "page": "together.html",
+      "bodyWidth": 768,
+      "documentWidth": 768,
+      "height": 900,
+      "viewport": 768
+    },
+    {
+      "page": "together.html",
+      "bodyWidth": 1024,
+      "documentWidth": 1024,
+      "height": 900,
+      "viewport": 1024
+    },
+    {
+      "page": "together.html",
+      "bodyWidth": 1440,
+      "documentWidth": 1440,
+      "height": 900,
+      "viewport": 1440
+    },
+    {
+      "page": "together.html",
+      "bodyWidth": 320,
+      "documentWidth": 320,
+      "height": 900,
+      "viewport": 320
+    },
+    {
+      "page": "progression.html",
+      "bodyWidth": 360,
+      "documentWidth": 360,
+      "height": 900,
+      "viewport": 360
+    },
+    {
+      "page": "progression.html",
+      "bodyWidth": 390,
+      "documentWidth": 390,
+      "height": 900,
+      "viewport": 390
+    },
+    {
+      "page": "progression.html",
+      "bodyWidth": 430,
+      "documentWidth": 430,
+      "height": 900,
+      "viewport": 430
+    },
+    {
+      "page": "progression.html",
+      "bodyWidth": 768,
+      "documentWidth": 768,
+      "height": 900,
+      "viewport": 768
+    },
+    {
+      "page": "progression.html",
+      "bodyWidth": 1024,
+      "documentWidth": 1024,
+      "height": 900,
+      "viewport": 1024
+    },
+    {
+      "page": "progression.html",
+      "bodyWidth": 1440,
+      "documentWidth": 1440,
+      "height": 900,
+      "viewport": 1440
+    },
+    {
+      "page": "progression.html",
+      "bodyWidth": 320,
+      "documentWidth": 320,
+      "height": 900,
+      "viewport": 320
+    },
+    {
+      "page": "discover.html",
+      "orientation": "portrait",
+      "bodyWidth": 320,
+      "documentWidth": 320,
+      "height": 900,
+      "viewport": 320
+    },
+    {
+      "page": "discover.html",
+      "orientation": "portrait",
+      "bodyWidth": 360,
+      "documentWidth": 360,
+      "height": 900,
+      "viewport": 360
+    },
+    {
+      "page": "discover.html",
+      "orientation": "portrait",
+      "bodyWidth": 390,
+      "documentWidth": 390,
+      "height": 900,
+      "viewport": 390
+    },
+    {
+      "page": "discover.html",
+      "orientation": "portrait",
+      "bodyWidth": 430,
+      "documentWidth": 430,
+      "height": 900,
+      "viewport": 430
+    },
+    {
+      "page": "discover.html",
+      "orientation": "portrait",
+      "bodyWidth": 768,
+      "documentWidth": 768,
+      "height": 900,
+      "viewport": 768
+    },
+    {
+      "page": "discover.html",
+      "orientation": "portrait",
+      "bodyWidth": 1024,
+      "documentWidth": 1024,
+      "height": 900,
+      "viewport": 1024
+    },
+    {
+      "page": "discover.html",
+      "orientation": "portrait",
+      "bodyWidth": 1440,
+      "documentWidth": 1440,
+      "height": 900,
+      "viewport": 1440
+    },
+    {
+      "page": "index.html",
+      "orientation": "landscape",
+      "bodyWidth": 360,
+      "documentWidth": 360,
+      "height": 360,
+      "viewport": 360
+    },
+    {
+      "page": "index.html",
+      "orientation": "landscape",
+      "bodyWidth": 768,
+      "documentWidth": 768,
+      "height": 360,
+      "viewport": 768
+    },
+    {
+      "page": "you.html",
+      "orientation": "landscape",
+      "bodyWidth": 360,
+      "documentWidth": 360,
+      "height": 360,
+      "viewport": 360
+    },
+    {
+      "page": "you.html",
+      "orientation": "landscape",
+      "bodyWidth": 768,
+      "documentWidth": 768,
+      "height": 360,
+      "viewport": 768
+    },
+    {
+      "page": "together.html",
+      "orientation": "landscape",
+      "bodyWidth": 360,
+      "documentWidth": 360,
+      "height": 360,
+      "viewport": 360
+    },
+    {
+      "page": "together.html",
+      "orientation": "landscape",
+      "bodyWidth": 768,
+      "documentWidth": 768,
+      "height": 360,
+      "viewport": 768
+    },
+    {
+      "page": "progression.html",
+      "orientation": "landscape",
+      "bodyWidth": 360,
+      "documentWidth": 360,
+      "height": 360,
+      "viewport": 360
+    },
+    {
+      "page": "progression.html",
+      "orientation": "landscape",
+      "bodyWidth": 768,
+      "documentWidth": 768,
+      "height": 360,
+      "viewport": 768
+    },
+    {
+      "page": "discover.html",
+      "orientation": "landscape",
+      "bodyWidth": 360,
+      "documentWidth": 360,
+      "height": 360,
+      "viewport": 360
+    },
+    {
+      "page": "discover.html",
+      "orientation": "landscape",
+      "bodyWidth": 768,
+      "documentWidth": 768,
+      "height": 360,
+      "viewport": 768
+    },
+    {
+      "page": "invite.html",
+      "orientation": "landscape",
+      "bodyWidth": 360,
+      "documentWidth": 360,
+      "height": 360,
+      "viewport": 360
+    },
+    {
+      "page": "invite.html",
+      "orientation": "landscape",
+      "bodyWidth": 768,
+      "documentWidth": 768,
+      "height": 360,
+      "viewport": 768
+    }
+  ],
+  "localNavigationComparisons": [
+    {
+      "version": "f069117",
+      "page": "index.html",
+      "repetition": 1,
+      "navigationMs": 129,
+      "domReadyMs": 117,
+      "firstContentfulPaintMs": 304,
+      "resourceCount": 68
+    },
+    {
+      "version": "f069117",
+      "page": "index.html",
+      "repetition": 2,
+      "navigationMs": 128,
+      "domReadyMs": 123,
+      "firstContentfulPaintMs": 268,
+      "resourceCount": 68
+    },
+    {
+      "version": "f069117",
+      "page": "index.html",
+      "repetition": 3,
+      "navigationMs": 127,
+      "domReadyMs": 120,
+      "firstContentfulPaintMs": 280,
+      "resourceCount": 68
+    },
+    {
+      "version": "f069117",
+      "page": "you.html",
+      "repetition": 1,
+      "navigationMs": 84,
+      "domReadyMs": 82,
+      "firstContentfulPaintMs": 312,
+      "resourceCount": 48
+    },
+    {
+      "version": "f069117",
+      "page": "you.html",
+      "repetition": 2,
+      "navigationMs": 85,
+      "domReadyMs": 85,
+      "firstContentfulPaintMs": 244,
+      "resourceCount": 48
+    },
+    {
+      "version": "f069117",
+      "page": "you.html",
+      "repetition": 3,
+      "navigationMs": 89,
+      "domReadyMs": 88,
+      "firstContentfulPaintMs": 280,
+      "resourceCount": 48
+    },
+    {
+      "version": "f069117",
+      "page": "together.html",
+      "repetition": 1,
+      "navigationMs": 80,
+      "domReadyMs": 76,
+      "firstContentfulPaintMs": 364,
+      "resourceCount": 31
+    },
+    {
+      "version": "f069117",
+      "page": "together.html",
+      "repetition": 2,
+      "navigationMs": 88,
+      "domReadyMs": 85,
+      "firstContentfulPaintMs": 272,
+      "resourceCount": 31
+    },
+    {
+      "version": "f069117",
+      "page": "together.html",
+      "repetition": 3,
+      "navigationMs": 90,
+      "domReadyMs": 84,
+      "firstContentfulPaintMs": 280,
+      "resourceCount": 31
+    },
+    {
+      "version": "f069117",
+      "page": "progression.html",
+      "repetition": 1,
+      "navigationMs": 102,
+      "domReadyMs": 102,
+      "firstContentfulPaintMs": null,
+      "resourceCount": 39
+    },
+    {
+      "version": "f069117",
+      "page": "progression.html",
+      "repetition": 2,
+      "navigationMs": 93,
+      "domReadyMs": 92,
+      "firstContentfulPaintMs": 280,
+      "resourceCount": 39
+    },
+    {
+      "version": "f069117",
+      "page": "progression.html",
+      "repetition": 3,
+      "navigationMs": 84,
+      "domReadyMs": 83,
+      "firstContentfulPaintMs": null,
+      "resourceCount": 39
+    },
+    {
+      "version": "phase3-working-tree",
+      "page": "index.html",
+      "repetition": 1,
+      "navigationMs": 135,
+      "domReadyMs": 126,
+      "firstContentfulPaintMs": 360,
+      "resourceCount": 68
+    },
+    {
+      "version": "phase3-working-tree",
+      "page": "index.html",
+      "repetition": 2,
+      "navigationMs": 129,
+      "domReadyMs": 120,
+      "firstContentfulPaintMs": 308,
+      "resourceCount": 68
+    },
+    {
+      "version": "phase3-working-tree",
+      "page": "index.html",
+      "repetition": 3,
+      "navigationMs": 135,
+      "domReadyMs": 127,
+      "firstContentfulPaintMs": 400,
+      "resourceCount": 68
+    },
+    {
+      "version": "phase3-working-tree",
+      "page": "you.html",
+      "repetition": 1,
+      "navigationMs": 92,
+      "domReadyMs": 91,
+      "firstContentfulPaintMs": 280,
+      "resourceCount": 48
+    },
+    {
+      "version": "phase3-working-tree",
+      "page": "you.html",
+      "repetition": 2,
+      "navigationMs": 80,
+      "domReadyMs": 78,
+      "firstContentfulPaintMs": 308,
+      "resourceCount": 48
+    },
+    {
+      "version": "phase3-working-tree",
+      "page": "you.html",
+      "repetition": 3,
+      "navigationMs": 81,
+      "domReadyMs": 80,
+      "firstContentfulPaintMs": 276,
+      "resourceCount": 48
+    },
+    {
+      "version": "phase3-working-tree",
+      "page": "together.html",
+      "repetition": 1,
+      "navigationMs": 89,
+      "domReadyMs": 87,
+      "firstContentfulPaintMs": 292,
+      "resourceCount": 31
+    },
+    {
+      "version": "phase3-working-tree",
+      "page": "together.html",
+      "repetition": 2,
+      "navigationMs": 81,
+      "domReadyMs": 77,
+      "firstContentfulPaintMs": 300,
+      "resourceCount": 31
+    },
+    {
+      "version": "phase3-working-tree",
+      "page": "together.html",
+      "repetition": 3,
+      "navigationMs": 81,
+      "domReadyMs": 75,
+      "firstContentfulPaintMs": 284,
+      "resourceCount": 31
+    },
+    {
+      "version": "phase3-working-tree",
+      "page": "progression.html",
+      "repetition": 1,
+      "navigationMs": 91,
+      "domReadyMs": 91,
+      "firstContentfulPaintMs": null,
+      "resourceCount": 39
+    },
+    {
+      "version": "phase3-working-tree",
+      "page": "progression.html",
+      "repetition": 2,
+      "navigationMs": 85,
+      "domReadyMs": 85,
+      "firstContentfulPaintMs": null,
+      "resourceCount": 39
+    },
+    {
+      "version": "phase3-working-tree",
+      "page": "progression.html",
+      "repetition": 3,
+      "navigationMs": 88,
+      "domReadyMs": 87,
+      "firstContentfulPaintMs": 312,
+      "resourceCount": 39
+    }
+  ],
+  "integration": {
+    "tests": 10,
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "durationMs": 150166.831112,
+    "logSha256": "6317546fcd243915ea8bbffb9ac7e001d1ef7dbe73e1b9225df0ab61764b71b5"
+  },
+  "limitations": [
+    "CSS viewports in a same-origin iframe, not physical device certification",
+    "Paint entries occasionally unavailable; these measurements do not certify Core Web Vitals",
+    "No browser network-loss simulation, complete screen-reader audit or 200% text zoom",
+    "No exact hosted production schema parity or pre-CDC cached-tab compatibility certification"
+  ],
+  "sourceTests": {
+    "tests": 201,
+    "passed": 201,
+    "failed": 0,
+    "skipped": 0,
+    "filesBuilt": 204,
+    "logSha256": "2cb553368cd10b5b064c1531910a93c8e96a7d91c8c915d112db6f4aef36531f",
+    "finalTargetedDialogTests": 2
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "date": "2026-09-12",
+  "scope": "Local synthetic data only; representative pre-CDC application schema and real local Supabase provider services.",
+  "build": {
+    "tests": 198,
+    "passed": 198,
+    "failed": 0,
+    "staticFiles": 204
+  },
+  "postgres": {
+    "version": "17.10",
+    "cdcMigrations": 16,
+    "scenarios": 7,
+    "testsIncludingParent": 8,
+    "passed": 8,
+    "failed": 0,
+    "durationMs": 1186.704593
+  },
+  "supabaseFresh": {
+    "cli": "2.117.0",
+    "cdcMigrations": 16,
+    "scenarios": 8,
+    "testsIncludingParent": 9,
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "durationMs": 183105.194509
+  },
+  "logSha256": {
+    "phase2-build-final.log": "b7f0d51e42ac11688b5db112914487dcf42f24a8ee644d1b9d79fd113f2884f6",
+    "phase2-concurrency.log": "2fb9bbf8d8f37f484e749c69e7cbf04a1480a2c2c08da00211142aa27eacc159",
+    "phase2-fresh.log": "b84dd6b502dc3fef9724f3a9bd7eb56d793479073d15fdf16481605c933eaae1"
+  },
+  "productionApplied": false,
+  "limitations": [
+    "Production schema parity not certified",
+    "Historical shared images not transformed",
+    "Browser and human acceptance incomplete",
+    "Full restored Auth/Storage stack and legacy client compatibility pending"
+  ]
+}

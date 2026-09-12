@@ -8,6 +8,7 @@
   <link rel="icon" href="Assets/icons/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/navigation.css" />
+  <link rel="stylesheet" href="css/consolidation.css" />
   <link rel="stylesheet" href="css/momentum-motion.css" />
   <link rel="stylesheet" href="css/momentum-hero.css" />
   <link rel="stylesheet" href="css/progression.css" />
@@ -24,7 +25,7 @@
       <div class="progression-hero-inner momentum-hero-content">
         <div class="progression-hero-copy">
           <span class="section-kicker">Progression</span>
-          <h1>Voir le chemin.<br><em>Comprendre l’élan.</em></h1>
+          <h1>Voir le chemin.<br><em>Comprendre l’élan.</em></h1><a data-content-link href="#progression-content">Aller au contenu</a>
           <p>Le tableau de bord de ton évolution — volume, disciplines, charge et bien-être réunis dans une lecture claire du temps.</p>
         </div>
         <div class="progression-hero-mark" aria-hidden="true">
@@ -38,7 +39,7 @@
       </div>
     </header>
 
-    <section class="progression-dashboard" aria-labelledby="dashboardTitle">
+    <section id="progression-content" data-direct-content class="progression-dashboard" aria-labelledby="dashboardTitle">
       <div class="dashboard-intro" data-motion-reveal>
         <div>
           <span class="section-kicker">Tableau de bord</span>
@@ -149,6 +150,12 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
+  <script src="js/momentum-access.js"></script>
+  <script src="js/momentum-session.js"></script>
+  <script src="js/momentum-preferences.js"></script>
+  <script src="js/momentum-data.js"></script>
+  <script src="js/momentum-training-load.js"></script>
+  <script src="js/momentum-wellbeing-data.js"></script>
   <script src="js/momentum-ui.js"></script>
   <script src="js/guard.js"></script>
   <script src="js/navigation.js"></script>
@@ -162,5 +169,6 @@
   <script src="js/home-wellbeing.js"></script>
   <script src="js/momentum-motion.js"></script>
   <script src="js/home-progression.js"></script>
+  <script src="js/momentum-surface.js"></script>
 </body>
 </html>

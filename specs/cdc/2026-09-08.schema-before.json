@@ -1,0 +1,2749 @@
+{
+  "capturedAt": "2026-09-11",
+  "project": "momentum-alpha",
+  "tables": [
+    {
+      "table_name": "activities",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "moment_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "sport",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "activity_type",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "default": "'done'::text",
+          "nullable": "YES"
+        },
+        {
+          "name": "distance_km",
+          "type": "numeric",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "duration_min",
+          "type": "numeric",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "elevation_m",
+          "type": "numeric",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "avg_hr",
+          "type": "integer",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "rpe",
+          "type": "integer",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "gear",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "gpx_url",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "YES"
+        },
+        {
+          "name": "sport_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "mission_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "activity_date",
+          "type": "date",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "weather",
+          "type": "jsonb",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "location_name",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "route_summary",
+          "type": "jsonb",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "activity_category",
+          "type": "text",
+          "default": "'sport'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "source_file_url",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "source_file_type",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "activity_time",
+          "type": "time without time zone",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "location_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "YES"
+        }
+      ]
+    },
+    {
+      "table_name": "activity_equipment",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "activity_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "equipment_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "YES"
+        }
+      ]
+    },
+    {
+      "table_name": "activity_flow_assessments",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "activity_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "perceived_challenge",
+          "type": "smallint",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "perceived_mastery",
+          "type": "smallint",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "analysis_context",
+          "type": "jsonb",
+          "default": "'{}'::jsonb",
+          "nullable": "NO"
+        },
+        {
+          "name": "assessment_version",
+          "type": "smallint",
+          "default": "1",
+          "nullable": "NO"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "retained_memory",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        }
+      ]
+    },
+    {
+      "table_name": "activity_media",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "activity_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "media_type",
+          "type": "text",
+          "default": "'PHOTO'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "file_path",
+          "type": "text",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "caption",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "activity_nutrition_items",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "activity_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "product_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "quantity",
+          "type": "numeric",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "product_name_snapshot",
+          "type": "text",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "brand_snapshot",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "unit_label_snapshot",
+          "type": "text",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "carbohydrates_g_snapshot",
+          "type": "numeric",
+          "default": "0",
+          "nullable": "NO"
+        },
+        {
+          "name": "sodium_mg_snapshot",
+          "type": "numeric",
+          "default": "0",
+          "nullable": "NO"
+        },
+        {
+          "name": "caffeine_mg_snapshot",
+          "type": "numeric",
+          "default": "0",
+          "nullable": "NO"
+        },
+        {
+          "name": "potassium_mg_snapshot",
+          "type": "numeric",
+          "default": "0",
+          "nullable": "NO"
+        },
+        {
+          "name": "magnesium_mg_snapshot",
+          "type": "numeric",
+          "default": "0",
+          "nullable": "NO"
+        },
+        {
+          "name": "calcium_mg_snapshot",
+          "type": "numeric",
+          "default": "0",
+          "nullable": "NO"
+        },
+        {
+          "name": "bicarbonate_mg_snapshot",
+          "type": "numeric",
+          "default": "0",
+          "nullable": "NO"
+        },
+        {
+          "name": "zinc_mg_snapshot",
+          "type": "numeric",
+          "default": "0",
+          "nullable": "NO"
+        },
+        {
+          "name": "extra_nutrients_snapshot",
+          "type": "jsonb",
+          "default": "'{}'::jsonb",
+          "nullable": "NO"
+        },
+        {
+          "name": "is_approximate_snapshot",
+          "type": "boolean",
+          "default": "false",
+          "nullable": "NO"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "activity_timeline",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "activity_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "position",
+          "type": "integer",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "timestamp",
+          "type": "timestamp with time zone",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "elapsed_seconds",
+          "type": "integer",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "event_type",
+          "type": "text",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "metadata",
+          "type": "jsonb",
+          "default": "'{}'::jsonb",
+          "nullable": "NO"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "blocked_users",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "blocker_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "blocked_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "circle_preferences",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "circle_member_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "is_pinned",
+          "type": "boolean",
+          "default": "false",
+          "nullable": "NO"
+        },
+        {
+          "name": "notifications_enabled",
+          "type": "boolean",
+          "default": "true",
+          "nullable": "NO"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "circle_relationships",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "requester_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "recipient_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "default": "'PENDING'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "accepted_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "nullable": "YES"
+        }
+      ]
+    },
+    {
+      "table_name": "club_member_preferences",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "club_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "notifications_enabled",
+          "type": "boolean",
+          "default": "true",
+          "nullable": "NO"
+        },
+        {
+          "name": "is_pinned",
+          "type": "boolean",
+          "default": "false",
+          "nullable": "NO"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "club_members",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "club_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "invited_by",
+          "type": "uuid",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "role",
+          "type": "text",
+          "default": "'MEMBER'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "membership_status",
+          "type": "text",
+          "default": "'PENDING'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "joined_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "clubs",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "owner_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "slug",
+          "type": "text",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "category",
+          "type": "text",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "location_name",
+          "type": "text",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "logo_url",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "cover_image_url",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "visibility",
+          "type": "text",
+          "default": "'PRIVATE'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "default": "'ACTIVE'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "default_location_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "YES"
+        }
+      ]
+    },
+    {
+      "table_name": "collections",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "emoji",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "category",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "order_index",
+          "type": "integer",
+          "default": "0",
+          "nullable": "YES"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "YES"
+        }
+      ]
+    },
+    {
+      "table_name": "connections",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "user_low_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "user_high_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "default": "'active'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "created_from_invitation_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "ended_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "nullable": "YES"
+        }
+      ]
+    },
+    {
+      "table_name": "daily_wellbeing",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "recorded_date",
+          "type": "date",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "sleep_hours",
+          "type": "numeric",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "motivation",
+          "type": "smallint",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "resting_hr",
+          "type": "smallint",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "hrv_ms",
+          "type": "numeric",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "sleep_quality_value",
+          "type": "numeric",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "sleep_quality_unit",
+          "type": "text",
+          "default": "'%'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "source",
+          "type": "text",
+          "default": "'manual'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "source_label",
+          "type": "text",
+          "default": "'Ajout manuel'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "raw_data",
+          "type": "jsonb",
+          "default": "'{}'::jsonb",
+          "nullable": "NO"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "days",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "day_date",
+          "type": "date",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "note",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "mood",
+          "type": "integer",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "energy",
+          "type": "integer",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "sleep_hours",
+          "type": "numeric",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "stress",
+          "type": "integer",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "soreness",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "rest_hr",
+          "type": "integer",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "hrv",
+          "type": "integer",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "weight",
+          "type": "numeric",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "weather",
+          "type": "jsonb",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "sunrise",
+          "type": "timestamp with time zone",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "sunset",
+          "type": "timestamp with time zone",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "YES"
+        }
+      ]
+    },
+    {
+      "table_name": "equipment_categories",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "slug",
+          "type": "text",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "order_index",
+          "type": "integer",
+          "default": "0",
+          "nullable": "YES"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "YES"
+        },
+        {
+          "name": "icon",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        }
+      ]
+    },
+    {
+      "table_name": "invitations",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "inviter_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "recipient_user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "recipient_email",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "recipient_phone",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "target_type",
+          "type": "text",
+          "default": "'circle'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "target_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "channel",
+          "type": "text",
+          "default": "'in_app'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "token_hash",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "default": "'pending'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "accepted_by",
+          "type": "uuid",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "locations",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "address",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "postal_code",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "city",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "country",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "country_code",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "latitude",
+          "type": "numeric",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "longitude",
+          "type": "numeric",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "source",
+          "type": "text",
+          "default": "'manual'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "provider_place_id",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "visibility",
+          "type": "text",
+          "default": "'private'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "owner_user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "moment_activities",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "moment_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "activity_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "added_by",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "moment_availability",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "date_option_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "availability_status",
+          "type": "text",
+          "default": "'NO_RESPONSE'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "moment_date_options",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "moment_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "start_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "end_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "location_name",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "is_selected",
+          "type": "boolean",
+          "default": "false",
+          "nullable": "NO"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "location_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "YES"
+        }
+      ]
+    },
+    {
+      "table_name": "moment_media",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "moment_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "media_type",
+          "type": "text",
+          "default": "'PHOTO'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "file_path",
+          "type": "text",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "caption",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "taken_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "moment_participants",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "moment_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "role",
+          "type": "text",
+          "default": "'PARTICIPANT'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "invitation_status",
+          "type": "text",
+          "default": "'PENDING'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "participation_status",
+          "type": "text",
+          "default": "'INVITED'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "moments",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "day_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "mission_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "story",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "emotion",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "location_name",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "latitude",
+          "type": "numeric",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "longitude",
+          "type": "numeric",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "visibility",
+          "type": "text",
+          "default": "'PARTICIPANTS'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "YES"
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "club_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "moment_type",
+          "type": "text",
+          "default": "'OTHER'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "default": "'PLANNING'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "start_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "end_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "cover_image_url",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "capacity",
+          "type": "integer",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "location_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "YES"
+        }
+      ]
+    },
+    {
+      "table_name": "nutrition_products",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "brand",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "category",
+          "type": "text",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "unit_label",
+          "type": "text",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "serving_size",
+          "type": "numeric",
+          "default": "1",
+          "nullable": "NO"
+        },
+        {
+          "name": "serving_volume_ml",
+          "type": "numeric",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "carbohydrates_g",
+          "type": "numeric",
+          "default": "0",
+          "nullable": "NO"
+        },
+        {
+          "name": "sodium_mg",
+          "type": "numeric",
+          "default": "0",
+          "nullable": "NO"
+        },
+        {
+          "name": "caffeine_mg",
+          "type": "numeric",
+          "default": "0",
+          "nullable": "NO"
+        },
+        {
+          "name": "potassium_mg",
+          "type": "numeric",
+          "default": "0",
+          "nullable": "NO"
+        },
+        {
+          "name": "magnesium_mg",
+          "type": "numeric",
+          "default": "0",
+          "nullable": "NO"
+        },
+        {
+          "name": "calcium_mg",
+          "type": "numeric",
+          "default": "0",
+          "nullable": "NO"
+        },
+        {
+          "name": "bicarbonate_mg",
+          "type": "numeric",
+          "default": "0",
+          "nullable": "NO"
+        },
+        {
+          "name": "zinc_mg",
+          "type": "numeric",
+          "default": "0",
+          "nullable": "NO"
+        },
+        {
+          "name": "extra_nutrients",
+          "type": "jsonb",
+          "default": "'{}'::jsonb",
+          "nullable": "NO"
+        },
+        {
+          "name": "is_approximate",
+          "type": "boolean",
+          "default": "false",
+          "nullable": "NO"
+        },
+        {
+          "name": "source_url",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "is_global",
+          "type": "boolean",
+          "default": "false",
+          "nullable": "NO"
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "default": "true",
+          "nullable": "NO"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "onboarding_progress",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "current_step",
+          "type": "smallint",
+          "default": "1",
+          "nullable": "NO"
+        },
+        {
+          "name": "answers",
+          "type": "jsonb",
+          "default": "'{}'::jsonb",
+          "nullable": "NO"
+        },
+        {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "passports",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "display_name",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "country",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "city",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "quote",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "avatar_url",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "height_cm",
+          "type": "numeric",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "weight_kg",
+          "type": "numeric",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "birth_year",
+          "type": "integer",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "YES"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "YES"
+        },
+        {
+          "name": "birth_date",
+          "type": "date",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "sex",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "sport_level",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "habits",
+          "type": "jsonb",
+          "default": "'{}'::jsonb",
+          "nullable": "NO"
+        },
+        {
+          "name": "objectives",
+          "type": "jsonb",
+          "default": "'{}'::jsonb",
+          "nullable": "NO"
+        },
+        {
+          "name": "connected_sources",
+          "type": "jsonb",
+          "default": "'{}'::jsonb",
+          "nullable": "NO"
+        },
+        {
+          "name": "personalization",
+          "type": "jsonb",
+          "default": "'{}'::jsonb",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "preset_messages",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "label",
+          "type": "text",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "language",
+          "type": "text",
+          "default": "'fr'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "category",
+          "type": "text",
+          "default": "'ENCOURAGEMENT'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "default": "true",
+          "nullable": "NO"
+        },
+        {
+          "name": "display_order",
+          "type": "integer",
+          "default": "0",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "profiles",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "email",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "first_name",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "last_name",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "display_name",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "avatar_url",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "circle_discoverable",
+          "type": "boolean",
+          "default": "true",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "reactions",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "moment_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "reaction_type",
+          "type": "text",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "preset_message_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "sports",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "YES"
+        },
+        {
+          "name": "emoji",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "order_index",
+          "type": "integer",
+          "default": "0",
+          "nullable": "YES"
+        }
+      ]
+    },
+    {
+      "table_name": "user_equipment",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "category_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "brand",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "model",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "photo_url",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "purchase_date",
+          "type": "date",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "first_used_at",
+          "type": "date",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "retired_at",
+          "type": "date",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "active",
+          "type": "boolean",
+          "default": "true",
+          "nullable": "YES"
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "YES"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "YES"
+        }
+      ]
+    },
+    {
+      "table_name": "user_goals",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "primary_goal",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "default": "'EMPTY'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "details",
+          "type": "jsonb",
+          "default": "'{}'::jsonb",
+          "nullable": "NO"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "user_load_estimates",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "chronic_load",
+          "type": "numeric",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "weekly_hours",
+          "type": "numeric",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "experience_level",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "sport_distribution",
+          "type": "jsonb",
+          "default": "'{}'::jsonb",
+          "nullable": "NO"
+        },
+        {
+          "name": "confidence",
+          "type": "numeric",
+          "default": "0",
+          "nullable": "NO"
+        },
+        {
+          "name": "source",
+          "type": "text",
+          "default": "'EMPTY'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "user_locations",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "city",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "country",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "latitude",
+          "type": "numeric",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "longitude",
+          "type": "numeric",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "timezone",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "user_missions",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "category",
+          "type": "text",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "subcategory",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "sport",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "distance_km",
+          "type": "numeric",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "target_time_seconds",
+          "type": "integer",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "target_pace_seconds_per_km",
+          "type": "integer",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "target_date",
+          "type": "date",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "default": "'active'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "story_note",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "result_note",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "moved_to_history_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "duration_days",
+          "type": "integer",
+          "default": null,
+          "nullable": "YES"
+        }
+      ]
+    },
+    {
+      "table_name": "user_settings",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "units",
+          "type": "text",
+          "default": "'METRIC'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "language",
+          "type": "text",
+          "default": "'fr'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "theme",
+          "type": "text",
+          "default": "'SYSTEM'::text",
+          "nullable": "NO"
+        },
+        {
+          "name": "notifications",
+          "type": "jsonb",
+          "default": "'{\"push\": true, \"email\": true, \"adventure_reminders\": true}'::jsonb",
+          "nullable": "NO"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "user_sport_preferences",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "experience_code",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "weekly_hours_range",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "events",
+          "type": "jsonb",
+          "default": "'[]'::jsonb",
+          "nullable": "NO"
+        },
+        {
+          "name": "watch_provider",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "preferences",
+          "type": "jsonb",
+          "default": "'{}'::jsonb",
+          "nullable": "NO"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "NO"
+        }
+      ]
+    },
+    {
+      "table_name": "user_sports",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "sport_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "role",
+          "type": "text",
+          "default": "'Secondaire'::text",
+          "nullable": "YES"
+        },
+        {
+          "name": "active",
+          "type": "boolean",
+          "default": "true",
+          "nullable": "YES"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "YES"
+        }
+      ]
+    },
+    {
+      "table_name": "wellbeing_profile",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "nullable": "NO"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "nullable": "NO"
+        },
+        {
+          "name": "max_hr",
+          "type": "integer",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "resting_hr",
+          "type": "integer",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "vo2max",
+          "type": "numeric",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "preferred_sleep_hours",
+          "type": "numeric",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "default": null,
+          "nullable": "YES"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "YES"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "nullable": "YES"
+        }
+      ]
+    }
+  ]
+}

@@ -141,3 +141,22 @@ button:disabled{cursor:wait;opacity:.55}
 }
 
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
+
+.moment-advanced{margin-top:22px;border-top:1px solid #d6d1c8;padding-top:12px}
+.moment-advanced summary{min-height:44px;padding:12px 0;font-weight:750;cursor:pointer}
+.moment-advanced[open] summary{margin-bottom:12px}
+#momentFormStatus,[data-moment-action-status]{overflow-wrap:anywhere;line-height:1.5}
+#momentFormStatus.error{color:#8c3028}
+#momentForm .dialog-actions{flex-wrap:wrap}
+#momentForm .date-option-input label{flex:1;min-width:0}
+#momentForm .date-option-input button{flex:0 0 44px;min-height:44px;align-self:end}
+#momentForm input:read-only{background:#f0ede7}
+#momentForm button:disabled{opacity:.6;cursor:default}
+#momentForm .date-options-field > div:first-child{flex-wrap:wrap;gap:8px}
+#momentForm .date-options-field small{line-height:1.5;color:#62635d}
+#momentForm input,#momentForm select,#momentForm textarea{min-width:0}
+@media(max-width:480px){
+ #momentForm{padding:20px}
+ #momentForm .dialog-head h2{font-size:28px}
+ #momentForm .dialog-actions > button{width:100%;min-height:44px}
+}

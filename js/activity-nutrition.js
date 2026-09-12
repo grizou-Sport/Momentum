@@ -39,7 +39,7 @@
     "is_approximate", "is_global", "created_by"
   ].join(",");
   const ITEM_FIELDS = [
-    "id", "activity_id", "product_id", "quantity", "product_name_snapshot",
+    "id", "activity_id", "product_id", "quantity", "phase", "snapshot_origin", "serving_size_snapshot", "serving_volume_ml_snapshot", "product_name_snapshot",
     "brand_snapshot", "unit_label_snapshot",
     ...NUTRIENT_FIELDS.map((field) => `${field}_snapshot`),
     "extra_nutrients_snapshot", "is_approximate_snapshot", "created_at"
@@ -57,18 +57,35 @@
     return Number.isFinite(number) ? number : 0;
   }
 
-  function durationHours(activity = {}) {
-    const seconds = numberValue(
-      activity.totalDurationSeconds ?? activity.total_duration_seconds
-    );
-    if (seconds > 0) return seconds / 3600;
-
-    const minutes = numberValue(
-      activity.duration ?? activity.duration_min
-    );
-    return minutes > 0 ? minutes / 60 : 0;
+  function nutrientValue(value) {
+    if(value === null || value === undefined || String(value).trim() === "") return null;
+    const n=Number(value);return Number.isFinite(n) && n>=0 ? n : null;
   }
-
+  function durationBasis(activity = {}) {
+    const raw=activity.original || activity;
+    const override=nutrientValue(activity.nutrition_elapsed_override_seconds ?? raw.nutrition_elapsed_override_seconds);
+    if(override>0)return {hours:override/3600,label:"Durée de ravitaillement corrigée"};
+    const elapsed=nutrientValue(activity.elapsedDurationSeconds ?? raw.elapsed_duration_seconds ?? activity.totalDurationSeconds ?? activity.total_duration_seconds ?? raw.route_summary?.source_durations?.elapsed_seconds);
+    if(elapsed>0)return {hours:elapsed/3600,label:"Calculé sur la durée écoulée"};
+    const duration=nutrientValue(activity.duration ?? activity.duration_min);
+    return {hours:duration>0?duration/60:0,label:duration>0?"Calculé sur la durée d’activité disponible":"Durée absente : valeurs horaires non calculables"};
+  }
+  function durationHours(activity={}) {return durationBasis(activity).hours;}
+  function defaultPhase(activity={}) {return String(activity.status || '').toLowerCase()==='planned'?'planned':'consumed';}
+  function phaseData(items=[],activity={}) {
+    const products=items.map(productFromSnapshot);
+    return {products,quantities:new Map(items.map(i=>[i.product_id,numberValue(i.quantity)])),snapshotProducts:new Map(products.map(p=>[p.id,p])),dirty:false,copy:new Set()};
+  }
+  function clonePhase(data) {return {...data,products:[...data.products],quantities:new Map(data.quantities),snapshotProducts:new Map(data.snapshotProducts),copy:new Set(data.copy)};}
+  function applyPhase(owner,phase) {
+    const data=owner.phases[phase];owner.phase=phase;owner.quantities=data.quantities;owner.snapshotProducts=data.snapshotProducts;
+  }
+  function phasePayload(owner) {
+    const result={};for(const phase of ['planned','consumed']){const data=owner.phases[phase];if(!data.dirty)continue;
+      result[phase]=[...data.quantities].filter(([,q])=>q>0).map(([product_id,quantity])=>({product_id,quantity,...(data.copy.has(product_id)?{copy_from_planned:true}:{})}));}
+    if(owner.contextDirty)result.context={note:owner.note||null,elapsed_override_seconds:owner.durationOverride==null?null:owner.durationOverride};
+    return Object.keys(result).length?result:null;
+  }
   function quantityFrom(collection, id) {
     if (collection instanceof Map) return numberValue(collection.get(id));
     return numberValue(collection?.[id]);
@@ -82,50 +99,28 @@
       category: item.category || "other",
       unit_label: item.unit_label_snapshot,
       is_approximate: Boolean(item.is_approximate_snapshot),
+      serving_size:item.serving_size_snapshot, serving_volume_ml:item.serving_volume_ml_snapshot, snapshot_origin:item.snapshot_origin,
       extra_nutrients: item.extra_nutrients_snapshot || {}
     };
 
     NUTRIENT_FIELDS.forEach((field) => {
-      product[field] = numberValue(item[`${field}_snapshot`]);
+      product[field] = nutrientValue(item[`${field}_snapshot`]);
     });
     return product;
   }
 
-  function calculateTotals(products = [], quantities = {}, activity = {}, snapshots = new Map()) {
-    const totals = NUTRIENT_FIELDS.reduce((values, field) => {
-      values[field] = 0;
-      return values;
-    }, {});
-    const items = [];
-
-    products.forEach((product) => {
-      const quantity = quantityFrom(quantities, product.id);
-      if (quantity <= 0) return;
-
-      const nutritionalProduct = snapshots.get?.(product.id) || product;
-      NUTRIENT_FIELDS.forEach((field) => {
-        totals[field] += numberValue(nutritionalProduct[field]) * quantity;
-      });
-      items.push({ product:nutritionalProduct, quantity });
-    });
-
-    const hours = durationHours(activity);
-    return {
-      ...totals,
-      carbs_total_g: totals.carbohydrates_g,
-      carbs_per_hour: hours > 0 ? totals.carbohydrates_g / hours : null,
-      sodium_total_mg: totals.sodium_mg,
-      sodium_per_hour: hours > 0 ? totals.sodium_mg / hours : null,
-      caffeine_total_mg: totals.caffeine_mg,
-      potassium_total_mg: totals.potassium_mg,
-      magnesium_total_mg: totals.magnesium_mg,
-      calcium_total_mg: totals.calcium_mg,
-      duration_hours: hours,
-      items
-    };
+  function calculateTotals(products=[],quantities={},activity={},snapshots=new Map()) {
+    const totals=Object.fromEntries(NUTRIENT_FIELDS.map(f=>[f,0])),known=Object.fromEntries(NUTRIENT_FIELDS.map(f=>[f,0])),missing=Object.fromEntries(NUTRIENT_FIELDS.map(f=>[f,0])),items=[];
+    const seen=new Set();for(const product of products){if(seen.has(product.id))continue;seen.add(product.id);const quantity=quantityFrom(quantities,product.id);if(quantity<=0)continue;
+      const nutrition=snapshots.get?.(product.id)||product;for(const f of NUTRIENT_FIELDS){const v=nutrientValue(nutrition[f]);if(v===null)missing[f]++;else{totals[f]+=v*quantity;known[f]++;}}
+      items.push({product:nutrition,quantity});}
+    const partial={};for(const f of NUTRIENT_FIELDS){partial[f]=missing[f]>0;if(items.length && !known[f])totals[f]=null;}
+    const basis=durationBasis(activity),hourly=v=>basis.hours>0&&v!==null?v/basis.hours:null;
+    return {...totals,partial,known,missing,carbs_total_g:totals.carbohydrates_g,carbs_per_hour:hourly(totals.carbohydrates_g),sodium_total_mg:totals.sodium_mg,sodium_per_hour:hourly(totals.sodium_mg),caffeine_total_mg:totals.caffeine_mg,potassium_total_mg:totals.potassium_mg,magnesium_total_mg:totals.magnesium_mg,calcium_total_mg:totals.calcium_mg,duration_hours:basis.hours,duration_label:basis.label,items};
   }
-
+  function nutrientTotal(totals,field,unit) {return totals[field]===null?'Non renseigné':`${formatNumber(totals[field])} ${unit}${totals.partial[field]?' · partiel':''}`;}
   function formatNumber(value, maximumFractionDigits = 1) {
+    if(value===null || value===undefined)return "Non renseigné";
     return numberValue(value).toLocaleString("fr-CH", {
       maximumFractionDigits,
       minimumFractionDigits: 0
@@ -141,18 +136,10 @@
     return `${formatNumber(value)} ${unit}/h`;
   }
 
-  function summaryFromItems(items, activity) {
-    const products = items.map(productFromSnapshot);
-    const quantities = new Map(items.map((item) => [item.product_id, numberValue(item.quantity)]));
-    const snapshots = new Map(products.map((product) => [product.id, product]));
-    return {
-      items,
-      products,
-      quantities,
-      totals:calculateTotals(products, quantities, activity, snapshots)
-    };
+  function summaryFromItems(items=[],activity={}) {
+    const phases={planned:phaseData(items.filter(i=>i.phase==='planned')),consumed:phaseData(items.filter(i=>(i.phase||'consumed')==='consumed'))};
+    const phase=defaultPhase(activity),data=phases[phase];return {items,phases,...data,totals:calculateTotals(data.products,data.quantities,activity,data.snapshotProducts)};
   }
-
   function updateActivityFormNutrition() {
     const host = document.querySelector("[data-activity-form-nutrition]");
     const summary = host?.querySelector("[data-activity-form-nutrition-summary]");
@@ -183,50 +170,26 @@
       : null;
     const count = totals?.items.length || 0;
     if (!count) {
-      summary.textContent = "Ajoute ce que tu as consommé pendant ce Moment.";
+      summary.textContent = `${draft?.phase==='planned'?"Prépare ce que tu souhaites emporter.":"Indique ce que tu as réellement consommé."} Le prévu ne devient jamais automatiquement consommé.`;
       button.textContent = "Ajouter la nutrition";
       return;
     }
 
     host.classList.add("has-nutrition");
-    summary.textContent = `${count} produit${count > 1 ? "s" : ""} · ${formatNumber(totals.carbs_total_g)} g de glucides · ${formatNumber(totals.sodium_total_mg)} mg de sodium`;
+    summary.textContent = `${draft.phase==='planned'?'Prévu':'Consommé'} · ${count} produit${count>1?'s':''} · Glucides : ${nutrientTotal(totals,'carbohydrates_g','g')}. Prévu : ${[...draft.phases.planned.quantities.values()].filter(q=>q>0).length} produits ; consommé : ${[...draft.phases.consumed.quantities.values()].filter(q=>q>0).length}.`;
     button.textContent = "Modifier la nutrition";
   }
 
-  async function beginActivityForm(activity = {}) {
-    const revision = ++activityFormRevision;
-    const activityId = activity.id || "";
-    activityFormDraft = {
-      activityId,
-      activity:{ ...activity },
-      products:[],
-      quantities:new Map(),
-      snapshotProducts:new Map(),
-      dirty:false,
-      loading:Boolean(activityId),
-      error:null
-    };
-    updateActivityFormNutrition();
-    if (!activityId) return;
-
-    await ensureActivities([activity]);
-    if (revision !== activityFormRevision || activityFormDraft?.activityId !== activityId) return;
-
-    const stored = summaries.get(activityId) || { items:[] };
-    const products = stored.products || (stored.items || []).map(productFromSnapshot);
-    activityFormDraft = {
-      activityId,
-      activity:{ ...activity },
-      products:[...products],
-      quantities:new Map(stored.quantities || (stored.items || []).map((item) => [item.product_id, numberValue(item.quantity)])),
-      snapshotProducts:new Map(products.map((product) => [product.id, product])),
-      dirty:false,
-      loading:false,
-      error:stored.error || null
-    };
-    updateActivityFormNutrition();
+  async function beginActivityForm(activity={}) {
+    const revision=++activityFormRevision,activityId=activity.id||"";
+    activityFormDraft={activityId,activity:{...activity},phases:{planned:phaseData(),consumed:phaseData()},products:[],dirty:false,loading:Boolean(activityId),error:null,note:activity.original?.nutrition_note||activity.nutrition_note||"",durationOverride:activity.original?.nutrition_elapsed_override_seconds??activity.nutrition_elapsed_override_seconds??null,contextDirty:false};
+    applyPhase(activityFormDraft,defaultPhase(activity));updateActivityFormNutrition();if(!activityId)return;
+    if(summaries.get(activityId)?.error)summaries.delete(activityId);
+    await ensureActivities([activity]);if(revision!==activityFormRevision||activityFormDraft?.activityId!==activityId)return;
+    const stored=summaries.get(activityId)||{items:[]},normal=summaryFromItems(stored.items||[],activity);
+    Object.assign(activityFormDraft,{phases:normal.phases,products:[...new Map((stored.items||[]).map(i=>[i.product_id,productFromSnapshot(i)])).values()],loading:false,error:stored.error||null});
+    applyPhase(activityFormDraft,defaultPhase(activity));updateActivityFormNutrition();
   }
-
   function cancelActivityForm() {
     activityFormRevision += 1;
     activityFormDraft = null;
@@ -239,10 +202,10 @@
     if (!missing.length || !window.momentumDB) return;
 
     const activityById = new Map(missing.map((activity) => [activity.id, activity]));
-    const { data, error } = await window.momentumDB
-      .from("activity_nutrition_items")
-      .select(ITEM_FIELDS)
-      .in("activity_id", [...activityById.keys()]);
+    let data=[],error=null;
+    try{for(let i=0;i<missing.length;i+=100){const ids=missing.slice(i,i+100).map(a=>a.id);
+      const page=await window.MomentumData.all(()=>window.momentumDB.from("activity_nutrition_items").select(ITEM_FIELDS,{count:"exact"}).in("activity_id",ids).order("id"));data.push(...page.data);}}
+    catch(e){error=e;}
 
     if (error) {
       console.warn("HOME : nutrition momentanément indisponible.", error);
@@ -257,126 +220,19 @@
     });
   }
 
-  function renderActivitySection(activity, date = "") {
-    const summary = summaries.get(activity.id);
-    const items = summary?.items || [];
-    const action = items.length ? "Modifier le ravitaillement" : "Ajouter le ravitaillement";
-
-    if (!items.length) {
-      return `
-        <section class="activity-nutrition activity-nutrition-empty" aria-labelledby="nutrition-${activity.id}">
-          <div>
-            <span class="card-label">Pendant l’activité</span>
-            <h4 id="nutrition-${activity.id}">Nutrition</h4>
-            <p>Recompose ton ravitaillement, MOMENTUM calcule le reste.</p>
-          </div>
-          <button
-            type="button"
-            class="nutrition-open"
-            data-action="edit-nutrition"
-            data-activity-id="${escapeHtml(activity.id)}"
-            data-date="${escapeHtml(date)}"
-          >${action}</button>
-        </section>
-      `;
-    }
-
-    const totals = summaryFromItems(items, activity).totals;
-    const productLines = totals.items.slice(0, 4).map(({ product, quantity }) => `
-      <li>
-        <span>${escapeHtml([product.brand, product.name].filter(Boolean).join(" "))}</span>
-        <strong>× ${escapeHtml(formatQuantity(quantity))}</strong>
-      </li>
-    `).join("");
-    const remaining = Math.max(0, totals.items.length - 4);
-
-    return `
-      <section class="activity-nutrition" aria-labelledby="nutrition-${activity.id}">
-        <div class="activity-nutrition-heading">
-          <div>
-            <span class="card-label">Pendant l’activité</span>
-            <h4 id="nutrition-${activity.id}">Nutrition</h4>
-          </div>
-          ${totals.caffeine_total_mg > 0
-            ? `<span class="nutrition-caffeine">${escapeHtml(formatNumber(totals.caffeine_total_mg))} mg caféine</span>`
-            : ""}
-        </div>
-        <dl class="activity-nutrition-totals">
-          <div>
-            <dt>Glucides consommés</dt>
-            <dd><strong>${escapeHtml(formatNumber(totals.carbs_total_g))} g</strong>${totals.carbs_per_hour === null ? "" : `<span>${escapeHtml(hourlyLabel(totals.carbs_per_hour, "g"))}</span>`}</dd>
-          </div>
-          <div>
-            <dt>Sodium</dt>
-            <dd><strong>${escapeHtml(formatNumber(totals.sodium_total_mg))} mg</strong>${totals.sodium_per_hour === null ? "" : `<span>${escapeHtml(hourlyLabel(totals.sodium_per_hour, "mg"))}</span>`}</dd>
-          </div>
-        </dl>
-        <ul class="activity-nutrition-products">${productLines}${remaining ? `<li><span>Et ${remaining} autre${remaining > 1 ? "s" : ""}</span></li>` : ""}</ul>
-        <button
-          type="button"
-          class="nutrition-open"
-          data-action="edit-nutrition"
-          data-activity-id="${escapeHtml(activity.id)}"
-          data-date="${escapeHtml(date)}"
-        >Modifier le ravitaillement</button>
-      </section>
-    `;
+  function renderActivitySection(activity,date="") {
+    const summary=summaries.get(activity.id);if(summary?.error)return `<section class="activity-nutrition" role="status"><h4>Ravitaillement indisponible</h4><p>Les données enregistrées n’ont pas été modifiées.</p><button type="button" data-action="edit-nutrition" data-activity-id="${escapeHtml(activity.id)}" data-date="${escapeHtml(date)}">Réessayer</button></section>`;
+    const data=summaryFromItems(summary?.items||[],activity);
+    const sections=['planned','consumed'].map(phase=>{const d=data.phases[phase],total=calculateTotals(d.products,d.quantities,activity,d.snapshotProducts);return `<div><h5>${phase==='planned'?'Prévu':'Consommé'}</h5>${total.items.length?`<ul class="activity-nutrition-products">${total.items.map(({product,quantity})=>`<li><span>${escapeHtml(fullProductName(product))}</span><strong>× ${escapeHtml(formatQuantity(quantity))} ${escapeHtml(product.unit_label)}</strong></li>`).join('')}</ul><p>Glucides : ${escapeHtml(nutrientTotal(total,'carbohydrates_g','g'))}${total.carbs_per_hour===null?'':` · ${escapeHtml(hourlyLabel(total.carbs_per_hour,'g'))}`}</p><p>Sodium : ${escapeHtml(nutrientTotal(total,'sodium_mg','mg'))}</p>`:'<p>Non renseigné</p>'}</div>`;}).join('');
+    return `<section class="activity-nutrition"><h4>Pendant l’activité</h4><div class="nutrition-phase-summaries">${sections}</div><p>${escapeHtml(durationBasis(activity).label)}</p>${activity.original?.nutrition_note?`<p>${escapeHtml(activity.original.nutrition_note)}</p>`:''}<button type="button" class="nutrition-open" data-action="edit-nutrition" data-activity-id="${escapeHtml(activity.id)}" data-date="${escapeHtml(date)}">Modifier le ravitaillement</button></section>`;
   }
-
-  async function loadLibrary() {
-    if (!libraryPromise) {
-      libraryPromise = window.momentumDB
-        .from("nutrition_products")
-        .select(PRODUCT_FIELDS)
-        .eq("is_active", true)
-        .order("brand", { ascending:true, nullsFirst:false })
-        .order("name")
-        .then(({ data, error }) => {
-          if (error) throw error;
-          return data || [];
-        })
-        .catch((error) => {
-          libraryPromise = null;
-          throw error;
-        });
-    }
-    return libraryPromise;
+  async function loadLibrary(){
+    if(!libraryPromise)libraryPromise=window.MomentumData.all(()=>window.momentumDB.from("nutrition_products").select(PRODUCT_FIELDS,{count:"exact"}).eq("is_active",true).order("id")).then(result=>result.data).catch(e=>{libraryPromise=null;throw e;});return libraryPromise;
   }
-
-  async function loadFrequencies() {
-    if (!frequencyPromise) {
-      frequencyPromise = window.momentumDB
-        .from("activity_nutrition_items")
-        .select("product_id,quantity")
-        .then(({ data, error }) => {
-          if (error) throw error;
-          const frequencies = new Map();
-          (data || []).forEach((item) => {
-            frequencies.set(
-              item.product_id,
-              numberValue(frequencies.get(item.product_id)) + numberValue(item.quantity)
-            );
-          });
-          return frequencies;
-        })
-        .catch((error) => {
-          console.warn("HOME : favoris nutrition indisponibles.", error);
-          return new Map();
-        });
-    }
-    return frequencyPromise;
+  async function loadFrequencies(){
+    if(!frequencyPromise)frequencyPromise=window.MomentumData.all(()=>window.momentumDB.from("activity_nutrition_items").select("id,product_id,quantity",{count:"exact"}).eq("phase","consumed").order("id")).then(result=>{const map=new Map();for(const row of result.data)map.set(row.product_id,(map.get(row.product_id)||0)+numberValue(row.quantity));return map;}).catch(()=>{frequencyPromise=null;return new Map();});return frequencyPromise;
   }
-
-  async function loadActivityItems(activityId) {
-    const { data, error } = await window.momentumDB
-      .from("activity_nutrition_items")
-      .select(ITEM_FIELDS)
-      .eq("activity_id", activityId)
-      .order("created_at");
-    if (error) throw error;
-    return data || [];
-  }
-
+  async function loadActivityItems(activityId){return window.MomentumData.all(()=>window.momentumDB.from("activity_nutrition_items").select(ITEM_FIELDS,{count:"exact"}).eq("activity_id",activityId).order("id")).then(result=>result.data);}
   function renderLoading() {
     const content = document.getElementById("nutritionDialogContent");
     if (!content) return;
@@ -406,7 +262,7 @@
 
   function nutrientLine(product) {
     const approximate = product.is_approximate ? "≈ " : "";
-    const values = [`${approximate}${formatNumber(product.carbohydrates_g)} g glucides`];
+    const values = [product.carbohydrates_g==null?"Glucides non renseignés":`${approximate}${formatNumber(product.carbohydrates_g)} g glucides`];
     if (numberValue(product.sodium_mg) > 0) values.push(`${formatNumber(product.sodium_mg)} mg sodium`);
     if (numberValue(product.caffeine_mg) > 0) values.push(`${formatNumber(product.caffeine_mg)} mg caféine`);
     return values.join(" · ");
@@ -430,7 +286,7 @@
 
   function referenceLine(product) {
     const parts = [];
-    if (numberValue(product.serving_size) !== 1) parts.push(`${formatNumber(product.serving_size, 2)} g`);
+    if (product.serving_size != null && numberValue(product.serving_size) !== 1) parts.push(`${formatNumber(product.serving_size, 2)} g`);
     if (numberValue(product.serving_volume_ml) > 0) parts.push(`${formatNumber(product.serving_volume_ml)} ml préparés`);
     return parts.length ? `1 ${escapeHtml(product.unit_label)} = ${escapeHtml(parts.join(" dans "))}` : escapeHtml(product.unit_label);
   }
@@ -454,7 +310,7 @@
           <p class="nutrition-product-main">${escapeHtml(nutrientLine(product))}</p>
           <p class="nutrition-product-reference">${referenceLine(product)}</p>
           ${extendedNutrients(product)}
-          <div class="nutrition-quantity" aria-label="Quantité consommée">
+          <div class="nutrition-quantity" aria-label="Quantité ${active.phase==='planned'?'prévue':'consommée'}">
             <button type="button" data-quantity-change="-1" data-product-id="${escapeHtml(product.id)}" aria-label="Retirer 0,25 ${escapeHtml(product.unit_label)} de ${escapeHtml(fullProductName(product))}">−</button>
             <label>
               <span class="sr-only">Quantité de ${escapeHtml(fullProductName(product))}</span>
@@ -519,14 +375,14 @@
     const sodiumHourly = totals.sodium_per_hour === null ? "" : ` · ${hourlyLabel(totals.sodium_per_hour, "mg")}`;
 
     host.innerHTML = `
-      <span class="card-label">Ton ravitaillement</span>
-      <p><strong>${escapeHtml(formatNumber(totals.carbs_total_g))} g</strong> glucides${escapeHtml(carbsHourly)}</p>
-      <p><strong>${escapeHtml(formatNumber(totals.sodium_total_mg))} mg</strong> sodium${escapeHtml(sodiumHourly)}</p>
+      <span class="card-label">${active.phase==='planned'?'Ravitaillement prévu':'Ravitaillement consommé'}</span>
+      <p><strong>${escapeHtml(nutrientTotal(totals,"carbohydrates_g","g"))}</strong> glucides${escapeHtml(carbsHourly)}</p>
+      <p><strong>${escapeHtml(nutrientTotal(totals,"sodium_mg","mg"))}</strong> sodium${escapeHtml(sodiumHourly)}</p>
       ${totals.caffeine_total_mg > 0 ? `<p class="nutrition-summary-secondary">${escapeHtml(formatNumber(totals.caffeine_total_mg))} mg caféine</p>` : ""}
-      <small>${totals.items.length} produit${totals.items.length > 1 ? "s" : ""} sélectionné${totals.items.length > 1 ? "s" : ""}</small>`;
+      <p>${escapeHtml(totals.duration_label)}</p><small>${totals.items.length} produit${totals.items.length > 1 ? "s" : ""} sélectionné${totals.items.length > 1 ? "s" : ""}</small>`;
 
-    const action = active.mode === "activity-form" ? "Valider" : "Enregistrer";
-    saveButton.textContent = `${action} — ${formatNumber(totals.carbs_total_g)} g${totals.carbs_per_hour === null ? "" : ` · ${formatNumber(totals.carbs_per_hour)} g/h`}`;
+    const action = active.mode === "activity-form" ? "Appliquer au Moment" : "Enregistrer";
+    saveButton.textContent = action;
   }
 
   function customProductForm() {
@@ -543,14 +399,14 @@
           <label>Unité<input name="unit_label" required placeholder="gel, bidon, portion…" /></label>
           <label>Quantité de référence<input name="serving_size" type="number" min="0.01" step="0.01" value="1" required /></label>
           <label>Volume préparé (ml)<input name="serving_volume_ml" type="number" min="0" step="1" /></label>
-          <label>Glucides (g)<input name="carbohydrates_g" type="number" min="0" step="0.1" value="0" required /></label>
-          <label>Sodium (mg)<input name="sodium_mg" type="number" min="0" step="0.1" value="0" required /></label>
-          <label>Caféine (mg)<input name="caffeine_mg" type="number" min="0" step="0.1" value="0" /></label>
-          <label>Potassium (mg)<input name="potassium_mg" type="number" min="0" step="0.1" value="0" /></label>
-          <label>Magnésium (mg)<input name="magnesium_mg" type="number" min="0" step="0.1" value="0" /></label>
-          <label>Calcium (mg)<input name="calcium_mg" type="number" min="0" step="0.1" value="0" /></label>
-          <label>Bicarbonates (mg)<input name="bicarbonate_mg" type="number" min="0" step="0.1" value="0" /></label>
-          <label>Zinc (mg)<input name="zinc_mg" type="number" min="0" step="0.1" value="0" /></label>
+          <label>Glucides (g)<input name="carbohydrates_g" type="number" min="0" step="0.1" placeholder="Non renseigné" /></label>
+          <label>Sodium (mg)<input name="sodium_mg" type="number" min="0" step="0.1" placeholder="Non renseigné" /></label>
+          <label>Caféine (mg)<input name="caffeine_mg" type="number" min="0" step="0.1" placeholder="Non renseigné" /></label>
+          <label>Potassium (mg)<input name="potassium_mg" type="number" min="0" step="0.1" placeholder="Non renseigné" /></label>
+          <label>Magnésium (mg)<input name="magnesium_mg" type="number" min="0" step="0.1" placeholder="Non renseigné" /></label>
+          <label>Calcium (mg)<input name="calcium_mg" type="number" min="0" step="0.1" placeholder="Non renseigné" /></label>
+          <label>Bicarbonates (mg)<input name="bicarbonate_mg" type="number" min="0" step="0.1" placeholder="Non renseigné" /></label>
+          <label>Zinc (mg)<input name="zinc_mg" type="number" min="0" step="0.1" placeholder="Non renseigné" /></label>
         </div>
         <p class="nutrition-form-message" data-custom-product-message aria-live="polite"></p>
         <div class="nutrition-custom-actions">
@@ -573,6 +429,16 @@
           </div>
           <button type="button" class="nutrition-close" data-nutrition-close aria-label="Fermer">×</button>
         </header>
+        <div class="nutrition-phase-controls" role="group" aria-label="Nature du ravitaillement">
+          <button type="button" data-nutrition-phase="planned" aria-pressed="${active.phase==='planned'}">Prévu</button>
+          <button type="button" data-nutrition-phase="consumed" aria-pressed="${active.phase==='consumed'}">Consommé</button>
+          ${active.phase==='consumed'?'<button type="button" data-copy-planned>Reprendre le prévu comme point de départ</button>':''}
+        </div>
+        <p class="nutrition-library-state" role="status">${active.libraryError?'Bibliothèque indisponible : les produits déjà enregistrés restent modifiables.':''}</p>
+        <details class="nutrition-context"><summary>Durée de ravitaillement et ce que tu retiens</summary>
+          <label>Durée de ravitaillement corrigée, en minutes (facultatif)<input id="nutritionDurationOverride" type="number" min="0.01" step="0.01" value="${active.durationOverride==null?'':escapeHtml(active.durationOverride/60)}" placeholder="Durée écoulée si disponible" /></label>
+          <label>Ce qui a fonctionné, ou ce que tu souhaites modifier<textarea id="nutritionNote" maxlength="2000">${escapeHtml(active.note||'')}</textarea></label>
+        </details>
         <div class="nutrition-menu-layout">
           <main class="nutrition-menu-main">
             <div class="nutrition-toolbar">
@@ -600,43 +466,12 @@
     document.getElementById("nutritionSearch")?.focus();
   }
 
-  async function open(activity, date = "") {
-    const dialog = document.getElementById("nutritionDialog");
-    if (!dialog || !activity?.id || !window.momentumDB) return;
-
-    active = { activity, date, products:[], quantities:new Map(), snapshotProducts:new Map(), frequencies:new Map(), category:"favorites", search:"" };
-    renderLoading();
-    if (!dialog.open) {
-      if (typeof openHomeDialog === "function") openHomeDialog(dialog);
-      else dialog.showModal();
-    }
-
-    try {
-      const [products, items, frequencies] = await Promise.all([
-        loadLibrary(),
-        loadActivityItems(activity.id),
-        loadFrequencies()
-      ]);
-      const productsById = new Map(products.map((product) => [product.id, product]));
-      const snapshotProducts = new Map();
-
-      items.forEach((item) => {
-        const snapshot = productFromSnapshot(item);
-        snapshotProducts.set(item.product_id, snapshot);
-        if (!productsById.has(item.product_id)) {
-          productsById.set(item.product_id, { ...snapshot, category:"other", is_global:false });
-        }
-      });
-
-      active.products = [...productsById.values()];
-      active.quantities = new Map(items.map((item) => [item.product_id, numberValue(item.quantity)]));
-      active.snapshotProducts = snapshotProducts;
-      active.frequencies = frequencies;
-      renderDialog();
-    } catch (error) {
-      console.error("HOME : impossible de charger la carte de ravitaillement.", error);
-      renderError();
-    }
+  async function open(activity,date="") {
+    if(typeof openEditActivityById!=="function")return;
+    await openEditActivityById(activity.id);
+    const form=document.getElementById('activityForm');
+    if(form?.dataset.editActivityId!==activity.id)return;
+    await openActivityForm(activity);
   }
 
   async function openActivityForm(activity = {}) {
@@ -649,8 +484,11 @@
     }
     if (!activityFormDraft || activityFormDraft.loading || activityFormDraft.error) return;
 
+    const request=++activityFormRevision;
     active = {
       mode:"activity-form",
+      phases:{planned:clonePhase(activityFormDraft.phases.planned),consumed:clonePhase(activityFormDraft.phases.consumed)},
+      note:activityFormDraft.note,durationOverride:activityFormDraft.durationOverride,contextDirty:activityFormDraft.contextDirty,
       activity:{ ...activityFormDraft.activity, ...activity },
       date:activity.date || activityFormDraft.activity.date || "",
       products:[],
@@ -660,6 +498,7 @@
       category:"favorites",
       search:""
     };
+    applyPhase(active,defaultPhase(activity));
     renderLoading();
     if (!dialog.open) {
       if (typeof openHomeDialog === "function") openHomeDialog(dialog);
@@ -667,7 +506,9 @@
     }
 
     try {
-      const [products, frequencies] = await Promise.all([loadLibrary(), loadFrequencies()]);
+      const [library, frequencies] = await Promise.allSettled([loadLibrary(), loadFrequencies()]);
+      if(request!==activityFormRevision||!active)return;
+      const products=library.status==='fulfilled'?library.value:[];active.libraryError=library.status!=='fulfilled';
       if (!active || active.mode !== "activity-form") return;
       const productsById = new Map(products.map((product) => [product.id, product]));
       activityFormDraft.products.forEach((product) => {
@@ -676,7 +517,7 @@
         }
       });
       active.products = [...productsById.values()];
-      active.frequencies = frequencies;
+      active.frequencies = frequencies.status==='fulfilled'?frequencies.value:new Map();
       renderDialog();
     } catch (error) {
       console.error("HOME : impossible de préparer la nutrition du Moment.", error);
@@ -693,84 +534,22 @@
 
   function setQuantity(productId, value) {
     if (!active) return;
-    const normalized = Math.max(0, Math.round(numberValue(value) / STEP) * STEP);
+    const normalized = Math.max(0, Math.min(10000,Math.round(numberValue(value) / STEP) * STEP));
+    active.phases[active.phase].dirty=true;
     active.quantities.set(productId, normalized);
     renderProductArea();
     renderStickySummary();
   }
 
   async function save() {
-    if (!active) return;
-    const button = document.getElementById("saveNutrition");
-    const message = document.getElementById("nutritionSaveMessage");
-    const payload = [...active.quantities.entries()]
-      .filter(([, quantity]) => numberValue(quantity) > 0)
-      .map(([product_id, quantity]) => ({ product_id, quantity:numberValue(quantity) }));
-
-    button.disabled = true;
-    button.dataset.originalLabel = button.textContent;
-    button.textContent = "Enregistrement…";
-    if (message) message.textContent = "";
-
-    if (active.mode === "activity-form") {
-      activityFormDraft = {
-        activityId:active.activity.id || "",
-        activity:{ ...active.activity },
-        products:[...active.products],
-        quantities:new Map(active.quantities),
-        snapshotProducts:new Map(active.snapshotProducts),
-        dirty:true,
-        loading:false,
-        error:null
-      };
-      updateActivityFormNutrition();
-      close();
-      return;
-    }
-
-    const { data, error } = await window.momentumDB.rpc("save_activity_nutrition", {
-      p_activity_id:active.activity.id,
-      p_items:payload
-    });
-
-    if (error) {
-      console.error("HOME : enregistrement du ravitaillement impossible.", error);
-      button.disabled = false;
-      button.textContent = button.dataset.originalLabel;
-      if (message) message.textContent = "Impossible d’enregistrer le ravitaillement. Réessayer.";
-      return;
-    }
-
-    summaries.set(active.activity.id, summaryFromItems(data || [], active.activity));
-    frequencyPromise = null;
-    const activityDate = active.date || active.activity.date;
+    if(!active || active.mode!=="activity-form")return;
+    activityFormDraft={activityId:active.activity.id||"",activity:{...active.activity},products:[...active.products],phases:{planned:clonePhase(active.phases.planned),consumed:clonePhase(active.phases.consumed)},note:active.note,durationOverride:active.durationOverride,contextDirty:active.contextDirty,dirty:Boolean(phasePayload(active)),loading:false,error:null};
+    applyPhase(activityFormDraft,defaultPhase(active.activity));updateActivityFormNutrition();
+    const form=document.getElementById('activityForm');if(form)form.dataset.dirty='true';
     close();
-    if (activityDate && typeof openDay === "function") await openDay(activityDate);
   }
-
-  async function saveActivityForm(activityId, activity = {}) {
-    const draft = activityFormDraft;
-    if (!draft) return [];
-    if (!draft.dirty) {
-      cancelActivityForm();
-      return [];
-    }
-    if (!activityId) throw new Error("Le Moment doit être enregistré avant sa nutrition.");
-
-    const payload = [...draft.quantities.entries()]
-      .filter(([, quantity]) => numberValue(quantity) > 0)
-      .map(([product_id, quantity]) => ({ product_id, quantity:numberValue(quantity) }));
-    const { data, error } = await window.momentumDB.rpc("save_activity_nutrition", {
-      p_activity_id:activityId,
-      p_items:payload
-    });
-    if (error) throw error;
-
-    summaries.set(activityId, summaryFromItems(data || [], { ...draft.activity, ...activity, id:activityId }));
-    frequencyPromise = null;
-    cancelActivityForm();
-    return data || [];
-  }
+  // Compatibility entry point: only the atomic parent form may write activity nutrition.
+  async function saveActivityForm(){throw new Error("Enregistre le Moment dans son formulaire unique pour appliquer le ravitaillement.");}
 
   async function createCustomProduct(form) {
     if (!active) return;
@@ -795,7 +574,7 @@
       created_by:user.id
     };
     NUTRIENT_FIELDS.forEach((field) => {
-      product[field] = numberValue(formData.get(field));
+      product[field] = nutrientValue(formData.get(field));
     });
 
     submit.disabled = true;
@@ -843,6 +622,14 @@
         else if (active) await open(active.activity, active.date);
         return;
       }
+      const phaseButton=event.target.closest('[data-nutrition-phase]');
+      if(phaseButton&&active){applyPhase(active,phaseButton.dataset.nutritionPhase);renderDialog();return;}
+      if(event.target.closest('[data-copy-planned]')&&active){
+        const hasConsumed=[...active.phases.consumed.quantities.values()].some(q=>q>0);
+        if(hasConsumed && !await window.MomentumUI.confirm({title:"Reprendre le prévu ?",message:"Les quantités consommées du brouillon seront remplacées par les quantités prévues. Tu pourras les ajuster avant d’enregistrer le Moment.",confirmLabel:"Reprendre le prévu"}))return;
+        const plan=active.phases.planned;active.phases.consumed={...clonePhase(plan),dirty:true,copy:new Set([...plan.quantities.keys()].filter(id=>plan.quantities.get(id)>0))};
+        applyPhase(active,'consumed');renderDialog();return;
+      }
       const categoryButton = event.target.closest("[data-nutrition-category]");
       if (categoryButton && active) {
         active.category = categoryButton.dataset.nutritionCategory;
@@ -876,6 +663,11 @@
     });
 
     dialog.addEventListener("input", (event) => {
+      if(active && event.target.id==='nutritionNote'){active.note=event.target.value;active.contextDirty=true;}
+      if(active && event.target.id==='nutritionDurationOverride'){
+        const value=nutrientValue(event.target.value);active.durationOverride=value>0?value*60:null;active.contextDirty=true;
+        active.activity.nutrition_elapsed_override_seconds=active.durationOverride;renderStickySummary();
+      }
       if (event.target.id === "nutritionSearch" && active) {
         active.search = event.target.value;
         renderProductArea();
@@ -895,18 +687,28 @@
     });
   }
 
+  window.addEventListener("momentum:session-cleared",()=>{summaries.clear();libraryPromise=null;frequencyPromise=null;activityFormRevision++;activityFormDraft=null;close();});
   window.MomentumNutrition = {
     STEP,
     beginActivityForm,
     calculateTotals,
     cancelActivityForm,
     durationHours,
+    durationBasis,
+    nutrientValue,
+    phasePayload,
     ensureActivities,
     formatQuantity,
     open,
     openActivityForm,
     renderActivitySection,
     saveActivityForm,
+    draftPayload() {
+      if (!activityFormDraft?.dirty) return null;
+      if (activityFormDraft.loading || activityFormDraft.error) throw new Error("Le ravitaillement ne peut pas être sauvegardé tant que sa lecture a échoué.");
+      return phasePayload(activityFormDraft);
+    },
+    parentSaved(activityId) { summaries.delete(activityId); frequencyPromise = null; cancelActivityForm(); },
     summaryFromItems
   };
 

@@ -87,6 +87,30 @@ test("important counters finish immediately when reduced motion is requested", (
   assert.match(progressionSource, /data-motion-number/);
 });
 
+test("offscreen and paused animations never replace measured counters with zero or intermediate values", () => {
+  const counter={dataset:{motionValue:"1.333333",motionDecimals:"1",motionSuffix:" h"},textContent:"0 h",animate(){}};
+  const document={documentElement:{classList:{add(){}}},addEventListener(){},querySelectorAll(){return [counter];}};
+  const window={document,matchMedia(){return {matches:false};},IntersectionObserver:class {observe(){} unobserve(){}}};
+  vm.runInNewContext(motionSource,{window,document,WeakSet});
+  window.MomentumMotion.animateNumbers(document);
+  assert.equal(counter.textContent,"1,3 h","Offscreen values are already final even if the observer never fires");
+  window.MomentumMotion.animateNumber(counter);
+  assert.equal(counter.textContent,"1,3 h","A paused appearance animation leaves the measured value readable");
+  const functionSource=progressionSource.slice(progressionSource.indexOf("function progressionCounter("),progressionSource.indexOf("function animateProgressionNumbers("));
+  const html=vm.runInNewContext(functionSource+';progressionCounter(80/60,{decimals:1,suffix:" h"})');
+  assert.match(html,/>1,3 h<\/strong>$/,"The rendered fallback works before the motion helper runs");
+});
+
+test("a missing effort or wellbeing observation does not claim the activity is absent",()=>{
+  const functionSource=progressionSource.slice(progressionSource.indexOf("function setProgressionChartEmpty("),progressionSource.indexOf("function activityValue("));
+  let rendered;const empty={};const canvas={parentElement:{querySelector(){return empty;}}};
+  const context={canvas,progressionState:{periodPreset:"current-week",periodOffset:0},window:{MomentumEmptyState:{render(value){rendered=value;return "empty";}}}};
+  vm.runInNewContext(functionSource+';setProgressionChartEmpty(canvas,true,"Pas encore de charge calculable","Renseigne une durée et un effort si tu le souhaites.")',context);
+  assert.equal(rendered.title,"Pas encore de charge calculable");
+  assert.equal(rendered.text,"Renseigne une durée et un effort si tu le souhaites.");
+  assert.doesNotMatch(rendered.text,/Aucune activité/);
+});
+
 test("chart points receive a halo and an animated HTML tooltip", () => {
   assert.match(motionSource, /id:"momentumPointHalo"/);
   assert.match(motionSource, /context\.arc\(point\.x, point\.y, 10/);

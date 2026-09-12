@@ -40,12 +40,11 @@ function callbackErrorMessage() {
 }
 
 async function destinationForUser(user) {
-  const { data } = await momentumDB
-    .from("passports")
-    .select("personalization")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  return data?.personalization?.onboarding_completed ? "index.html" : "welcome.html";
+  if (!user) throw new Error("Session indisponible.");
+  const { data, error } = await momentumDB.from("passports").select("personalization").eq("user_id", user.id).maybeSingle();
+  if (error) throw error;
+  const target = window.MomentumAccess.safeReturn(new URLSearchParams(location.search).get("returnTo"), location.origin);
+  return window.MomentumAccess.complete(data) ? target : `welcome.html?returnTo=${encodeURIComponent(target)}`;
 }
 
 async function redirectIfLoggedIn() {
@@ -183,14 +182,22 @@ newPasswordForm.addEventListener("submit", async (event) => {
   const button = newPasswordForm.querySelector('button[type="submit"]');
   button.disabled = true;
   setMessage(message, "Mise à jour…");
+  let passwordUpdated = false;
   try {
     const { error } = await momentumDB.auth.updateUser({ password });
     if (error) return setMessage(message, friendlyAuthError(error), "error");
+    passwordUpdated = true;
+    const { data, error: userError } = await momentumDB.auth.getUser();
+    if (userError) throw userError;
+    const destination = await destinationForUser(data.user);
     setMessage(message, "Mot de passe mis à jour. Ton espace s'ouvre…", "success");
-    const { data } = await momentumDB.auth.getUser();
-    setTimeout(async () => window.location.replace(await destinationForUser(data.user)), 650);
+    setTimeout(() => window.location.replace(destination), 650);
   } catch (error) {
-    setMessage(message, friendlyAuthError(error), "error");
+    if (passwordUpdated) {
+      recoveringPassword = false;
+      showMode("login");
+      setMessage(document.getElementById("authMessage"), "Ton mot de passe est mis à jour. Ton espace est momentanément indisponible ; utilise ton nouveau mot de passe pour réessayer avec Continuer.", "error");
+    } else setMessage(message, friendlyAuthError(error), "error");
   } finally {
     button.disabled = false;
   }
@@ -203,4 +210,6 @@ momentumDB.auth.onAuthStateChange((event) => {
 if (new URLSearchParams(window.location.search).get("recovery") === "1") recoveringPassword = true;
 const callbackMessage = callbackErrorMessage();
 if (callbackMessage) setMessage(document.getElementById("authMessage"), callbackMessage, "error");
-redirectIfLoggedIn();
+redirectIfLoggedIn().catch(() => setMessage(document.getElementById("authMessage"), "Impossible de charger ton espace pour le moment. Réessaie avec Continuer.", "error"));
+
+if (new URLSearchParams(location.search).get("mode") === "signup" && !recoveringPassword) showMode("signup");

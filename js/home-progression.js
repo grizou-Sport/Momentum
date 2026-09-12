@@ -12,11 +12,13 @@ const progressionState = {
   activities:[], historyActivities:[], weeks:[], volumeChart:null, loadChart:null, sportChart:null,
   wellnessChart:null, mode:"time", wellnessMode:"summary", passport:null,
   physiological:null, loadSeries:[], loadDisplaySeries:[], sportGroups:[], wellbeingDays:[], wellbeingDisplayDays:[], dayRows:[], eventsByDate:new Map(),
-  periodPreset:"current-week", periodOffset:0, periodStart:null, periodEnd:null, requestVersion:0
+  periodPreset:"last-7-days", periodOffset:0, periodStart:null, periodEnd:null, requestVersion:0
 };
 
 function progressionCounter(value, { decimals = 0, prefix = "", suffix = "" } = {}) {
-  return `<strong data-motion-number data-motion-value="${Number(value) || 0}" data-motion-decimals="${decimals}" data-motion-prefix="${prefix}" data-motion-suffix="${suffix}">0${suffix}</strong>`;
+  const target=Number(value)||0;
+  const formatted=target.toLocaleString("fr-CH",{minimumFractionDigits:decimals,maximumFractionDigits:decimals});
+  return `<strong data-motion-number data-motion-value="${target}" data-motion-decimals="${decimals}" data-motion-prefix="${prefix}" data-motion-suffix="${suffix}">${prefix}${formatted}${suffix}</strong>`;
 }
 
 function animateProgressionNumbers(root) {
@@ -43,13 +45,12 @@ function stageProgressionChart(chart, cardId) {
 }
 
 function readProgressionPreferences() {
-  try { return JSON.parse(localStorage.getItem(PROGRESSION_PREFERENCES_KEY)) || {}; }
-  catch (_error) { return {}; }
+  return window.MomentumSession?.read("progression", {}) || {};
 }
 
 function saveProgressionPreferences() {
   try {
-    localStorage.setItem(PROGRESSION_PREFERENCES_KEY, JSON.stringify({ periodPreset:progressionState.periodPreset, periodOffset:progressionState.periodOffset, periodStart:progressionState.periodStart, periodEnd:progressionState.periodEnd, mode:progressionState.mode, wellnessMode:progressionState.wellnessMode }));
+    window.MomentumSession.write("progression", { periodPreset:progressionState.periodPreset, periodOffset:progressionState.periodOffset, periodStart:progressionState.periodStart, periodEnd:progressionState.periodEnd, mode:progressionState.mode, wellnessMode:progressionState.wellnessMode });
   } catch (_error) { /* Une préférence locale ne doit jamais bloquer la page. */ }
 }
 
@@ -154,16 +155,18 @@ async function loadProgressionData() {
     renderProgressionPeriodControl(range);
     const historyEnd = [end, iso(new Date())].sort().at(-1);
     const [activitiesResult, passportResult, dailyResult, daysResult, physiologicalResult] = await Promise.all([
-      window.momentumDB.from("activities").select("id,sport,activity_type,activity_category,activity_date,duration_min,distance_km,elevation_m,rpe,avg_hr,status,notes").eq("user_id", user.id).eq("status", "done").lte("activity_date", historyEnd).order("activity_date"),
+      window.MomentumData.history(user.id),
       window.momentumDB.from("passports").select("sport_level,habits,personalization").eq("user_id", user.id).maybeSingle(),
-      window.momentumDB.from("daily_wellbeing").select("recorded_date,sleep_hours,motivation,resting_hr,hrv_ms,sleep_quality_value,sleep_quality_unit,source_label").eq("user_id",user.id).gte("recorded_date",start).lte("recorded_date",end).order("recorded_date"),
-      window.momentumDB.from("days").select("day_date,note,mood,energy,sleep_hours,stress,rest_hr,hrv").eq("user_id",user.id).gte("day_date",start).lte("day_date",end).order("day_date"),
+      window.MomentumData.all(() => window.momentumDB.from("daily_wellbeing").select("*", { count:"exact" }).eq("user_id",user.id).gte("recorded_date",start).lte("recorded_date",end).order("recorded_date").order("id")),
+      window.MomentumData.all(() => window.momentumDB.from("days").select("*", { count:"exact" }).eq("user_id",user.id).gte("day_date",start).lte("day_date",end).order("day_date").order("id")),
       window.momentumDB.from("wellbeing_profile").select("resting_hr,preferred_sleep_hours").eq("user_id",user.id).maybeSingle(),
     ]);
     const firstError = activitiesResult.error || passportResult.error || dailyResult.error || daysResult.error || physiologicalResult.error;
     if (firstError) throw firstError;
     if (requestVersion !== progressionState.requestVersion) return;
-    progressionState.historyActivities = activitiesResult.data || [];
+    progressionState.historyActivities = (activitiesResult.data || []).map(window.MomentumData.trainingActivity);
+    progressionState.historyComplete = activitiesResult.complete === true;
+    progressionState.calculationDate = iso(new Date());
     progressionState.activities = progressionState.historyActivities.filter((activity) => activity.activity_date >= start && activity.activity_date <= end);
     progressionState.passport = passportResult.data || null;
     progressionState.physiological = physiologicalResult.data || null;
@@ -181,8 +184,14 @@ async function loadProgressionData() {
     renderSportChart();
     renderLoadChart();
     renderWellnessChart();
+    renderDateComparison();
+    renderPeriodStory(requestVersion);
+    document.querySelectorAll(".chart-card,.kpi-strip").forEach(node=>{node.removeAttribute("aria-busy");node.classList.remove("is-data-unavailable");});
   } catch (error) {
     if (requestVersion !== progressionState.requestVersion) return;
+    document.querySelectorAll(".chart-card,.kpi-strip").forEach(node=>node.classList.add("is-data-unavailable"));
+    document.getElementById("periodStory")?.remove();
+    document.getElementById("progressionDateComparison")?.remove();
     console.error("PROGRESSION : impossible de charger les indicateurs.", error);
     if (message) message.innerHTML = 'Les indicateurs n’ont pas pu être chargés. <button type="button" data-progression-retry>Réessayer</button>';
     window.MomentumMotion?.reveal();
@@ -190,10 +199,10 @@ async function loadProgressionData() {
 }
 
 function completedActivities(activities = progressionState.activities) {
-  return activities.filter((activity) => window.MomentumMoments?.isCompletedActivity(activity) ?? activity.status === "done");
+  return activities.filter((activity) => (window.MomentumMoments?.isCompletedActivity(activity) ?? activity.status === "done") && (!activity.activity_date || activity.activity_date <= (progressionState.calculationDate || iso(new Date()))));
 }
 
-function setProgressionChartEmpty(canvas, isEmpty, title = "Aucune donnée ne correspond à cette période.", text = "Tes premières activités feront apparaître ta progression ici.") {
+function setProgressionChartEmpty(canvas, isEmpty, title = "Aucune donnée ne correspond à cette période.", text = "Aucune activité réalisée n’est enregistrée pour cette période.") {
   const wrapper = canvas?.parentElement;
   if (!wrapper) return;
   let empty = wrapper.querySelector(".progression-chart-empty");
@@ -205,10 +214,10 @@ function setProgressionChartEmpty(canvas, isEmpty, title = "Aucune donnée ne co
   empty.hidden = !isEmpty;
   canvas.hidden = isEmpty;
   if (isEmpty) {
-    const hasCustomFilter = progressionState.periodPreset !== "current-week";
+    const hasCustomFilter = progressionState.periodPreset !== "last-7-days" || progressionState.periodOffset !== 0;
     empty.innerHTML = window.MomentumEmptyState?.render({
-      title:hasCustomFilter ? title : "Tes premières activités feront apparaître ta progression ici.",
-      text:hasCustomFilter ? "Aucune activité réalisée ne correspond à la période choisie." : text,
+      title,
+      text,
       action:hasCustomFilter ? "Réinitialiser les filtres" : "",
       actionAttributes:hasCustomFilter ? "data-progression-reset" : "",
       compact:true
@@ -217,35 +226,34 @@ function setProgressionChartEmpty(canvas, isEmpty, title = "Aucune donnée ne co
 }
 
 function activityValue(activity, mode) {
-  return mode === "distance" ? Number(activity.distance_km || 0) : Number(activity.duration_min || 0) / 60;
+  const value=window.MomentumTrainingLoad.number(mode === "distance" ? activity.distance_km : activity.duration_min);
+  return value==null||value<0?0:mode==="distance"?value:value/60;
 }
 
 function renderProgressionKpis() {
   const strip = document.getElementById("kpiStrip");
   if (!strip) return;
   const completed = completedActivities();
-  const hours = completed.reduce((sum, item) => sum + Number(item.duration_min || 0), 0) / 60;
-  const distance = completed.reduce((sum, item) => sum + Number(item.distance_km || 0), 0);
+  const measuredDuration=completed.filter(a=>window.MomentumTrainingLoad.number(a.duration_min)!=null),measuredDistance=completed.filter(a=>window.MomentumTrainingLoad.number(a.distance_km)!=null);
+  const hours = completed.reduce((sum, item) => sum + activityValue(item,"time"), 0);
+  const distance = completed.reduce((sum, item) => sum + activityValue(item,"distance"), 0);
   const activeWeeks = progressionState.weeks.filter((week) => completedActivities(week.activities).length).length;
   const periodLabel = PROGRESSION_PERIODS[progressionState.periodPreset]?.label || "Période";
-  strip.innerHTML = `<div>${progressionCounter(completed.length)}<span>Séances réalisées · ${escapeHtml(periodLabel)}</span></div><div>${progressionCounter(hours,{decimals:1,suffix:" h"})}<span>Temps construit</span></div><div>${progressionCounter(distance,{suffix:" km"})}<span>Distance totale</span></div><div>${progressionCounter(activeWeeks)}<span>Semaines actives</span></div>`;
+  strip.innerHTML = `<div>${progressionCounter(completed.length)}<span>Moments réalisés</span></div><div>${measuredDuration.length?progressionCounter(hours,{decimals:1,suffix:" h"}):"Non renseigné"}<span>Temps d’activité${measuredDuration.length<completed.length?" · partiel":""}</span></div><div>${measuredDistance.length?progressionCounter(distance,{decimals:1,suffix:" km"}):"Non renseignée"}<span>Distance enregistrée</span></div><div>${progressionCounter(new Set(completed.map(a=>a.activity_date)).size)}<span>Jours avec une activité</span></div>`;
   animateProgressionNumbers(strip);
 }
 
 function passportBaselineLoad() {
-  const hours = Number(progressionState.passport?.habits?.weekly_hours || 3);
-  const levelFactor = ({ BEGINNER:.75, RETURNING:.7, REGULAR:1, COMPETITOR:1.2, EXPERT:1.35 })[progressionState.passport?.sport_level] || .85;
-  return Math.max(12, Math.min(90, hours * 7 * levelFactor));
+  // Conservé comme point de compatibilité technique, jamais injecté dans le modèle.
+  return 0;
 }
 
 function activityTrainingLoad(activity) {
-  const duration = Number(activity.duration_min || 0);
-  const perceivedEffort = Number(activity.rpe || 5);
-  return duration * Math.max(1, Math.min(10, perceivedEffort)) / 6;
+  return window.MomentumTrainingLoad.activityLoad(activity).load;
 }
 
 function progressionGranularity(startValue = progressionState.periodStart, endValue = progressionState.periodEnd) {
-  const dayCount = Math.floor((dateFromIso(endValue) - dateFromIso(startValue)) / 86400000) + 1;
+  const dayCount = window.MomentumTrainingLoad.daysBetween(startValue,endValue) + 1;
   if (dayCount <= 14) return "day";
   if (dayCount <= 120) return "week";
   return "month";
@@ -337,61 +345,32 @@ function normalizeProgressionText(value) {
 
 function buildProgressionEvents(activities, dayRows) {
   const events = new Map();
-  const add = (date, label) => {
-    if (!date || !label) return;
-    if (!events.has(date)) events.set(date, []);
-    if (!events.get(date).includes(label)) events.get(date).push(label);
-  };
-  activities.forEach((activity) => {
-    const text = normalizeProgressionText(`${activity.activity_type} ${activity.sport} ${activity.notes}`);
-    const activityLabel = window.MomentumSports?.getLabel(activity.sport, activity.activity_type || "Activité") || activity.activity_type || activity.sport || "Activité";
-    if (activity.activity_category === "adventure") add(activity.activity_date, `Aventure · ${activityLabel}`);
-    else if (/competition|race|epreuve|dossard/.test(text)) add(activity.activity_date, `Compétition · ${activityLabel}`);
-    else if (/groupe|group|club|collectif/.test(text)) add(activity.activity_date, `Sortie de groupe · ${activityLabel}`);
-    else if (/massage/.test(text)) add(activity.activity_date, `Massage · ${activityLabel}`);
+  const add = (date, label) => { if (!date) return; if (!events.has(date)) events.set(date, []); if (!events.get(date).includes(label)) events.get(date).push(label); };
+  activities.forEach(activity => {
+    if (activity.activity_category === "adventure" || activity.qualifiers?.includes("adventure")) add(activity.activity_date, "Aventure");
+    if (activity.qualifiers?.includes("together")) add(activity.activity_date, "Avec des proches");
+    if (window.MomentumTrainingLoad.eligibility(activity).practice === "massage") add(activity.activity_date, "Massage");
   });
-  dayRows.forEach((day) => {
-    const note = normalizeProgressionText(day.note);
-    if (/maladie|malade|fievre|infection/.test(note)) add(day.day_date, "Maladie");
-    if (/vacances|vacance|conge/.test(note)) add(day.day_date, "Vacances");
-  });
+  // Les notes libres ne sont jamais interprétées comme des déclarations de maladie ou de vacances.
+  dayRows.forEach(day => (day.context_annotations || []).forEach(value => {
+    const label = { illness:"Maladie", vacation:"Vacances", competition:"Compétition" }[value];
+    if (label) add(day.day_date, label);
+  }));
   return events;
 }
 
 function buildLoadSeries() {
-  const days = [];
   const history = completedActivities(progressionState.historyActivities);
-  const historyStart = history[0]?.activity_date || progressionState.periodStart;
-  const calculationEnd = [progressionState.periodEnd, iso(new Date())].sort().at(-1);
-  const start = dateFromIso(historyStart);
-  const end = dateFromIso(calculationEnd);
-  const dayCount = Math.floor((end - start) / 86400000) + 1;
-  const firstActivity = history[0]?.activity_date || null;
-  const baseline = passportBaselineLoad();
-  const expectedActivities = Math.max(6, Number(progressionState.passport?.habits?.weekly_sessions || 3) * 6);
-  const activitiesByDate = new Map();
-  history.forEach((activity) => {
-    if (!activitiesByDate.has(activity.activity_date)) activitiesByDate.set(activity.activity_date, []);
-    activitiesByDate.get(activity.activity_date).push(activity);
+  const result = window.MomentumTrainingLoad.build(history, {
+    asOf:progressionState.calculationDate || iso(new Date()), complete:progressionState.historyComplete === true
   });
-  let chronic = baseline;
-  let acute = baseline;
-  let observedActivities = 0;
-  for (let index=0; index<dayCount; index+=1) {
-    const date = iso(addDays(start,index));
-    const activities = activitiesByDate.get(date) || [];
-    const completed = completedActivities(activities);
-    observedActivities += completed.length;
-    const actualLoad = completed.reduce((sum,activity) => sum + activityTrainingLoad(activity),0);
-    const learnedDays = firstActivity ? Math.max(0, Math.floor((dateFromIso(date)-dateFromIso(firstActivity))/86400000)+1) : 0;
-    const confidence = Math.min(1, learnedDays / 42, observedActivities / expectedActivities);
-    const modeledLoad = baseline * (1-confidence) + actualLoad * confidence;
-    chronic += (modeledLoad-chronic) / 42;
-    acute += (modeledLoad-acute) / 7;
-    days.push({ date, activities:completed, actualLoad, modeledLoad, chronic, acute, form:chronic-acute, confidence });
-  }
-  progressionState.loadSeries = days;
-  return days;
+  progressionState.loadResult = result;
+  const byId = new Map(history.map(activity => [activity.id, activity]));
+  progressionState.loadSeries = result.days.map(day => ({ ...day,
+    activities:day.entries.map(item => byId.get(item.id)).filter(Boolean),
+    actualLoad:day.known_load, modeledLoad:day.known_load, acute:day.recent, form:day.balance
+  }));
+  return progressionState.loadSeries;
 }
 
 function loadDisplaySeries(series) {
@@ -414,59 +393,65 @@ function loadDisplaySeries(series) {
 }
 
 function loadPhase(series) {
-  const confidence = series.at(-1)?.confidence || 0;
-  if (confidence === 0) return { label:"Estimation", detail:"Initialisée depuis ton Passeport" };
-  if (confidence < 1) return { label:"Apprentissage", detail:`Modèle personnalisé à ${Math.round(confidence*100)} %` };
-  return { label:"Personnalisation", detail:"Modèle entièrement fondé sur tes données" };
+  const result = progressionState.loadResult;
+  if (!result?.has_calculable) return { label:"Pas encore de charge calculable", detail:"Une durée et un effort volontaire sont nécessaires." };
+  const partial = series.some(day => day.partial);
+  return { label:partial ? "Données partielles" : "Charges renseignées", detail:`Historique utilisé : depuis le ${result.source_start} · ${result.history_days} jours. Initialisation à zéro ; les activités non enregistrées ne sont pas connues.` };
 }
 
 function loadInterpretation(current) {
-  if (!current) return "Le modèle attend ses premières données.";
-  if (current.form > 10) return "Bonne fraîcheur : ton corps semble disponible pour construire.";
-  if (current.form < -15) return "Charge élevée : une respiration peut consolider le travail accompli.";
-  if (current.acute > current.chronic * 1.15) return "La charge récente monte plus vite que ton socle habituel.";
-  return "Progression maîtrisée : la charge récente reste proche de ton socle.";
+  if (!current || current.chronic == null) return "Pas encore de charge calculable.";
+  if (current.partial) return "Une partie des activités n'est pas calculable. Ces repères partiels ne décrivent pas ta récupération.";
+  return "Repères calculés à partir de tes activités renseignées. L'équilibre de charge ne décrit pas à lui seul ta récupération.";
 }
 
 function renderLoadChart() {
   const canvas = document.getElementById("fitnessChart");
   if (!canvas || !window.Chart) return;
-  const hasCompleted = completedActivities().length > 0;
-  setProgressionChartEmpty(canvas, !hasCompleted);
+  const series = buildLoadSeries();
+  const hasCompleted = progressionState.loadResult?.has_calculable && series.some(day => day.chronic != null && day.date >= progressionState.periodStart && day.date <= progressionState.periodEnd);
+  setProgressionChartEmpty(canvas, !hasCompleted, "Pas encore de charge calculable", "Renseigne librement une durée et un effort pour commencer tes repères.");
   if (!hasCompleted) {
     progressionState.loadChart?.destroy();
     document.getElementById("loadStatus").innerHTML = "";
-    document.getElementById("loadInsight").textContent = "Tes premières activités feront apparaître ta progression ici.";
-    renderAccessibleChartTable("fitnessChartTable", ["Période","Charge chronique","Charge aiguë","Forme"], []);
+    document.getElementById("loadInsight").textContent = "Pas encore de charge calculable pour cette période.";
+    renderLoadCoverage(series.filter(day => day.date >= progressionState.periodStart && day.date <= progressionState.periodEnd));
+    document.getElementById("loadModelPhase").textContent = "Pas encore de charge calculable";
+    renderAccessibleChartTable("fitnessChartTable", ["Période","Charge chronique (unités MOMENTUM)","Charge récente (unités MOMENTUM)","Équilibre de charge (unités MOMENTUM)"], []);
     return;
   }
-  const series = buildLoadSeries();
   const displaySeries = loadDisplaySeries(series);
-  const phase = loadPhase(series);
-  const today = series.find((day) => day.date === iso(new Date())) || series.at(-1);
+  const phase = loadPhase(displaySeries);
+  const today = displaySeries.at(-1);
   const granularity = progressionGranularity();
   progressionState.loadDisplaySeries = displaySeries;
   progressionState.loadChart?.destroy();
   const eventLabels = displaySeries.map((day) => day.eventLabels || []);
-  progressionState.loadChart = new Chart(canvas,{ type:"line", data:{ labels:displaySeries.map((day) => progressionDateLabel(day.date, granularity)), datasets:[{label:"Charge chronique (CTL)",data:displaySeries.map((day)=>day.chronic),borderColor:"#273c31",backgroundColor:"rgba(39,60,49,.08)",fill:true,tension:.35,pointRadius:displaySeries.length > 45 ? 0 : 2,pointHoverRadius:6,pointHoverBorderWidth:3,borderWidth:2.5},{label:"Fatigue (ATL)",data:displaySeries.map((day)=>day.acute),borderColor:"#d9763d",backgroundColor:"transparent",tension:.35,pointRadius:displaySeries.length > 45 ? 0 : 2,pointHoverRadius:6,pointHoverBorderWidth:3,borderWidth:2},{label:"Forme (TSB)",data:displaySeries.map((day)=>day.form),borderColor:"#6f63a6",backgroundColor:"transparent",tension:.3,pointRadius:displaySeries.length > 45 ? 0 : 2,pointHoverRadius:6,pointHoverBorderWidth:3,borderWidth:2},{label:"Événements",data:displaySeries.map((day,index)=>eventLabels[index].length?Math.max(day.chronic,day.acute)+6:null),borderColor:"#b27d42",backgroundColor:"#b27d42",showLine:false,pointRadius:5,pointHoverRadius:7,pointStyle:"rectRot"}] }, options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:"index",intersect:false},onClick:(_event,elements)=>{if(elements[0])openLoadDay(elements[0].index);},plugins:{legend:{position:"bottom",align:"start",labels:{usePointStyle:true,pointStyle:"circle",boxWidth:8,padding:16}},tooltip:progressionChartTooltip({label:(context)=>context.dataset.label==="Événements"?eventLabels[context.dataIndex].join(" • "):`${context.dataset.label} : ${Math.round(context.parsed.y)}`})},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,color:"#858178",maxRotation:0}},y:{grid:{color:"rgba(20,20,20,.07)"},ticks:{color:"#858178"}}}} });
+  progressionState.loadChart = new Chart(canvas,{ type:"line", data:{ labels:displaySeries.map((day) => progressionDateLabel(day.date, granularity)), datasets:[{label:"Charge chronique",data:displaySeries.map((day)=>day.chronic),segment:{borderDash:ctx=>displaySeries[ctx.p1DataIndex]?.partial?[6,4]:undefined},borderColor:"#273c31",backgroundColor:"rgba(39,60,49,.08)",fill:true,tension:.35,pointRadius:displaySeries.length > 45 ? 0 : 2,pointHoverRadius:6,pointHoverBorderWidth:3,borderWidth:2.5},{label:"Charge récente",data:displaySeries.map((day)=>day.acute),borderDash:[7,3],borderColor:"#d9763d",backgroundColor:"transparent",tension:.35,pointRadius:displaySeries.length > 45 ? 0 : 2,pointHoverRadius:6,pointHoverBorderWidth:3,borderWidth:2},{label:"Équilibre de charge",data:displaySeries.map((day)=>day.form),borderDash:[2,3],borderColor:"#6f63a6",backgroundColor:"transparent",tension:.3,pointRadius:displaySeries.length > 45 ? 0 : 2,pointHoverRadius:6,pointHoverBorderWidth:3,borderWidth:2},{label:"Événements",data:displaySeries.map((day,index)=>eventLabels[index].length?Math.max(day.chronic,day.acute)+6:null),borderColor:"#b27d42",backgroundColor:"#b27d42",showLine:false,pointRadius:5,pointHoverRadius:7,pointStyle:"rectRot"}] }, options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:"index",intersect:false},onClick:(_event,elements)=>{if(elements[0])openLoadDay(elements[0].index);},plugins:{legend:{position:"bottom",align:"start",labels:{usePointStyle:true,pointStyle:"circle",boxWidth:8,padding:16}},tooltip:progressionChartTooltip({label:(context)=>context.dataset.label==="Événements"?eventLabels[context.dataIndex].join(" • "):`${context.dataset.label} : ${Math.round(context.parsed.y)}`})},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,color:"#858178",maxRotation:0}},y:{grid:{color:"rgba(20,20,20,.07)"},ticks:{color:"#858178"}}}} });
   stageProgressionChart(progressionState.loadChart,"loadChartCard");
-  renderAccessibleChartTable("fitnessChartTable", ["Période","Charge chronique","Charge aiguë","Forme"], displaySeries.map((day)=>[progressionDateLabel(day.date,granularity),Math.round(day.chronic),Math.round(day.acute),`${day.form>=0?"+":""}${Math.round(day.form)}`]), "load");
+  renderAccessibleChartTable("fitnessChartTable", ["Période","Charge chronique (unités MOMENTUM)","Charge récente (unités MOMENTUM)","Équilibre de charge (unités MOMENTUM)"], displaySeries.map((day)=>[progressionDateLabel(day.date,granularity),day.chronic==null?"Non calculable":Math.round(day.chronic),day.acute==null?"Non calculable":Math.round(day.acute),`${day.form!=null&&day.form>=0?"+":""}${day.form==null?"Non calculable":Math.round(day.form)}`]), "load");
   document.getElementById("loadModelPhase").textContent=phase.label;
   document.getElementById("loadModelPhase").title=phase.detail;
   const loadStatus=document.getElementById("loadStatus");
-  loadStatus.innerHTML=`<p>Aujourd’hui</p><div>${progressionCounter(Math.round(today?.chronic||0))}<span>Charge chronique</span></div><div>${progressionCounter(Math.round(today?.acute||0))}<span>Fatigue</span></div><div>${progressionCounter(Math.round(today?.form||0),{prefix:today?.form>=0?"+":""})}<span>Forme</span></div>`;
+  loadStatus.innerHTML=`<p>Fin de période mesurée · ${escapeHtml(today?.date || "")}</p><div>${today?.chronic==null?"Non calculable":progressionCounter(Math.round(today.chronic))}<span>Charge chronique</span></div><div>${today?.acute==null?"Non calculable":progressionCounter(Math.round(today.acute))}<span>Charge récente</span></div><div>${today?.form==null?"Non calculable":progressionCounter(Math.round(today.form),{prefix:today.form>=0?"+":""})}<span>Équilibre de charge</span></div>`;
   animateProgressionNumbers(loadStatus);
   document.getElementById("loadInsight").textContent=loadInterpretation(today);
+  renderLoadCoverage(displaySeries);
+  renderDateComparison();
 }
 
-function openLoadDay(index) {
-  const day=progressionState.loadDisplaySeries[index];
+function openLoadDay(index, selectedDate = null) {
+  const bucket=progressionState.loadDisplaySeries[index];
+  if(!bucket)return;
+  if(!selectedDate && bucket.rangeStart && bucket.rangeStart!==bucket.date)return openAggregatedDays(bucket.rangeStart,bucket.date,date=>openLoadDay(index,date));
+  const day=selectedDate?progressionState.loadSeries.find(item=>item.date===selectedDate):bucket;
   const content=document.getElementById("progressionDialogContent");
   const dialog=document.getElementById("progressionDialog");
   if(!day||!content||!dialog)return;
+  selectComparisonDate(day.date);
   const events=day.eventLabels||[];
-  const periodLabel=day.rangeStart!==day.date?`${fmtDate(day.rangeStart)} — ${fmtDate(day.date)}`:fmtDate(day.date);
-  content.innerHTML=`<span class="section-kicker">${escapeHtml(periodLabel)}</span><h2>Charge ${Math.round(day.actualLoad)}</h2><div class="progression-detail-kpis"><div><strong>${Math.round(day.chronic)}</strong><span>CTL</span></div><div><strong>${Math.round(day.acute)}</strong><span>ATL</span></div><div><strong>${day.form>=0?"+":""}${Math.round(day.form)}</strong><span>Forme (TSB)</span></div></div>${events.length?`<p class="load-day-events">${events.map(escapeHtml).join(" • ")}</p>`:""}<div class="load-day-activities">${day.activities.length?day.activities.map((activity)=>`<article><strong>${escapeHtml(window.MomentumSports?.getLabel(activity.sport,activity.activity_type||"Activité")||"Activité")}</strong><span>${Math.round(activityTrainingLoad(activity))} de charge · ${escapeHtml(window.MomentumDuration?.format(activity.duration_min||0) || `${Math.round(activity.duration_min||0)} min`)} · effort physique ${activity.rpe||"non renseigné"} / 10</span></article>`).join(""):'<p>Aucune activité enregistrée sur cette période.</p>'}</div>`;
+  const periodLabel=day.rangeStart&&day.rangeStart!==day.date?`${fmtDate(day.rangeStart)} — ${fmtDate(day.date)}`:fmtDate(day.date);
+  content.innerHTML=`<span class="section-kicker">${escapeHtml(periodLabel)}</span><h2>Charge renseignée : ${Math.round(day.actualLoad)} unités</h2>${day.partial?'<p>Données partielles. Cette somme ne représente pas toute la charge enregistrée.</p>':''}<div class="progression-detail-kpis"><div><strong>${day.chronic==null?"Non calculable":Math.round(day.chronic)}</strong><span>Charge chronique</span></div><div><strong>${day.acute==null?"Non calculable":Math.round(day.acute)}</strong><span>Charge récente</span></div><div><strong>${day.form!=null&&day.form>=0?"+":""}${day.form==null?"Non calculable":Math.round(day.form)}</strong><span>Équilibre de charge</span></div></div>${events.length?`<p class="load-day-events">${events.map(escapeHtml).join(" • ")}</p>`:""}<div class="load-day-activities">${day.activities.length?day.activities.map((activity)=>`<article><strong>${escapeHtml(window.MomentumSports?.getLabel(activity.sport,activity.activity_type||"Activité")||"Activité")}</strong><span>${activityTrainingLoad(activity) == null ? "Charge non calculable" : `${Math.round(activityTrainingLoad(activity))} unités MOMENTUM`} · ${escapeHtml(window.MomentumDuration?.format(activity.duration_min||0) || `${Math.round(activity.duration_min||0)} min`)} · effort physique ${activity.rpe||"non renseigné"} / 10</span></article>`).join(""):'<p>Aucune activité enregistrée sur cette période.</p>'}</div>`;
   openHomeDialog(dialog);
 }
 
@@ -533,24 +518,27 @@ function openSportDetail(index) {
     const sub=subdisciplines.get(label);sub.hours+=activityValue(activity,"time");sub.distance+=activityValue(activity,"distance");sub.sessions+=1;
     const intensity=intensityLabel(activity.rpe);intensities.set(intensity,(intensities.get(intensity)||0)+activityValue(activity,"time"));
   });
-  content.innerHTML=`<span class="section-kicker">Discipline</span><h2>${escapeHtml(group.label)}</h2><div class="progression-detail-kpis"><div><strong>${group.hours.toFixed(1)} h</strong><span>Temps réalisé</span></div><div><strong>${group.distance.toFixed(1)} km</strong><span>Distance</span></div><div><strong>${completed.length}</strong><span>Séances réalisées</span></div></div><section class="sport-detail-section"><h3>Sous-disciplines</h3><div class="sport-breakdown">${[...subdisciplines.entries()].sort((a,b)=>b[1].hours-a[1].hours).map(([label,data])=>`<div><span>${escapeHtml(label)}</span><strong>${data.hours.toFixed(1)} h · ${data.distance.toFixed(1)} km · ${data.sessions} séance${data.sessions>1?"s":""}</strong></div>`).join("")}</div></section><button class="secondary intensity-toggle" id="showIntensity" type="button">Afficher la répartition par intensité</button><section class="sport-detail-section" id="intensityDetail" hidden><h3>Répartition par intensité</h3><div class="intensity-breakdown">${[...intensities.entries()].map(([label,hours])=>`<div><span>${escapeHtml(label)}</span><i><b style="width:${Math.round(hours/Math.max(group.hours,.01)*100)}%"></b></i><strong>${hours.toFixed(1)} h</strong></div>`).join("")}</div></section>`;
+  content.innerHTML=`<span class="section-kicker">Discipline</span><h2>${escapeHtml(group.label)}</h2><div class="progression-detail-kpis"><div><strong>${group.hours.toFixed(1)} h</strong><span>Temps d’activité renseigné</span></div><div><strong>${group.distance.toFixed(1)} km</strong><span>Distance</span></div><div><strong>${completed.length}</strong><span>Séances réalisées</span></div></div><section class="sport-detail-section"><h3>Sous-disciplines</h3><div class="sport-breakdown">${[...subdisciplines.entries()].sort((a,b)=>b[1].hours-a[1].hours).map(([label,data])=>`<div><span>${escapeHtml(label)}</span><strong>${data.hours.toFixed(1)} h · ${data.distance.toFixed(1)} km · ${data.sessions} séance${data.sessions>1?"s":""}</strong></div>`).join("")}</div></section><button class="secondary intensity-toggle" id="showIntensity" type="button">Afficher la répartition par intensité</button><section class="sport-detail-section" id="intensityDetail" hidden><h3>Répartition par intensité</h3><div class="intensity-breakdown">${[...intensities.entries()].map(([label,hours])=>`<div><span>${escapeHtml(label)}</span><i><b style="width:${Math.round(hours/Math.max(group.hours,.01)*100)}%"></b></i><strong>${hours.toFixed(1)} h</strong></div>`).join("")}</div></section>`;
   document.getElementById("showIntensity")?.addEventListener("click",(event)=>{const detail=document.getElementById("intensityDetail");detail.hidden=!detail.hidden;event.currentTarget.textContent=detail.hidden?"Afficher la répartition par intensité":"Masquer la répartition par intensité";});
   openHomeDialog(dialog);
 }
 
 function normalizeSubjective(value) {
+  if(value == null || value === "" || typeof value === "boolean") return null;
   const number=Number(value);
   if(!Number.isFinite(number))return null;
   return Math.max(0,Math.min(100,number<=10?number*10:number));
 }
 
 function subjectiveValueOutOfTen(value) {
+  if(value == null || value === "" || typeof value === "boolean") return null;
   const number=Number(value);
   if(!Number.isFinite(number))return null;
   return Math.max(0,Math.min(10,number>10?number/10:number));
 }
 
 function physiologicalValue(value) {
+  if(value == null || value === "" || typeof value === "boolean") return null;
   const number=Number(value);
   return Number.isFinite(number)&&number>=0?number:null;
 }
@@ -559,26 +547,27 @@ function mergeWellbeingDays(dailyRows, legacyRows, start, end) {
   const dailyMap=new Map(dailyRows.map((row)=>[row.recorded_date,row]));
   const legacyMap=new Map(legacyRows.map((row)=>[row.day_date,row]));
   const sleepTarget=Number(progressionState.physiological?.preferred_sleep_hours||8);
-  const dayCount=Math.floor((dateFromIso(end)-dateFromIso(start))/86400000)+1;
+  const dayCount=window.MomentumTrainingLoad.daysBetween(start,end)+1;
   return Array.from({length:dayCount},(_,index)=>{
     const date=iso(addDays(dateFromIso(start),index));
     const daily=dailyMap.get(date)||{};const legacy=legacyMap.get(date)||{};
-    const sleepHours=daily.sleep_hours??legacy.sleep_hours??null;
+    const resolved=window.MomentumWellbeingData.resolve(daily,legacy);
+    const sleepHours=resolved.values.sleep_hours;
     const normalizedSleepHours=physiologicalValue(sleepHours);
     const sleepScore=normalizedSleepHours==null?null:Math.max(0,Math.min(100,normalizedSleepHours/sleepTarget*100));
-    const motivationSource=daily.motivation??legacy.energy??null;
+    const motivationSource=resolved.values.motivation;
     const motivation=subjectiveValueOutOfTen(motivationSource);
     const motivationScore=normalizeSubjective(motivationSource);
-    const recovery=sleepQualityLevel(daily.sleep_quality_value,daily.sleep_quality_unit);
-    const recoveryScore=sleepQualityScore(daily.sleep_quality_value,daily.sleep_quality_unit);
+    const recovery=sleepQualityLevel(resolved.values.sleep_quality_value,resolved.sleep_quality_unit);
+    const recoveryScore=sleepQualityScore(resolved.values.sleep_quality_value,resolved.sleep_quality_unit);
     const available=[sleepScore,motivationScore,recoveryScore].filter((value)=>value!=null);
-    return {date,sleepHours:normalizedSleepHours,sleepTarget,motivation,recovery,summary:available.length?available.reduce((sum,value)=>sum+value,0)/available.length:null,restingHr:physiologicalValue(daily.resting_hr??legacy.rest_hr),hrv:physiologicalValue(daily.hrv_ms??legacy.hrv),note:legacy.note||null,source:daily.source_label||null};
+    return {date,sleepHours:normalizedSleepHours,sleepTarget,motivation,recovery,summary:available.length?available.reduce((sum,value)=>sum+value,0)/available.length:null,restingHr:resolved.values.resting_hr,hrv:resolved.values.hrv_ms,note:resolved.note||null,source:daily.source_label||"Journal historique",sources:resolved.sources,summaryInputs:available.length};
   });
 }
 
 function wellnessDefinition(mode) {
   return ({
-    summary:{label:"Bien-être",dataKey:"summary",color:"#273c31",scale:{min:0,max:100}},
+    summary:{label:"Synthèse descriptive",dataKey:"summary",color:"#273c31",scale:{min:0,max:100}},
     sleep:{label:"Sommeil",dataKey:"sleepHours",color:"#5d7894",scale:{beginAtZero:true,suggestedMax:12}},
     motivation:{label:"Motivation",dataKey:"motivation",color:"#d49a3a",scale:{min:0,max:10}},
     recovery:{label:"Qualité du sommeil",dataKey:"recovery",color:"#66845b",scale:{min:1,max:5},stepSize:1},
@@ -598,7 +587,7 @@ function wellbeingDisplayDays(days, dataKey) {
   });
   return [...buckets.values()].map((bucket)=>{
     const values=bucket.map((day)=>day[dataKey]).filter((value)=>value!=null);
-    return {...bucket.at(-1),[dataKey]:values.length?values.reduce((sum,value)=>sum+Number(value),0)/values.length:null};
+    return {...bucket.at(-1),rangeStart:bucket[0].date,measureCount:values.length,[dataKey]:values.length?values.reduce((sum,value)=>sum+Number(value),0)/values.length:null};
   });
 }
 
@@ -630,26 +619,33 @@ function renderWellnessChart() {
   const granularity=progressionGranularity();
   progressionState.wellbeingDisplayDays=days;
   const availableCount=days.filter((day)=>day[definition.dataKey]!=null).length;
-  setProgressionChartEmpty(canvas, availableCount === 0, "Aucune donnée ne correspond à cette période.", "Le bien-être apparaîtra après une saisie ou une source déclarée.");
+  setProgressionChartEmpty(canvas, availableCount === 0, "Aucune observation de bien-être pour cette période.", "Les observations saisies ou importées pour cette période apparaîtront ici.");
   if (availableCount === 0) { progressionState.wellnessChart?.destroy(); document.getElementById("wellnessInsight").textContent=""; renderAccessibleChartTable("wellnessChartTable",["Date",definition.label],[]); return; }
   progressionState.wellnessChart?.destroy();
-  progressionState.wellnessChart=new Chart(canvas,{type:"line",data:{labels:days.map((day)=>progressionDateLabel(day.date,granularity)),datasets:[{label:definition.label,data:days.map((day)=>day[definition.dataKey]),borderColor:definition.color,backgroundColor:`${definition.color}18`,fill:true,tension:.35,pointRadius:days.length>45?0:2,pointHoverRadius:6,pointHoverBorderWidth:3,spanGaps:true,borderWidth:2.5}]},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:"index",intersect:false},onClick:(_event,elements)=>{if(elements[0])openWellnessDay(elements[0].index);},plugins:{legend:{display:false},tooltip:progressionChartTooltip({label:(context)=>`${definition.label} : ${wellnessChartValue(progressionState.wellnessMode,context.parsed.y)}`})},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,maxRotation:0,color:"#858178"}},y:{...definition.scale,grid:{color:"rgba(20,20,20,.07)"},ticks:{color:"#858178",stepSize:definition.stepSize,callback:(value)=>wellnessAxisValue(progressionState.wellnessMode,value)}}}}});
+  progressionState.wellnessChart=new Chart(canvas,{type:"line",data:{labels:days.map((day)=>progressionDateLabel(day.date,granularity)),datasets:[{label:definition.label,data:days.map((day)=>day[definition.dataKey]),borderColor:definition.color,backgroundColor:`${definition.color}18`,fill:true,tension:.35,pointRadius:days.length>45?0:2,pointHoverRadius:6,pointHoverBorderWidth:3,spanGaps:false,borderWidth:2.5}]},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:"index",intersect:false},onClick:(_event,elements)=>{if(elements[0])openWellnessDay(elements[0].index);},plugins:{legend:{display:false},tooltip:progressionChartTooltip({label:(context)=>`${definition.label} : ${wellnessChartValue(progressionState.wellnessMode,context.parsed.y)}`})},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,maxRotation:0,color:"#858178"}},y:{...definition.scale,grid:{color:"rgba(20,20,20,.07)"},ticks:{color:"#858178",stepSize:definition.stepSize,callback:(value)=>wellnessAxisValue(progressionState.wellnessMode,value)}}}}});
   stageProgressionChart(progressionState.wellnessChart,"wellnessChartCard");
   renderAccessibleChartTable("wellnessChartTable",["Date",definition.label],days.map((day)=>[progressionDateLabel(day.date,granularity),day[definition.dataKey]==null?"Non renseigné":wellnessChartValue(progressionState.wellnessMode,day[definition.dataKey])]),"wellness");
   if(availableCount<5){progressionState.wellnessChart.data.datasets[0].pointRadius=4;progressionState.wellnessChart.update("none");}
   const recent=[...days].reverse().find((day)=>day[definition.dataKey]!=null);
   const insight=document.getElementById("wellnessInsight");
-  insight.textContent=recent?`${definition.label} : ${wellnessChartValue(progressionState.wellnessMode,recent[definition.dataKey])} lors de la dernière journée renseignée.`:"Aucune donnée disponible pour cet indicateur. MOMENTUM attend une saisie ou une source déclarée.";
+  renderDateComparison();
+  insight.textContent=recent?`${definition.label} : ${wellnessChartValue(progressionState.wellnessMode,recent[definition.dataKey])} lors de la dernière journée renseignée.`:"Aucune donnée disponible pour cet indicateur. Aucune mesure n’a été renseignée pour cet indicateur.";
 }
 
 function wellnessValue(value,suffix=" / 100") { return value==null?"Non renseigné":`${Math.round(value)}${suffix}`; }
 
-function openWellnessDay(index) {
-  const day=progressionState.wellbeingDisplayDays[index];
+function openWellnessDay(index, selectedDate = null) {
+  const bucket=progressionState.wellbeingDisplayDays[index];
+  if(!bucket)return;
+  if(!selectedDate && bucket.rangeStart && bucket.rangeStart!==bucket.date)return openAggregatedDays(bucket.rangeStart,bucket.date,date=>openWellnessDay(index,date));
+  const day=selectedDate?progressionState.wellbeingDays.find(item=>item.date===selectedDate):bucket;
+  if (!day) return;
+  selectComparisonDate(day.date);
   const load=progressionState.loadSeries.find((item)=>item.date===day.date);
   const content=document.getElementById("progressionDialogContent");const dialog=document.getElementById("progressionDialog");
   if(!day||!content||!dialog)return;
-  content.innerHTML=`<span class="section-kicker">${escapeHtml(fmtDate(day.date))}</span><h2>${wellnessValue(day.summary)}</h2><div class="wellness-detail-grid"><div><span>Sommeil</span><strong>${day.sleepHours==null?"Non renseigné":escapeHtml(formatSleepDuration(day.sleepHours))}</strong><small>${day.sleepHours==null?"Durée non renseignée":`Objectif ${escapeHtml(formatSleepDuration(day.sleepTarget))}`}</small></div><div><span>Motivation au réveil</span><strong>${day.motivation==null?"Non renseignée":`${day.motivation.toLocaleString("fr-CH",{maximumFractionDigits:1})} / 10`}</strong></div><div><span>Qualité du sommeil</span><strong>${day.recovery==null?"Non renseignée":escapeHtml(sleepQualityLabel(day.recovery,"qualitative-v1"))}</strong></div></div><div class="progression-detail-kpis"><div><strong>${Math.round(load?.actualLoad||0)}</strong><span>Charge sportive</span></div><div><strong>${day.restingHr==null?"—":`${Math.round(day.restingHr)} bpm`}</strong><span>FC repos</span></div><div><strong>${day.hrv==null?"—":`${Math.round(day.hrv)} ms`}</strong><span>VFC</span></div></div><section class="wellness-note-detail"><span class="card-label">Note utilisateur</span><p>${escapeHtml(day.note||"Aucune note pour cette journée.")}</p>${day.source?`<small>Source : ${escapeHtml(day.source)}</small>`:""}</section>`;
+  content.innerHTML=`<span class="section-kicker">${escapeHtml(day.rangeStart && day.rangeStart !== day.date ? `${fmtDate(day.rangeStart)} — ${fmtDate(day.date)}` : fmtDate(day.date))}</span><h2>Observations disponibles</h2><div class="wellness-detail-grid"><div><span>Sommeil</span><strong>${day.sleepHours==null?"Non renseigné":escapeHtml(formatSleepDuration(day.sleepHours))}</strong><small>${day.sleepHours==null?"Durée non renseignée":`Objectif ${escapeHtml(formatSleepDuration(day.sleepTarget))}`}</small></div><div><span>Motivation au réveil</span><strong>${day.motivation==null?"Non renseignée":`${day.motivation.toLocaleString("fr-CH",{maximumFractionDigits:1})} / 10`}</strong></div><div><span>Qualité du sommeil</span><strong>${day.recovery==null?"Non renseignée":escapeHtml(sleepQualityLabel(day.recovery,"qualitative-v1"))}</strong></div></div><div class="progression-detail-kpis"><div><strong>${load?.complete_recorded_load == null ? "Partielle ou non calculable" : Math.round(load.known_load)}</strong><span>Charge sportive</span></div><div><strong>${day.restingHr==null?"—":`${Math.round(day.restingHr)} bpm`}</strong><span>FC repos</span></div><div><strong>${day.hrv==null?"—":`${Math.round(day.hrv)} ms`}</strong><span>VFC</span></div></div><section class="wellness-note-detail"><span class="card-label">Note utilisateur</span><p>${escapeHtml(day.note||"Aucune note pour cette journée.")}</p>${day.source?`<small>Source : ${escapeHtml(day.source)}</small>`:""}</section>`;
+  content.insertAdjacentHTML("beforeend",`<a class="secondary" href="index.html?wellbeing=${encodeURIComponent(day.date)}#today">Modifier les observations de cette journée</a>`);
   openHomeDialog(dialog);
 }
 
@@ -687,7 +683,7 @@ function bindProgression() {
     if (event.target.closest("[data-progression-reset]")) {
       const custom = document.querySelector("[data-period-custom]");
       if (custom) custom.hidden = true;
-      await applyProgressionPeriod("current-week", null, null, 0);
+      await applyProgressionPeriod("last-7-days", null, null, 0);
     }
     const toggle = event.target.closest("[data-chart-table-toggle]");
     if (toggle) {
@@ -702,7 +698,7 @@ function bindProgression() {
       if (type === "wellness") openWellnessDay(Number(index));
     }
   });
-  document.querySelectorAll("[data-volume-mode]").forEach((button) => { button.classList.toggle("active",button.dataset.volumeMode===progressionState.mode); button.setAttribute("aria-pressed",String(button.dataset.volumeMode===progressionState.mode)); button.addEventListener("click", () => { progressionState.mode=button.dataset.volumeMode; document.querySelectorAll("[data-volume-mode]").forEach((item)=>{const active=item===button;item.classList.toggle("active",active);item.setAttribute("aria-pressed",String(active));}); saveProgressionPreferences(); renderSportChart(); }); });
+  document.querySelectorAll("[data-volume-mode]").forEach((button) => { button.classList.toggle("active",button.dataset.volumeMode===progressionState.mode); button.setAttribute("aria-pressed",String(button.dataset.volumeMode===progressionState.mode)); button.addEventListener("click", () => { progressionState.mode=button.dataset.volumeMode; document.querySelectorAll("[data-volume-mode]").forEach((item)=>{const active=item===button;item.classList.toggle("active",active);item.setAttribute("aria-pressed",String(active));}); saveProgressionPreferences(); renderSportChart(); renderVolumeChart(); }); });
   document.querySelectorAll("[data-wellness-mode]").forEach((button) => { button.classList.toggle("active",button.dataset.wellnessMode===progressionState.wellnessMode); button.setAttribute("aria-pressed",String(button.dataset.wellnessMode===progressionState.wellnessMode)); button.addEventListener("click",()=>{progressionState.wellnessMode=button.dataset.wellnessMode;document.querySelectorAll("[data-wellness-mode]").forEach((item)=>{const active=item===button;item.classList.toggle("active",active);item.setAttribute("aria-pressed",String(active));});saveProgressionPreferences();renderWellnessChart();}); });
   const custom = document.querySelector("[data-period-custom]");
   const customStart = document.querySelector("[data-period-start]");
@@ -746,7 +742,8 @@ function bindProgression() {
   document.getElementById("closeProgressionDialog")?.addEventListener("click", () => closeHomeDialog(document.getElementById("progressionDialog")));
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  if (window.momentumPageReady) await window.momentumPageReady;
   if (window.Chart && window.MomentumMotion?.chartHaloPlugin) {
     window.Chart.register(window.MomentumMotion.chartHaloPlugin);
   }
@@ -757,3 +754,62 @@ document.addEventListener("DOMContentLoaded", () => {
     window.location.href = "login.html";
   });
 });
+
+/* CDC : qualité de données et comparaison à date commune, sans nouvel indicateur physiologique. */
+function renderLoadCoverage(series) {
+  let host = document.getElementById("loadCoverage");
+  if (!host) { host = document.createElement("div"); host.id = "loadCoverage"; document.getElementById("loadInsight")?.after(host); }
+  const result = progressionState.loadResult;
+  const items = (progressionState.loadSeries || []).filter(day => day.date >= progressionState.periodStart && day.date <= progressionState.periodEnd).flatMap(day => day.entries || []);
+  const coverage = window.MomentumTrainingLoad.coverage(items);
+  const allMissing = result?.coverage?.missing || [];
+  const labels = { missing_rpe:"Effort non renseigné", missing_duration:"Durée non renseignée", invalid_input:"Valeur à vérifier", undetermined_type:"Nature à préciser" };
+  host.innerHTML = `<p>${coverage.calculable} activités calculables sur ${coverage.eligible} admissibles${coverage.undetermined ? ` · ${coverage.undetermined} natures à préciser` : ""}${coverage.excluded ? ` · ${coverage.excluded} pratiques exclues` : ""}.</p>
+    ${result?.source_start ? `<p>Historique utilisé : depuis le ${escapeHtml(result.source_start)} · ${result.history_days} jours. Initialisation à zéro ; les activités non enregistrées restent inconnues.</p>` : ""}
+    ${coverage.undocumented ? `<p>${coverage.undocumented} efforts historiques d’origine non documentée, conservés sans modification.</p>` : ""}
+    ${allMissing.length ? `<details><summary>Voir les données à compléter (${allMissing.length})</summary><ul>${allMissing.map(item => `<li><a href="index.html?activity=${encodeURIComponent(item.id || "")}#today">${escapeHtml(item.date || "Date à vérifier")} · ${escapeHtml(labels[item.reason] || "Données à compléter")}</a></li>`).join("")}</ul></details>` : ""}`;
+}
+function selectComparisonDate(date) {
+  if (!window.MomentumTrainingLoad.dateKey(date) || date < progressionState.periodStart || date > progressionState.periodEnd) return;
+  progressionState.selectedDate = date;
+  renderDateComparison();
+}
+function renderDateComparison() {
+  let host = document.getElementById("progressionDateComparison");
+  if (!host) {
+    host = document.createElement("section"); host.id = "progressionDateComparison"; host.className = "progression-date-comparison";
+    document.getElementById("loadChartCard")?.closest(".progression-chart-group")?.after(host);
+    if (!host.isConnected) document.getElementById("loadChartCard")?.parentElement?.after(host);
+  }
+  let date = progressionState.selectedDate;
+  if (!date || date < progressionState.periodStart || date > progressionState.periodEnd) date = [progressionState.periodEnd, iso(new Date())].sort()[0];
+  if (date < progressionState.periodStart) { host.textContent = "Cette période est à venir : aucune mesure observée."; return; }
+  progressionState.selectedDate = date;
+  const day = progressionState.loadSeries.find(item => item.date === date);
+  const wellbeing = progressionState.wellbeingDays.find(item => item.date === date);
+  const load = day?.chronic == null ? "Non calculable" : `${Math.round(day.known_load)} unités MOMENTUM${day.partial ? " · historique partiel" : ""}`;
+  host.innerHTML = `<label>Charge et bien-être à la même date <input type="date" value="${escapeHtml(date)}" min="${escapeHtml(progressionState.periodStart)}" max="${escapeHtml([progressionState.periodEnd,iso(new Date())].sort()[0])}" aria-label="Date de comparaison"></label>
+    <div><p><strong>Charge renseignée</strong><br>${escapeHtml(load)}</p><p><strong>Bien-être</strong><br>Sommeil : ${wellbeing?.sleepHours == null ? "Non renseigné" : escapeHtml(formatSleepDuration(wellbeing.sleepHours))} · FC repos : ${wellbeing?.restingHr == null ? "Non renseignée" : `${wellbeing.restingHr} bpm`} · VFC : ${wellbeing?.hrv == null ? "Non renseignée" : `${wellbeing.hrv} ms`}</p></div>
+    <small>La lecture commune ne démontre pas de lien de cause à effet.</small>`;
+  host.querySelector("input")?.addEventListener("change", event => selectComparisonDate(event.target.value));
+  for (const [chart, values] of [[progressionState.loadChart,progressionState.loadDisplaySeries],[progressionState.wellnessChart,progressionState.wellbeingDisplayDays]]) {
+    const index = values.findIndex(item => date >= (item.rangeStart || item.date) && date <= item.date);
+    chart?.setActiveElements?.(index >= 0 ? [{ datasetIndex:0,index }] : []); chart?.update?.("none");
+  }
+}
+
+function openAggregatedDays(start,end,onSelect){
+ const content=document.getElementById("progressionDialogContent"),dialog=document.getElementById("progressionDialog");
+ content.innerHTML=`<p class="section-kicker">${escapeHtml(fmtDate(start))} — ${escapeHtml(fmtDate(end))}</p><h2>Choisir une journée</h2><p>Le graphique présente une période agrégée. Choisis un jour pour consulter ses observations réelles.</p><label>Date<input type="date" id="detailDay" min="${start}" max="${end}" value="${end}"></label><button type="button" class="primary" id="viewDetailDay">Voir cette journée</button>`;
+ document.getElementById("viewDetailDay").onclick=()=>{const value=document.getElementById("detailDay").value;if(value>=start&&value<=end)onSelect(value);};openHomeDialog(dialog);
+}
+
+async function renderPeriodStory(expectedRequest) {
+ let host=document.getElementById("periodStory");if(!host){host=document.createElement("section");host.id="periodStory";host.className="period-story";document.getElementById("kpiStrip")?.after(host);}
+ const activities=completedActivities(),chosen=activities.filter(a=>a.is_memorable).sort((a,b)=>String(b.activity_date).localeCompare(String(a.activity_date)))[0];
+ const count=activities.length;let memory=null;
+ if(chosen){try{const r=await window.momentumDB.from("activity_flow_assessments").select("retained_memory").eq("activity_id",chosen.id).eq("user_id",chosen.user_id).maybeSingle();if(!r.error)memory=r.data?.retained_memory||null;}catch(_){}}
+ if(expectedRequest!==progressionState.requestVersion)return;
+ const range=`${fmtDate(progressionState.periodStart)} — ${fmtDate(progressionState.periodEnd)}`;
+ host.innerHTML=`<p class="section-kicker">Ta période · ${escapeHtml(range)}</p><h3>${count?`${count} Moment${count>1?"s":""} réalisé${count>1?"s":""}.`:"Aucun Moment réalisé enregistré sur cette période."}</h3>${memory?`<blockquote>${escapeHtml(memory)}</blockquote><p>Les mots que tu as conservés le ${escapeHtml(fmtDate(chosen.activity_date))}.</p><a href="index.html?activity=${encodeURIComponent(chosen.id)}#today">Retrouver ce Moment</a>`:""}<p>Quel Moment aimerais-tu vivre ensuite ?</p><a href="you.html?section=mission">Retrouver Mon Horizon</a>`;
+}

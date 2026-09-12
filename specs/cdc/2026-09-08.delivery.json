@@ -1,15 +1,49 @@
 {
   "id": "CDC-2026-09-08",
-  "status": "recovery-incomplete",
+  "status": "implementation-in-progress",
   "referenceCommit": "dd8b37eb72c4ddc1a255c8f4e3a3f42f9f9fcfa0",
   "requiredFiles": [
     "js/momentum-training-load.js",
     "js/momentum-export.js",
     "js/momentum-import-rules.js",
-    "supabase/migrations/20260908000100_cdc_reliability_foundation.sql",
     "discover.html",
     "invite.html",
-    "tests/consolidation"
+    "tests/consolidation",
+    "supabase/migrations/20260911184622_cdc_personal_moment_foundation.sql",
+    "supabase/migrations/20260911185216_cdc_nutrition_phases.sql",
+    "supabase/migrations/20260911185612_cdc_daily_observations.sql",
+    "js/you-story.js",
+    "js/you-account.js",
+    "quality/export-scope.json",
+    "supabase/migrations/20260911190711_cdc_minimal_onboarding.sql",
+    "supabase/migrations/20260911191134_cdc_account_export.sql",
+    "supabase/migrations/20260911192153_cdc_personal_story.sql",
+    "js/momentum-guest-manager.js",
+    "supabase/migrations/20260911194108_cdc_guest_invitations.sql",
+    "supabase/migrations/20260911192914_cdc_shared_moment_privacy.sql",
+    "supabase/migrations/20260911195144_cdc_shared_profile_privacy.sql",
+    "supabase/migrations/20260911194959_cdc_export_guest_responses.sql",
+    "supabase/migrations/20260911201444_cdc_storage_cleanup.sql",
+    "supabase/functions/storage-cleanup/index.mjs",
+    "supabase/functions/storage-cleanup/worker.mjs",
+    "supabase/config.toml",
+    "supabase/migrations/20260911202220_cdc_cleanup_schedule.sql",
+    "supabase/migrations/20260911202513_cdc_account_deletion.sql",
+    "supabase/functions/account-deletion/index.mjs",
+    "supabase/functions/account-deletion/handler.mjs",
+    "supabase/functions/storage-cleanup/accounts.mjs",
+    "js/momentum-account-deletion.js",
+    "account-deletion-status.html",
+    "js/momentum-shared-commands.js",
+    "supabase/migrations/20260911205620_cdc_shared_moment_commands.sql",
+    "supabase/migrations/20260912083358_cdc_legacy_storage_references.sql",
+    "js/momentum-uploads.js",
+    "supabase/functions/file-ingest/index.mjs",
+    "supabase/functions/file-ingest/handler.mjs",
+    "supabase/functions/file-ingest/content.mjs",
+    "supabase/functions/file-ingest/image-codec.mjs",
+    "supabase/migrations/20260912111435_cdc_validated_file_ingestion.sql",
+    "supabase/migrations/20260912141552_cdc_client_write_contract.sql"
   ],
   "requirements": [
     {
@@ -40,12 +74,18 @@
     {
       "id": "chapter-06",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json"
+      ]
     },
     {
       "id": "chapter-07",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json"
+      ]
     },
     {
       "id": "chapter-08",
@@ -55,7 +95,12 @@
     {
       "id": "chapter-09",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-12.docker-results.json",
+        "specs/cdc/2026-09-12.client-access.md",
+        "specs/cdc/2026-09-12.client-access-results.json"
+      ]
     },
     {
       "id": "chapter-10",
@@ -65,12 +110,18 @@
     {
       "id": "chapter-11",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-12.docker-results.json"
+      ]
     },
     {
       "id": "chapter-12",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-12.docker-results.json"
+      ]
     },
     {
       "id": "chapter-13",
@@ -90,7 +141,10 @@
     {
       "id": "chapter-16",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json"
+      ]
     },
     {
       "id": "chapter-17",
@@ -120,12 +174,18 @@
     {
       "id": "chapter-22",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json"
+      ]
     },
     {
       "id": "chapter-23",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-12.docker-results.json"
+      ]
     },
     {
       "id": "chapter-24",
@@ -135,17 +195,39 @@
     {
       "id": "chapter-25",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-12.docker-results.json",
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json",
+        "specs/cdc/2026-09-12.recovery-results.json",
+        "specs/cdc/2026-09-12.client-access.md",
+        "specs/cdc/2026-09-12.client-access-results.json"
+      ]
     },
     {
       "id": "chapter-26",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-12.docker-results.json",
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json",
+        "specs/cdc/2026-09-12.client-access.md",
+        "specs/cdc/2026-09-12.client-access-results.json"
+      ]
     },
     {
       "id": "chapter-27",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json"
+      ],
+      "technicalValidation": {
+        "status": "unverified",
+        "evidence": []
+      }
     },
     {
       "id": "chapter-28",
@@ -155,12 +237,22 @@
     {
       "id": "chapter-29",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-12.docker-results.json",
+        "specs/cdc/2026-09-12.client-access.md",
+        "specs/cdc/2026-09-12.client-access-results.json"
+      ]
     },
     {
       "id": "chapter-30",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-12.docker-results.json",
+        "specs/cdc/2026-09-12.client-access.md",
+        "specs/cdc/2026-09-12.client-access-results.json"
+      ]
     },
     {
       "id": "chapter-31",
@@ -177,5 +269,26 @@
       "status": "unverified",
       "evidence": []
     }
-  ]
+  ],
+  "specification": "specs/CDC_MOMENTUM_Consolidation_Experience_V1_2026-09-08.md",
+  "acceptance": "specs/cdc/2026-09-08.acceptance.json",
+  "preDeployment": {
+    "status": "unverified",
+    "evidence": []
+  },
+  "deployment": {
+    "status": "pending",
+    "commit": null,
+    "url": null,
+    "evidence": []
+  },
+  "humanValidationDeferral": {
+    "scenario": "LIV-05",
+    "status": "deferred-by-owner",
+    "decision": "2026-09-12-human-tests-deferred",
+    "reason": "Christophe reporte explicitement les cinq essais humains pour le moment.",
+    "evidence": [
+      "specs/cdc/2026-09-12.human-tests-deferred.md"
+    ]
+  }
 }

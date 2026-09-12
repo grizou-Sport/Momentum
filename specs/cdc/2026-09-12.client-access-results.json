@@ -1,0 +1,52 @@
+{
+  "cachedClient": {
+    "checkedAt": "2026-09-12T14:28:10.539Z",
+    "rejectedCachedWriteRows": 0,
+    "currentBrowserSavedRows": 1,
+    "durationMinutes": 80,
+    "rpe": null,
+    "memory": "Recette fictive — onglet rechargé, souvenir conservé."
+  },
+  "legacyClient": {
+    "checkedAt": "2026-09-12T14:43:02.274Z",
+    "clientCommit": "dd8b37eb72c4ddc1a255c8f4e3a3f42f9f9fcfa0",
+    "afterAttemptActivities": 0,
+    "formStayedOpen": true,
+    "memoryRemainedInForm": true,
+    "message": "Enregistrement interrompu. Réessaie dans un instant."
+  },
+  "passwordRecovery": {
+    "checkedAt": "2026-09-12T14:37:27.261Z",
+    "oldPasswordStatus": 400,
+    "newPasswordStatus": 200,
+    "productionChanged": false
+  },
+  "environment": "Supabase Docker local, representative application baseline, synthetic accounts only",
+  "unitTests": {
+    "passed": 211,
+    "failed": 0,
+    "skipped": 0
+  },
+  "staticFiles": 204,
+  "cdcMigrations": 17,
+  "nativePostgres": {
+    "version": "17.10",
+    "scenariosPassed": 7,
+    "nodeTestsPassed": 8
+  },
+  "realSupabase": {
+    "scenariosPassed": 10,
+    "nodeTestsPassed": 11,
+    "durationMilliseconds": 171924.131645
+  },
+  "readOnlyHostedChecks": {
+    "historicalMigrations": 18,
+    "publicTables": 41,
+    "publicTablesWithRls": 41,
+    "edgeFunctions": 0,
+    "flowAxesStillNotNull": true,
+    "completeParityVerified": false
+  },
+  "humanTests": "deferred-by-owner",
+  "productionChanged": false
+}

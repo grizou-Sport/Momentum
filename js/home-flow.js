@@ -79,43 +79,30 @@
   }
 
   function flowActivityLoad(activity) {
-    const duration = Number(activity.duration_min || 0);
-    const exertion = Number(activity.rpe || 5);
-    return duration * Math.max(1, Math.min(10, exertion)) / 6;
+    return window.MomentumTrainingLoad.activityLoad(window.MomentumData.trainingActivity(activity)).load;
   }
 
   function flowLoadContext(targetActivity) {
-    const includesTarget = flowState.analysisActivities.some((activity) => activity.id === targetActivity.id);
-    const datedActivities = (includesTarget ? flowState.analysisActivities : [...flowState.analysisActivities, targetActivity])
-      .filter((activity) => activity.activity_date && activity.activity_date <= targetActivity.activity_date)
-      .sort((a, b) => a.activity_date.localeCompare(b.activity_date));
-    if (!datedActivities.length) return { acute_load:0, chronic_load:0, tsb:0 };
+    const rows = flowState.analysisActivities.filter(row => row.id !== targetActivity.id);
+    rows.push(targetActivity);
+    const result = window.MomentumTrainingLoad.build(rows.map(window.MomentumData.trainingActivity), {
+      asOf:targetActivity.activity_date, complete:flowState.hasValidData, userId:flowState.user?.id
+    });
+    const day = result.days.at(-1);
+    return { acute_load:day?.recent ?? null, chronic_load:day?.chronic ?? null, tsb:day?.balance ?? null,
+      version:result.version, unit:result.unit, as_of:result.as_of, source_start:result.source_start,
+      partial:day?.partial ?? true, coverage:result.coverage, status:result.status };
+  }
 
-    const firstDate = dateFromIso(datedActivities[0].activity_date);
-    const targetDate = dateFromIso(targetActivity.activity_date);
-    let acute = 0;
-    let chronic = 0;
-
-    for (let cursor = new Date(firstDate); cursor <= targetDate; cursor = addDays(cursor, 1)) {
-      const day = iso(cursor);
-      const load = datedActivities
-        .filter((activity) => activity.activity_date === day)
-        .reduce((sum, activity) => sum + flowActivityLoad(activity), 0);
-      acute += (load - acute) / 7;
-      chronic += (load - chronic) / 42;
-    }
-
-    return {
-      acute_load:Number(acute.toFixed(2)),
-      chronic_load:Number(chronic.toFixed(2)),
-      tsb:Number((chronic - acute).toFixed(2))
-    };
+  function hasFlowAxes(assessment) {
+    return [assessment?.perceived_challenge, assessment?.perceived_mastery].every(value =>
+      value != null && value !== "" && Number.isInteger(Number(value)) && Number(value) >= 1 && Number(value) <= 10);
   }
 
   function buildFlowAnalysisContext(activity) {
     return {
-      version:1,
-      source:"momentum-flow-v1",
+      version:3,
+      source:"momentum-recorded-load-v1",
       activity_metrics:{
         duration_min:activity.duration_min ?? null,
         distance_km:activity.distance_km ?? null,
@@ -155,7 +142,7 @@
     const groups = new Map();
     activities.forEach((activity) => {
       const assessment = assessments.get(activity.id);
-      if (!assessment) return;
+      if (!hasFlowAxes(assessment)) return;
       const key = `${assessment.perceived_challenge}:${assessment.perceived_mastery}`;
       if (!groups.has(key)) groups.set(key, { key, assessment, activities:[] });
       groups.get(key).activities.push(activity);
@@ -206,7 +193,7 @@
     const periodSummary = document.getElementById("flowPeriodSummary");
     if (!points) return;
 
-    const assessedActivities = flowState.activities.filter((activity) => flowState.assessments.has(activity.id));
+    const assessedActivities = flowState.activities.filter((activity) => hasFlowAxes(flowState.assessments.get(activity.id)));
     const pendingCount = flowState.activities.length - assessedActivities.length;
     const periodLabel = FLOW_PERIODS[flowState.period]?.label || "Période";
 
@@ -256,7 +243,8 @@
       .from("activity_media")
       .select("id,file_path,caption")
       .eq("activity_id", activityId);
-    if (mediaError || !media?.length) {
+    if (mediaError) {host.textContent="Impossible de charger les photos pour le moment.";return;}
+    if (!media?.length) {
       host.innerHTML = '<p class="flow-no-photos">Aucune photo liée à cette activité.</p>';
       return;
     }
@@ -275,7 +263,8 @@
     const assessment = flowState.assessments.get(activity.id);
     if (!detail || !assessment) return;
     const zone = flowZoneKey(assessment.perceived_challenge, assessment.perceived_mastery);
-    const charge = Math.round(flowActivityLoad(activity));
+    const value = flowActivityLoad(activity);
+    const charge = value == null ? "Non calculable" : `${Math.round(value)} unités MOMENTUM`;
 
     detail.innerHTML = `
       <div class="flow-detail-head">
@@ -291,7 +280,7 @@
         <div><dt>Durée</dt><dd>${activity.duration_min == null ? "—" : escapeHtml(window.MomentumDuration?.format(activity.duration_min) || `${Math.round(activity.duration_min)} min`)}</dd></div>
         <div><dt>Distance</dt><dd>${activity.distance_km == null ? "—" : `${Number(activity.distance_km).toLocaleString("fr-CH", { maximumFractionDigits:1 })} km`}</dd></div>
         <div><dt>D+</dt><dd>${activity.elevation_m == null ? "—" : `${Math.round(activity.elevation_m)} m`}</dd></div>
-        <div><dt>Charge</dt><dd>${charge || "—"}</dd></div>
+        <div><dt>Charge</dt><dd>${charge}</dd></div>
         <div><dt>Bien-être</dt><dd>${escapeHtml(flowWellbeingText(activity))}</dd></div>
       </dl>
       <div class="flow-feeling-metrics">
@@ -311,12 +300,17 @@
         <button class="secondary" type="button" data-flow-action="open-activity" data-flow-activity="${escapeHtml(activity.id)}">Voir l'activité</button>
         <button class="primary" type="button" data-flow-action="edit-moment" data-flow-activity="${escapeHtml(activity.id)}">Modifier le Moment</button>
       </div>`;
+    const context = flowLoadContext(activity);
+    const note = document.createElement("p");
+    note.className = "flow-data-quality";
+    note.textContent = context.partial ? "Contexte de charge partiel. Ce repère ne décrit pas ta récupération." : `Charges renseignées · historique depuis le ${context.source_start}.`;
+    detail.append(note);
     loadFlowPhotos(activity.id);
   }
 
   function selectFlowActivity(activityId) {
     const activity = flowState.activities.find((item) => item.id === activityId);
-    if (!activity || !flowState.assessments.has(activityId)) return;
+    if (!activity || !hasFlowAxes(flowState.assessments.get(activityId))) return;
     flowState.selectedActivityId = activityId;
     const assessment = flowState.assessments.get(activityId);
     flowState.selectedGroupKey = assessment ? `${assessment.perceived_challenge}:${assessment.perceived_mastery}` : null;
@@ -325,7 +319,7 @@
   }
 
   function selectFlowGroup(groupKey) {
-    const assessedActivities = flowState.activities.filter((activity) => flowState.assessments.has(activity.id));
+    const assessedActivities = flowState.activities.filter((activity) => hasFlowAxes(flowState.assessments.get(activity.id)));
     const group = flowGroups(assessedActivities).find((item) => item.key === groupKey);
     if (!group) return;
     flowState.selectedActivityId = null;
@@ -340,28 +334,18 @@
     const user = window.momentumPageReady ? await window.momentumPageReady : await getCurrentUser();
     if (!user || requestVersion !== flowState.requestVersion) return;
     const periodStart = flowPeriodStart(requestedPeriod);
-    const analysisStart = iso(addDays(new Date(), -365));
-    let query = window.momentumDB
-      .from("activities")
-      .select("id,activity_date,activity_category,sport,activity_type,status,duration_min,distance_km,elevation_m,avg_hr,rpe,notes,weather,route_summary,created_at")
-      .eq("user_id", user.id)
-      .eq("status", "done")
-      .order("activity_date", { ascending:true });
-    if (requestedPeriod !== "all") query = query.gte("activity_date", analysisStart);
-
-    const { data:analysisActivities, error:activitiesError } = await query;
-    if (activitiesError) throw activitiesError;
-    const nextAnalysisActivities = analysisActivities || [];
+    const { data:analysisActivities } = await window.MomentumData.history(user.id);
+    const nextAnalysisActivities = (analysisActivities || []).filter(activity => activity.status === "done" && activity.activity_date <= iso(new Date()));
     const nextActivities = periodStart
       ? nextAnalysisActivities.filter((activity) => activity.activity_date >= periodStart)
       : nextAnalysisActivities;
 
     const activityIds = nextActivities.map((activity) => activity.id);
     const assessmentPromise = activityIds.length
-      ? window.momentumDB.from("activity_flow_assessments").select("*").eq("user_id", user.id).in("activity_id", activityIds)
+      ? window.MomentumData.all(() => window.momentumDB.from("activity_flow_assessments").select("*", { count:"exact" }).eq("user_id", user.id).order("id"))
       : Promise.resolve({ data:[], error:null });
     const wellbeingPromise = nextActivities.length
-      ? window.momentumDB.from("daily_wellbeing").select("recorded_date,sleep_hours,motivation").eq("user_id", user.id).gte("recorded_date", nextActivities[0].activity_date).lte("recorded_date", iso(new Date()))
+      ? window.MomentumData.all(() => window.momentumDB.from("daily_wellbeing").select("*", { count:"exact" }).eq("user_id", user.id).gte("recorded_date", nextActivities[0].activity_date).lte("recorded_date", iso(new Date())).order("id"))
       : Promise.resolve({ data:[], error:null });
     const [assessmentResult, wellbeingResult] = await Promise.all([assessmentPromise, wellbeingPromise]);
     if (assessmentResult.error) throw assessmentResult.error;
@@ -380,7 +364,7 @@
     }
     renderFlowPoints();
     if (flowState.selectedActivityId) selectFlowActivity(flowState.selectedActivityId);
-    if (options.selectActivityId && flowState.assessments.has(options.selectActivityId)) selectFlowActivity(options.selectActivityId);
+    if (options.selectActivityId && hasFlowAxes(flowState.assessments.get(options.selectActivityId))) selectFlowActivity(options.selectActivityId);
   }
 
 
@@ -409,7 +393,7 @@
       if (group) selectFlowGroup(group.dataset.flowGroup);
     });
 
-    document.getElementById("flowDetail")?.addEventListener("click", (event) => {
+    document.getElementById("flowDetail")?.addEventListener("click", async (event) => {
       const action = event.target.closest("[data-flow-action]");
       const groupedActivity = event.target.closest("[data-flow-group-activity]");
       if (groupedActivity) return selectFlowActivity(groupedActivity.dataset.flowGroupActivity);
@@ -432,7 +416,7 @@
       const activity = flowState.activities.find((item) => item.id === action.dataset.flowActivity);
       if (!activity) return;
       if (action.dataset.flowAction === "open-activity") openDay(activity.activity_date);
-      if (action.dataset.flowAction === "edit-moment") openEditActivityDialog(activity.id);
+      if (action.dataset.flowAction === "edit-moment") { await openEditActivityDialog(activity.id); window.MomentumMomentForm?.focusExperience(document.getElementById("activityForm")); }
     });
     document.getElementById("openFlowExplanation")?.addEventListener("click", () => openHomeDialog(document.getElementById("flowExplanationDialog")));
     document.getElementById("closeFlowExplanation")?.addEventListener("click", () => closeHomeDialog(document.getElementById("flowExplanationDialog")));
@@ -454,6 +438,7 @@
     analysisContext:buildFlowAnalysisContext,
     reload:loadFlowData,
     zone:flowZoneKey,
+    hasAxes:hasFlowAxes,
     groupByCoordinates:groupActivitiesByCoordinates
   });
 })();

@@ -1,0 +1,145 @@
+-- CDC §23. Stable, paginated, account-owned snapshots; never the YOU view's cache.
+begin;
+create table private.personal_exports (
+  id uuid primary key default gen_random_uuid(),user_id uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),expires_at timestamptz not null default now()+interval '1 hour',
+  total bigint not null default 0,counts jsonb not null default '{}'
+);
+create index personal_exports_owner_idx on private.personal_exports(user_id,expires_at);
+create table private.personal_export_items (
+  export_id uuid not null references private.personal_exports(id) on delete cascade,
+  sequence bigint not null,kind text not null,payload jsonb not null,primary key(export_id,sequence)
+);
+alter table private.personal_exports enable row level security;
+alter table private.personal_export_items enable row level security;
+revoke all on private.personal_exports,private.personal_export_items from public,anon,authenticated;
+
+create or replace function private.export_redact(value jsonb) returns jsonb
+language plpgsql immutable security invoker set search_path='' as $$
+declare result jsonb;
+begin
+  if jsonb_typeof(value)='object' then
+    select coalesce(jsonb_object_agg(key,private.export_redact(v)),'{}') into result from jsonb_each(value) e(key,v)
+      where lower(key) not in ('token','token_hash','secret','access_token','refresh_token','api_key','service_role_key','password','p_session','p_secret');
+    return result;
+  elsif jsonb_typeof(value)='array' then
+    select coalesce(jsonb_agg(private.export_redact(v) order by ord),'[]') into result from jsonb_array_elements(value) with ordinality e(v,ord); return result;
+  end if;
+  return value;
+end;
+$$;
+revoke all on function private.export_redact(jsonb) from public,anon,authenticated;
+
+create or replace function private.begin_personal_export() returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare actor uuid:=auth.uid(); job private.personal_exports%rowtype;
+begin
+  if actor is null then raise exception 'Authentication required' using errcode='42501'; end if;
+  perform pg_advisory_xact_lock(hashtextextended(actor::text,4));
+  delete from private.personal_exports where user_id=actor and expires_at<=now();
+  if (select count(*) from private.personal_exports where user_id=actor)>2 then raise exception 'Un export est déjà prêt. Réessaie après son expiration.' using errcode='54000'; end if;
+  insert into private.personal_exports(user_id) values(actor) returning * into job;
+  -- All source reads belong to this one SQL statement and therefore one MVCC snapshot.
+  insert into private.personal_export_items(export_id,sequence,kind,payload)
+    select job.id,row_number() over(order by kind,row_key),kind,payload from (
+select 'activities'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'user_id',t.user_id,'moment_id',t.moment_id,'sport',t.sport,'activity_type',t.activity_type,'status',t.status,'distance_km',t.distance_km,'duration_min',t.duration_min,'elevation_m',t.elevation_m,'avg_hr',t.avg_hr,'rpe',t.rpe,'gear',t.gear,'notes',t.notes,'gpx_url',t.gpx_url,'created_at',t.created_at,'sport_id',t.sport_id,'mission_id',t.mission_id,'activity_date',t.activity_date,'weather',t.weather,'location_name',t.location_name,'route_summary',t.route_summary,'activity_category',t.activity_category,'source_file_url',t.source_file_url,'source_file_type',t.source_file_type,'activity_time',t.activity_time,'location_id',t.location_id,'rpe_source',t.rpe_source,'duration_source',t.duration_source,'timer_duration_seconds',t.timer_duration_seconds,'elapsed_duration_seconds',t.elapsed_duration_seconds,'moving_duration_seconds',t.moving_duration_seconds,'source_instant',t.source_instant,'source_timezone',t.source_timezone,'source_hash',t.source_hash,'qualifiers',t.qualifiers,'is_memorable',t.is_memorable,'practice_variant',t.practice_variant,'revision',t.revision,'updated_at',t.updated_at,'nutrition_note',t.nutrition_note,'nutrition_elapsed_override_seconds',t.nutrition_elapsed_override_seconds)) payload from public.activities t where t.user_id=actor
+union all
+select 'activity_flow_assessments'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'activity_id',t.activity_id,'user_id',t.user_id,'perceived_challenge',t.perceived_challenge,'perceived_mastery',t.perceived_mastery,'analysis_context',t.analysis_context,'assessment_version',t.assessment_version,'created_at',t.created_at,'updated_at',t.updated_at,'retained_memory',t.retained_memory)) payload from public.activity_flow_assessments t where t.user_id=actor
+union all
+select 'activity_media'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'activity_id',t.activity_id,'user_id',t.user_id,'media_type',t.media_type,'file_path',t.file_path,'caption',t.caption,'created_at',t.created_at)) payload from public.activity_media t where t.user_id=actor
+union all
+select 'activity_timeline'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'activity_id',t.activity_id,'user_id',t.user_id,'position',t.position,'timestamp',t.timestamp,'elapsed_seconds',t.elapsed_seconds,'event_type',t.event_type,'metadata',t.metadata,'created_at',t.created_at)) payload from public.activity_timeline t where t.user_id=actor
+union all
+select 'daily_wellbeing'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'user_id',t.user_id,'recorded_date',t.recorded_date,'sleep_hours',t.sleep_hours,'motivation',t.motivation,'resting_hr',t.resting_hr,'hrv_ms',t.hrv_ms,'sleep_quality_value',t.sleep_quality_value,'sleep_quality_unit',t.sleep_quality_unit,'source',t.source,'source_label',t.source_label,'raw_data',t.raw_data,'created_at',t.created_at,'updated_at',t.updated_at)) payload from public.daily_wellbeing t where t.user_id=actor
+union all
+select 'days'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'user_id',t.user_id,'day_date',t.day_date,'title',t.title,'note',t.note,'mood',t.mood,'energy',t.energy,'sleep_hours',t.sleep_hours,'stress',t.stress,'soreness',t.soreness,'rest_hr',t.rest_hr,'hrv',t.hrv,'weight',t.weight,'weather',t.weather,'sunrise',t.sunrise,'sunset',t.sunset,'created_at',t.created_at,'context_annotations',t.context_annotations,'revision',t.revision)) payload from public.days t where t.user_id=actor
+union all
+select 'passports'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'user_id',t.user_id,'display_name',t.display_name,'country',t.country,'city',t.city,'quote',t.quote,'avatar_url',t.avatar_url,'height_cm',t.height_cm,'weight_kg',t.weight_kg,'birth_year',t.birth_year,'created_at',t.created_at,'updated_at',t.updated_at,'birth_date',t.birth_date,'sex',t.sex,'sport_level',t.sport_level,'habits',t.habits,'objectives',t.objectives,'connected_sources',t.connected_sources,'personalization',t.personalization)) payload from public.passports t where t.user_id=actor
+union all
+select 'user_settings'::text kind,t.user_id::text row_key,private.export_redact(jsonb_build_object('user_id',t.user_id,'units',t.units,'language',t.language,'theme',t.theme,'notifications',t.notifications,'created_at',t.created_at,'updated_at',t.updated_at,'experience_preferences',t.experience_preferences)) payload from public.user_settings t where t.user_id=actor
+union all
+select 'user_sports'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'user_id',t.user_id,'sport_id',t.sport_id,'role',t.role,'active',t.active,'created_at',t.created_at)) payload from public.user_sports t where t.user_id=actor
+union all
+select 'user_equipment'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'user_id',t.user_id,'category_id',t.category_id,'name',t.name,'brand',t.brand,'model',t.model,'description',t.description,'photo_url',t.photo_url,'purchase_date',t.purchase_date,'first_used_at',t.first_used_at,'retired_at',t.retired_at,'active',t.active,'notes',t.notes,'created_at',t.created_at,'updated_at',t.updated_at)) payload from public.user_equipment t where t.user_id=actor
+union all
+select 'wellbeing_profile'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'user_id',t.user_id,'max_hr',t.max_hr,'resting_hr',t.resting_hr,'vo2max',t.vo2max,'preferred_sleep_hours',t.preferred_sleep_hours,'notes',t.notes,'created_at',t.created_at,'updated_at',t.updated_at)) payload from public.wellbeing_profile t where t.user_id=actor
+union all
+select 'user_locations'::text kind,t.user_id::text row_key,private.export_redact(jsonb_build_object('user_id',t.user_id,'city',t.city,'country',t.country,'latitude',t.latitude,'longitude',t.longitude,'timezone',t.timezone,'created_at',t.created_at,'updated_at',t.updated_at)) payload from public.user_locations t where t.user_id=actor
+union all
+select 'user_missions'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'user_id',t.user_id,'category',t.category,'subcategory',t.subcategory,'title',t.title,'description',t.description,'sport',t.sport,'distance_km',t.distance_km,'target_time_seconds',t.target_time_seconds,'target_pace_seconds_per_km',t.target_pace_seconds_per_km,'target_date',t.target_date,'status',t.status,'story_note',t.story_note,'result_note',t.result_note,'created_at',t.created_at,'updated_at',t.updated_at,'moved_to_history_at',t.moved_to_history_at,'duration_days',t.duration_days)) payload from public.user_missions t where t.user_id=actor
+union all
+select 'user_sport_preferences'::text kind,t.user_id::text row_key,private.export_redact(jsonb_build_object('user_id',t.user_id,'experience_code',t.experience_code,'weekly_hours_range',t.weekly_hours_range,'events',t.events,'watch_provider',t.watch_provider,'preferences',t.preferences,'created_at',t.created_at,'updated_at',t.updated_at)) payload from public.user_sport_preferences t where t.user_id=actor
+union all
+select 'user_goals'::text kind,t.user_id::text row_key,private.export_redact(jsonb_build_object('user_id',t.user_id,'primary_goal',t.primary_goal,'status',t.status,'details',t.details,'created_at',t.created_at,'updated_at',t.updated_at)) payload from public.user_goals t where t.user_id=actor
+union all
+select 'user_load_estimates'::text kind,t.user_id::text row_key,private.export_redact(jsonb_build_object('user_id',t.user_id,'chronic_load',t.chronic_load,'weekly_hours',t.weekly_hours,'experience_level',t.experience_level,'sport_distribution',t.sport_distribution,'confidence',t.confidence,'source',t.source,'created_at',t.created_at,'updated_at',t.updated_at)) payload from public.user_load_estimates t where t.user_id=actor
+union all
+select 'onboarding_progress'::text kind,t.user_id::text row_key,private.export_redact(jsonb_build_object('user_id',t.user_id,'current_step',t.current_step,'answers',t.answers,'completed_at',t.completed_at,'created_at',t.created_at,'updated_at',t.updated_at)) payload from public.onboarding_progress t where t.user_id=actor
+union all
+select 'moment_media'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'moment_id',t.moment_id,'user_id',t.user_id,'media_type',t.media_type,'file_path',t.file_path,'caption',t.caption,'taken_at',t.taken_at,'created_at',t.created_at)) payload from public.moment_media t where t.user_id=actor
+union all
+select 'moment_participants'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'moment_id',t.moment_id,'user_id',t.user_id,'role',t.role,'invitation_status',t.invitation_status,'participation_status',t.participation_status,'created_at',t.created_at,'updated_at',t.updated_at)) payload from public.moment_participants t where t.user_id=actor
+union all
+select 'moment_availability'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'date_option_id',t.date_option_id,'user_id',t.user_id,'availability_status',t.availability_status,'updated_at',t.updated_at)) payload from public.moment_availability t where t.user_id=actor
+union all
+select 'club_member_preferences'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'club_id',t.club_id,'user_id',t.user_id,'notifications_enabled',t.notifications_enabled,'is_pinned',t.is_pinned,'created_at',t.created_at,'updated_at',t.updated_at)) payload from public.club_member_preferences t where t.user_id=actor
+union all
+select 'club_members'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'club_id',t.club_id,'user_id',t.user_id,'invited_by',t.invited_by,'role',t.role,'membership_status',t.membership_status,'joined_at',t.joined_at,'created_at',t.created_at,'updated_at',t.updated_at)) payload from public.club_members t where t.user_id=actor
+union all
+select 'circle_preferences'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'user_id',t.user_id,'circle_member_id',t.circle_member_id,'is_pinned',t.is_pinned,'notifications_enabled',t.notifications_enabled,'created_at',t.created_at,'updated_at',t.updated_at)) payload from public.circle_preferences t where t.user_id=actor
+union all
+select 'reactions'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'moment_id',t.moment_id,'user_id',t.user_id,'reaction_type',t.reaction_type,'preset_message_id',t.preset_message_id,'created_at',t.created_at,'updated_at',t.updated_at)) payload from public.reactions t where t.user_id=actor
+union all
+select 'profiles'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'email',t.email,'first_name',t.first_name,'last_name',t.last_name,'display_name',t.display_name,'avatar_url',t.avatar_url,'created_at',t.created_at,'updated_at',t.updated_at,'circle_discoverable',t.circle_discoverable)) payload from public.profiles t where t.id=actor
+union all
+select 'nutrition_products'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'name',t.name,'brand',t.brand,'category',t.category,'unit_label',t.unit_label,'serving_size',t.serving_size,'serving_volume_ml',t.serving_volume_ml,'carbohydrates_g',t.carbohydrates_g,'sodium_mg',t.sodium_mg,'caffeine_mg',t.caffeine_mg,'potassium_mg',t.potassium_mg,'magnesium_mg',t.magnesium_mg,'calcium_mg',t.calcium_mg,'bicarbonate_mg',t.bicarbonate_mg,'zinc_mg',t.zinc_mg,'extra_nutrients',t.extra_nutrients,'is_approximate',t.is_approximate,'source_url',t.source_url,'is_global',t.is_global,'created_by',t.created_by,'is_active',t.is_active,'created_at',t.created_at,'updated_at',t.updated_at)) payload from public.nutrition_products t where t.created_by=actor
+union all
+select 'moments'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'user_id',t.user_id,'day_id',t.day_id,'mission_id',t.mission_id,'title',t.title,'story',t.story,'emotion',t.emotion,'location_name',t.location_name,'latitude',t.latitude,'longitude',t.longitude,'visibility',t.visibility,'created_at',t.created_at,'created_by',t.created_by,'club_id',t.club_id,'description',t.description,'moment_type',t.moment_type,'status',t.status,'start_at',t.start_at,'end_at',t.end_at,'cover_image_url',t.cover_image_url,'capacity',t.capacity,'updated_at',t.updated_at,'location_id',t.location_id)) payload from public.moments t where t.created_by=actor
+union all
+select 'clubs'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'owner_id',t.owner_id,'name',t.name,'slug',t.slug,'description',t.description,'category',t.category,'location_name',t.location_name,'logo_url',t.logo_url,'cover_image_url',t.cover_image_url,'visibility',t.visibility,'status',t.status,'created_at',t.created_at,'updated_at',t.updated_at,'default_location_id',t.default_location_id)) payload from public.clubs t where t.owner_id=actor
+union all
+select 'invitations'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'inviter_id',t.inviter_id,'recipient_user_id',t.recipient_user_id,'recipient_email',t.recipient_email,'recipient_phone',t.recipient_phone,'target_type',t.target_type,'target_id',t.target_id,'channel',t.channel,'status',t.status,'expires_at',t.expires_at,'accepted_by',t.accepted_by,'created_at',t.created_at,'updated_at',t.updated_at)) payload from public.invitations t where t.inviter_id=actor or t.recipient_user_id=actor
+union all
+select 'circle_relationships'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'requester_id',t.requester_id,'recipient_id',t.recipient_id,'status',t.status,'created_at',t.created_at,'accepted_at',t.accepted_at)) payload from public.circle_relationships t where t.requester_id=actor or t.recipient_id=actor
+union all
+select 'connections'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'user_low_id',t.user_low_id,'user_high_id',t.user_high_id,'status',t.status,'created_from_invitation_id',t.created_from_invitation_id,'created_at',t.created_at,'updated_at',t.updated_at,'ended_at',t.ended_at)) payload from public.connections t where t.user_low_id=actor or t.user_high_id=actor
+union all
+select 'blocked_users'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'blocker_id',t.blocker_id,'blocked_id',t.blocked_id,'created_at',t.created_at)) payload from public.blocked_users t where t.blocker_id=actor
+union all
+select 'activity_equipment'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'activity_id',t.activity_id,'equipment_id',t.equipment_id,'created_at',t.created_at)) payload from public.activity_equipment t where exists(select from public.activities a where a.id=t.activity_id and a.user_id=actor)
+union all
+select 'activity_nutrition_items'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'activity_id',t.activity_id,'product_id',t.product_id,'quantity',t.quantity,'product_name_snapshot',t.product_name_snapshot,'brand_snapshot',t.brand_snapshot,'unit_label_snapshot',t.unit_label_snapshot,'carbohydrates_g_snapshot',t.carbohydrates_g_snapshot,'sodium_mg_snapshot',t.sodium_mg_snapshot,'caffeine_mg_snapshot',t.caffeine_mg_snapshot,'potassium_mg_snapshot',t.potassium_mg_snapshot,'magnesium_mg_snapshot',t.magnesium_mg_snapshot,'calcium_mg_snapshot',t.calcium_mg_snapshot,'bicarbonate_mg_snapshot',t.bicarbonate_mg_snapshot,'zinc_mg_snapshot',t.zinc_mg_snapshot,'extra_nutrients_snapshot',t.extra_nutrients_snapshot,'is_approximate_snapshot',t.is_approximate_snapshot,'created_at',t.created_at,'updated_at',t.updated_at,'phase',t.phase,'snapshot_origin',t.snapshot_origin,'serving_size_snapshot',t.serving_size_snapshot,'serving_volume_ml_snapshot',t.serving_volume_ml_snapshot)) payload from public.activity_nutrition_items t where exists(select from public.activities a where a.id=t.activity_id and a.user_id=actor)
+union all
+select 'moment_date_options'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'moment_id',t.moment_id,'start_at',t.start_at,'end_at',t.end_at,'location_name',t.location_name,'created_by',t.created_by,'is_selected',t.is_selected,'created_at',t.created_at,'location_id',t.location_id)) payload from public.moment_date_options t where exists(select from public.moments m where m.id=t.moment_id and m.created_by=actor)
+union all
+select 'moment_activities'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'moment_id',t.moment_id,'activity_id',t.activity_id,'added_by',t.added_by,'created_at',t.created_at)) payload from public.moment_activities t where exists(select from public.activities a where a.id=t.activity_id and a.user_id=actor)
+union all
+select 'locations'::text kind,t.id::text row_key,private.export_redact(jsonb_build_object('id',t.id,'name',t.name,'address',t.address,'postal_code',t.postal_code,'city',t.city,'country',t.country,'country_code',t.country_code,'latitude',t.latitude,'longitude',t.longitude,'source',t.source,'provider_place_id',t.provider_place_id,'visibility',t.visibility,'owner_user_id',t.owner_user_id,'created_by',t.created_by,'created_at',t.created_at,'updated_at',t.updated_at)) payload from public.locations t where t.owner_user_id=actor or t.created_by=actor
+    ) snapshot_rows;
+  update private.personal_exports set total=(select count(*) from private.personal_export_items where export_id=job.id),
+    counts=(select coalesce(jsonb_object_agg(kind,n),'{}') from (select kind,count(*) n from private.personal_export_items where export_id=job.id group by kind) c)
+    where id=job.id returning * into job;
+  return jsonb_build_object('export_id',job.id,'schema_version',1,'created_at',job.created_at,'expires_at',job.expires_at,'total',job.total,'counts',job.counts,'timezone','Europe/Zurich');
+end;
+$$;
+create or replace function private.read_personal_export(p_export_id uuid,p_after bigint default 0,p_limit integer default 200)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare job private.personal_exports%rowtype; items jsonb; last_sequence bigint;
+begin
+  select * into job from private.personal_exports where id=p_export_id and user_id=auth.uid() and expires_at>now();
+  if not found then raise exception 'Export unavailable or expired' using errcode='42501'; end if;
+  if p_after is null or p_after<0 or p_after>job.total or p_limit is null or p_limit not between 1 and 500 then raise exception 'Invalid export page' using errcode='22023'; end if;
+  select coalesce(jsonb_agg(to_jsonb(page) order by sequence),'[]'),max(sequence) into items,last_sequence from (
+    select sequence,kind,payload from private.personal_export_items where export_id=job.id and sequence>p_after order by sequence limit p_limit
+  ) page;
+  return jsonb_build_object('items',items,'next_cursor',coalesce(last_sequence,p_after),'done',coalesce(last_sequence,p_after)=job.total,'total',job.total);
+end;
+$$;
+revoke all on function private.begin_personal_export(),private.read_personal_export(uuid,bigint,integer) from public,anon;
+grant execute on function private.begin_personal_export(),private.read_personal_export(uuid,bigint,integer) to authenticated;
+create or replace function public.begin_personal_export() returns jsonb language sql security invoker set search_path='' as $$select private.begin_personal_export();$$;
+create or replace function public.read_personal_export(p_export_id uuid,p_after bigint default 0,p_limit integer default 200)
+returns jsonb language sql security invoker set search_path='' as $$select private.read_personal_export(p_export_id,p_after,p_limit);$$;
+revoke all on function public.begin_personal_export(),public.read_personal_export(uuid,bigint,integer) from public,anon;
+grant execute on function public.begin_personal_export(),public.read_personal_export(uuid,bigint,integer) to authenticated;
+commit;

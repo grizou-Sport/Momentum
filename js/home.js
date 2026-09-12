@@ -5,6 +5,7 @@
    ========================================================= */
 
 async function renderHome() {
+  if (window.momentumPageReady) await window.momentumPageReady;
   const todayDate = new Date();
   const today = iso(todayDate);
 
@@ -47,33 +48,30 @@ async function renderHome() {
     `;
   }
 
-  const livingContexts = await loadLivingWeatherWindow();
-  renderLivingWeekWeather(livingContexts);
+  try { const livingContexts = await loadLivingWeatherWindow();renderLivingWeekWeather(livingContexts);const context=livingContexts[today]||await getContextForDate(today);renderWeatherCard(context); }
+  catch(_){if(weatherCard)weatherCard.innerHTML='<span class="card-label">Météo</span><h2>Contexte indisponible</h2><p>Ton Journal reste disponible. La météo pourra être rechargée plus tard.</p>';}
 
-  const context = livingContexts[today] || await getContextForDate(today);
-  renderWeatherCard(context);
 }
 
 function bindHome() {
   document.addEventListener("click", (event) => {
+    if (event.target.closest("[data-add-moment]")) openActivityDialog(iso(new Date()), true);
     if (event.target.closest("[data-home-retry]")) renderHome();
   });
-  $("#closeActivityDialog")?.addEventListener("click", closeActivityDialog);
-  $("#cancelActivity")?.addEventListener("click", closeActivityDialog);
+  $("#closeActivityDialog")?.addEventListener("click", () => closeActivityDialog());
+  $("#cancelActivity")?.addEventListener("click", () => closeActivityDialog());
   $("#activityFile")?.addEventListener("change", handleActivityFile);
   $("#activityForm")?.addEventListener("submit", saveActivity);
   $("#activityNutritionButton")?.addEventListener("click", openActivityFormNutrition);
 
   $("#centerToday")?.addEventListener("click", async () => {
     renderLivingWeek(new Date());
+    centerLivingWeekOnToday();
     const contexts = await loadLivingWeatherWindow();
     renderLivingWeekWeather(contexts);
   });
 
-  window.addEventListener("pageshow", () => centerLivingWeekOnToday());
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) centerLivingWeekOnToday();
-  });
+  // Deliberate horizontal browsing survives visibility changes and data refreshes.
 
   $("#prevMonth")?.addEventListener("click", async () => {
     visibleMonth = addMonths(visibleMonth, -1);
@@ -173,9 +171,13 @@ function bindHome() {
 }
 
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   bindHome();
   bindWellbeingCard();
   bindWellbeingDialog();
-  renderHome();
+  await renderHome();
+  const entry = new URLSearchParams(location.search);
+  if (entry.get("import") === "1") { openActivityDialog(); $("#activityFile")?.focus(); }
+  const activityId = entry.get("activity");
+  if (/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(activityId || "")) await openEditActivityDialog(activityId);
 });

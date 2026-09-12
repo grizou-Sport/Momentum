@@ -27,8 +27,8 @@
       label: "Progression",
       kicker: "Ton évolution",
       items: [
-        ["volume", "Volume hebdomadaire", "progression.html#volume"],
-        ["sports", "Répartition sportive", "progression.html#sports"],
+        ["volume", "Volume d’activité", "progression.html#volume"],
+        ["sports", "Répartition des activités", "progression.html#sports"],
         ["charge", "Charge & forme", "progression.html#charge"],
         ["bien-etre", "Bien-être", "progression.html#bien-etre"]
       ]
@@ -37,8 +37,10 @@
       label: "You",
       kicker: "Tout ce qui te concerne",
       items: [
+        ["overview", "Ton aperçu", "you.html"],
+        ["path", "Mon Chemin", "you.html?section=path"],
         ["about", "Mon profil", "you.html?section=about"],
-        ["mission", "Objectifs", "you.html?section=mission"],
+        ["mission", "Mon Horizon", "you.html?section=mission"],
         ["sports", "Je vis pour", "you.html?section=sports"],
         ["wellbeing", "Mon équilibre", "you.html?section=wellbeing"],
         ["equipment", "Mon matériel", "you.html?section=equipment"],
@@ -49,7 +51,6 @@
       label: "Together",
       kicker: "Vivre ensemble",
       items: [
-        ["feed", "Fil d’actualité", "#", "Bientôt"],
         ["moments", "Mes Moments", "together.html?view=moments"],
         ["circle", "Cercle", "together.html?view=circle"],
         ["clubs", "Clubs", "together.html?view=clubs"],
@@ -59,10 +60,10 @@
   };
 
   const params = new URLSearchParams(window.location.search);
-  const initialSubsection = params.get("section") || params.get("view") || (page === "home" ? "today" : page === "progression" ? "volume" : page === "you" ? "mission" : "circle");
+  const initialSubsection = params.get("section") || params.get("view") || (page === "home" ? "today" : page === "progression" ? "volume" : page === "you" ? "overview" : "moments");
 
-  const railLink = (key, href, label) => `<a class="momentum-rail-link ${page === key ? "active" : ""}" data-momentum-section="${key}" href="${href}" aria-label="${label}" aria-controls="momentum-panel-${key}" aria-expanded="false" ${page === key ? 'aria-current="page"' : ""}>${icons[key]}</a>`;
-  const youRailLink = () => `<a class="momentum-rail-link momentum-user-link ${page === "you" ? "active" : ""}" data-momentum-section="you" data-momentum-direct href="you.html" aria-label="Ouvrir YOU" title="YOU" ${page === "you" ? 'aria-current="page"' : ""}><span class="momentum-user-avatar" data-momentum-user-avatar>${icons.you}</span></a>`;
+  const railLink = (key, href, label) => `<a class="momentum-rail-link ${page === key ? "active" : ""}" data-momentum-section="${key}" href="${href}" aria-label="${label}" ${page === key ? 'aria-current="page"' : ""}>${icons[key]}<span class="momentum-rail-label">${label}</span></a>`;
+  const youRailLink = () => `<a class="momentum-rail-link momentum-user-link ${page === "you" ? "active" : ""}" data-momentum-section="you" data-momentum-direct href="you.html" aria-label="Ouvrir YOU" title="YOU" ${page === "you" ? 'aria-current="page"' : ""}><span class="momentum-user-avatar" data-momentum-user-avatar>${icons.you}</span><span class="momentum-rail-label">YOU</span></a>`;
   const contextPanel = ([sectionKey, menu]) => {
     const contextLinks = menu.items.map(([key, label, href, note]) => `<a class="momentum-context-link ${page === sectionKey && initialSubsection === key ? "active" : ""}" data-momentum-subsection="${key}" href="${href}" ${note ? 'aria-disabled="true"' : ""}><span>${label}</span>${note ? `<span class="momentum-context-note">${note}</span>` : ""}</a>`).join("");
     return `<aside id="momentum-panel-${sectionKey}" class="momentum-context-panel ${page === sectionKey ? "current" : ""}" data-momentum-panel="${sectionKey}" aria-label="Navigation ${menu.label}">
@@ -77,9 +78,9 @@
     <aside class="momentum-rail" aria-label="Navigation principale">
       <a class="momentum-nav-brand" href="index.html" aria-label="MOMENTUM, accueil">△</a>
       ${railLink("home", "index.html", "Home")}
-      ${railLink("together", "together.html", "Together")}
-      ${railLink("progression", "progression.html", "Progression")}
       ${youRailLink()}
+      ${railLink("progression", "progression.html", "Progression")}
+      ${railLink("together", "together.html", "Together")}
       <span class="momentum-rail-spacer"></span>
       <button class="momentum-nav-logout" type="button" data-momentum-logout aria-label="Déconnexion" title="Déconnexion">${icons.power}</button>
     </aside>
@@ -181,7 +182,7 @@
     mount.querySelectorAll("[data-momentum-section]").forEach((link) => link.setAttribute("aria-expanded", "false"));
   };
   closeButtons.forEach((button) => button.addEventListener("click", closeMenu));
-  document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeMenu(); });
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape") { closeMenu(); closeDesktopPanel(); } });
 
   const desktop = window.matchMedia("(min-width: 901px)");
   let panelCloseTimer;
@@ -208,18 +209,7 @@
     link.addEventListener("mouseenter", () => openDesktopPanel(link.dataset.momentumSection, link));
     link.addEventListener("focus", () => openDesktopPanel(link.dataset.momentumSection, link));
     link.addEventListener("mouseleave", scheduleDesktopPanelClose);
-    link.addEventListener("click", (event) => {
-      if (desktop.matches) return;
-      if (link.hasAttribute("data-momentum-direct")) return;
-      event.preventDefault();
-      const key = link.dataset.momentumSection;
-      const willOpen = !mount.classList.contains("menu-open") || mount.dataset.mobileSection !== key;
-      closeMenu();
-      if (!willOpen) return;
-      mount.dataset.mobileSection = key;
-      mount.classList.add("menu-open");
-      link.setAttribute("aria-expanded", "true");
-    });
+
   });
   mount.querySelectorAll("[data-momentum-panel]").forEach((panel) => {
     panel.addEventListener("mouseenter", () => window.clearTimeout(panelCloseTimer));
@@ -251,7 +241,6 @@
       if (page === "you") {
         event.preventDefault();
         document.querySelector(`[data-you-section="${key}"]`)?.click();
-        window.history.replaceState({}, "", `you.html?section=${key}`);
         setSubsection(key);
         closeMenu();
       } else if (page === "together" && window.MomentumTogetherNavigation) {
@@ -266,9 +255,6 @@
     });
   });
 
-  if (page === "you" && initialSubsection !== "mission") {
-    window.setTimeout(() => document.querySelector(`[data-you-section="${initialSubsection}"]`)?.click(), 0);
-  }
 
   function initials(name) {
     return String(name || "")
@@ -286,8 +272,7 @@
     if (!avatar || !window.momentumDB) return;
 
     try {
-      const { data:sessionData } = await window.momentumDB.auth.getSession();
-      const user = sessionData.session?.user;
+      const user = window.momentumPageReady ? await window.momentumPageReady : (await window.momentumDB.auth.getSession()).data.session?.user;
       if (!user) return;
       const { data:passport, error } = await window.momentumDB
         .from("passports")
@@ -296,6 +281,7 @@
         .maybeSingle();
       if (error) throw error;
 
+      if (window.MomentumSession?.currentUser() !== user.id) return;
       avatar.replaceChildren();
       if (passport?.avatar_url) {
         const image = document.createElement("img");
@@ -310,7 +296,7 @@
         avatar.textContent = initials(passport?.display_name || user.email);
       }
     } catch (error) {
-      console.warn("Navigation : avatar momentanément indisponible.", error);
+      console.warn("Navigation : avatar momentanément indisponible.");
     }
   }
 
@@ -327,7 +313,7 @@
       if (error) throw error;
       window.location.replace("login.html");
     } catch (error) {
-      console.warn("Navigation : déconnexion momentanément indisponible.", error);
+      console.warn("Navigation : déconnexion momentanément indisponible.");
       button.disabled = false;
       button.setAttribute("aria-label", "Déconnexion");
     }

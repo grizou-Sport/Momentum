@@ -24,7 +24,16 @@ async function loadActiveHorizon() {
     return null;
   }
 
-  return data || null;
+  if (data) return data;
+  const { data: passport, error: passportError } = await window.momentumDB
+    .from("passports").select("personalization").eq("user_id", user.id).maybeSingle();
+  if (passportError) {
+    console.error("HOME : impossible de charger l’intention.", passportError);
+    return null;
+  }
+  const intention = passport?.personalization;
+  if (!intention?.open_intention || ["paused", "archived"].includes(intention.open_intention_status)) return null;
+  return { title: intention.open_intention, category: "open_intention" };
 }
 
 function formatHeroDate(dateValue) {
@@ -70,10 +79,11 @@ function createHeroDetail(label, value) {
 }
 
 function getHeroDetails(horizon) {
+  if (horizon.category === "open_intention") return [createHeroDetail("Intention ouverte", "À ton rythme")];
   const details = [
-    createHeroDetail("Intention", heroIntentionLabel(horizon.subcategory)),
-    createHeroDetail("Date cible", formatHeroDate(horizon.target_date))
+    createHeroDetail("Intention", heroIntentionLabel(horizon.subcategory))
   ];
+  if (horizon.target_date) details.push(createHeroDetail("Date cible", formatHeroDate(horizon.target_date)));
 
   if (horizon.category === "adventure") {
     const duration = Number(horizon.duration_days);
@@ -133,8 +143,7 @@ function renderHeroEmpty() {
   setText("#heroTitle", "Mon Horizon");
   setText("#heroQuote", "Chaque journée écrit une ligne du chemin.");
   renderHeroDetails([
-    createHeroDetail("Intention", "À définir"),
-    createHeroDetail("Date cible", "À définir")
+    createHeroDetail("Intention", "À ton rythme")
   ]);
 }
 

@@ -61,19 +61,9 @@ function defaultState() {
   };
 }
 
-function loadState() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(STORE_KEY));
-    return parsed && typeof parsed === "object" ? parsed : defaultState();
-  } catch (error) {
-    console.warn("HOME : état local illisible, réinitialisation.", error);
-    return defaultState();
-  }
-}
+function loadState() { return defaultState(); }
 
-function saveState() {
-  localStorage.setItem(STORE_KEY, JSON.stringify(state));
-}
+function saveState() { /* Données métier en mémoire uniquement, jamais dans un cache intercompte. */ }
 
 function sessionIconHtml(session, className = "session-icon") {
   if (session?.source === "shared_moment") {
