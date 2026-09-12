@@ -16,7 +16,9 @@ const progressionState = {
 };
 
 function progressionCounter(value, { decimals = 0, prefix = "", suffix = "" } = {}) {
-  return `<strong data-motion-number data-motion-value="${Number(value) || 0}" data-motion-decimals="${decimals}" data-motion-prefix="${prefix}" data-motion-suffix="${suffix}">0${suffix}</strong>`;
+  const target=Number(value)||0;
+  const formatted=target.toLocaleString("fr-CH",{minimumFractionDigits:decimals,maximumFractionDigits:decimals});
+  return `<strong data-motion-number data-motion-value="${target}" data-motion-decimals="${decimals}" data-motion-prefix="${prefix}" data-motion-suffix="${suffix}">${prefix}${formatted}${suffix}</strong>`;
 }
 
 function animateProgressionNumbers(root) {
@@ -200,7 +202,7 @@ function completedActivities(activities = progressionState.activities) {
   return activities.filter((activity) => (window.MomentumMoments?.isCompletedActivity(activity) ?? activity.status === "done") && (!activity.activity_date || activity.activity_date <= (progressionState.calculationDate || iso(new Date()))));
 }
 
-function setProgressionChartEmpty(canvas, isEmpty, title = "Aucune donnée ne correspond à cette période.", text = "Tes premières activités feront apparaître ta progression ici.") {
+function setProgressionChartEmpty(canvas, isEmpty, title = "Aucune donnée ne correspond à cette période.", text = "Aucune activité réalisée n’est enregistrée pour cette période.") {
   const wrapper = canvas?.parentElement;
   if (!wrapper) return;
   let empty = wrapper.querySelector(".progression-chart-empty");
@@ -212,10 +214,10 @@ function setProgressionChartEmpty(canvas, isEmpty, title = "Aucune donnée ne co
   empty.hidden = !isEmpty;
   canvas.hidden = isEmpty;
   if (isEmpty) {
-    const hasCustomFilter = progressionState.periodPreset !== "current-week";
+    const hasCustomFilter = progressionState.periodPreset !== "last-7-days" || progressionState.periodOffset !== 0;
     empty.innerHTML = window.MomentumEmptyState?.render({
-      title:hasCustomFilter ? title : "Tes premières activités feront apparaître ta progression ici.",
-      text:hasCustomFilter ? "Aucune activité réalisée ne correspond à la période choisie." : text,
+      title,
+      text,
       action:hasCustomFilter ? "Réinitialiser les filtres" : "",
       actionAttributes:hasCustomFilter ? "data-progression-reset" : "",
       compact:true
@@ -617,7 +619,7 @@ function renderWellnessChart() {
   const granularity=progressionGranularity();
   progressionState.wellbeingDisplayDays=days;
   const availableCount=days.filter((day)=>day[definition.dataKey]!=null).length;
-  setProgressionChartEmpty(canvas, availableCount === 0, "Aucune donnée ne correspond à cette période.", "Le bien-être apparaîtra après une saisie ou une source déclarée.");
+  setProgressionChartEmpty(canvas, availableCount === 0, "Aucune observation de bien-être pour cette période.", "Les observations saisies ou importées pour cette période apparaîtront ici.");
   if (availableCount === 0) { progressionState.wellnessChart?.destroy(); document.getElementById("wellnessInsight").textContent=""; renderAccessibleChartTable("wellnessChartTable",["Date",definition.label],[]); return; }
   progressionState.wellnessChart?.destroy();
   progressionState.wellnessChart=new Chart(canvas,{type:"line",data:{labels:days.map((day)=>progressionDateLabel(day.date,granularity)),datasets:[{label:definition.label,data:days.map((day)=>day[definition.dataKey]),borderColor:definition.color,backgroundColor:`${definition.color}18`,fill:true,tension:.35,pointRadius:days.length>45?0:2,pointHoverRadius:6,pointHoverBorderWidth:3,spanGaps:false,borderWidth:2.5}]},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:"index",intersect:false},onClick:(_event,elements)=>{if(elements[0])openWellnessDay(elements[0].index);},plugins:{legend:{display:false},tooltip:progressionChartTooltip({label:(context)=>`${definition.label} : ${wellnessChartValue(progressionState.wellnessMode,context.parsed.y)}`})},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,maxRotation:0,color:"#858178"}},y:{...definition.scale,grid:{color:"rgba(20,20,20,.07)"},ticks:{color:"#858178",stepSize:definition.stepSize,callback:(value)=>wellnessAxisValue(progressionState.wellnessMode,value)}}}}});

@@ -73,12 +73,18 @@
     {
       "id": "chapter-06",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json"
+      ]
     },
     {
       "id": "chapter-07",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json"
+      ]
     },
     {
       "id": "chapter-08",
@@ -132,7 +138,10 @@
     {
       "id": "chapter-16",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json"
+      ]
     },
     {
       "id": "chapter-17",
@@ -162,7 +171,10 @@
     {
       "id": "chapter-22",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json"
+      ]
     },
     {
       "id": "chapter-23",
@@ -182,7 +194,10 @@
       "status": "unverified",
       "evidence": [
         "specs/cdc/2026-09-12.supabase-docker.md",
-        "specs/cdc/2026-09-12.docker-results.json"
+        "specs/cdc/2026-09-12.docker-results.json",
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json",
+        "specs/cdc/2026-09-12.recovery-results.json"
       ]
     },
     {
@@ -190,13 +205,18 @@
       "status": "unverified",
       "evidence": [
         "specs/cdc/2026-09-12.supabase-docker.md",
-        "specs/cdc/2026-09-12.docker-results.json"
+        "specs/cdc/2026-09-12.docker-results.json",
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json"
       ]
     },
     {
       "id": "chapter-27",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json"
+      ]
     },
     {
       "id": "chapter-28",

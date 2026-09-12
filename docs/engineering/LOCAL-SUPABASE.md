@@ -37,3 +37,7 @@ Les Edge Functions n’acceptent HTTP qu’avec `MOMENTUM_LOCAL_DEVELOPMENT=true
 Le configurateur du planificateur conserve son contrôle des URL Supabase hébergées. Dans cette base jetable uniquement, la valeur Vault est ensuite remplacée, dans la même transaction, par `http://kong:8000`. Les vrais `pg_cron` et `pg_net` déclenchent le véritable worker. Cette adaptation de transport ne prouve pas la configuration d’un projet hébergé.
 
 Cette recette ne vaut ni livraison complète du CDC, ni validation de tous les contenus de fichiers, ni restauration d’un projet hébergé, ni essais humains. Les contrôles de livraison restent actifs.
+
+## Restauration complète et repli
+
+Le scénario `validation/supabase-local-restore.mjs` sauvegarde hors ligne les deux volumes, la configuration et la clé racine Vault locale, puis restaure dans de nouveaux volumes. Il exige le projet fictif nommé `momentum-cdc-validation`, une origine de boucle locale et des comptes `example.invalid`. Les originaux restent conservés. Voir les preuves et limites dans [la recette navigateur et restauration](../../specs/cdc/2026-09-12.browser-recovery.md). Les archives, clés et identifiants doivent rester hors du dépôt. Les essais avec de vraies personnes suivent [le protocole de recette humaine](HUMAN-ACCEPTANCE.md).

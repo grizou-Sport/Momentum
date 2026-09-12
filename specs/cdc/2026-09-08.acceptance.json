@@ -98,8 +98,11 @@
       "id": "UX-02",
       "situation": "Navigation au clavier sur ordinateur",
       "expected": "Focus visible, destinations identifiables, aucun survol indispensable.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json"
+      ]
     },
     {
       "id": "UX-03",
@@ -164,8 +167,11 @@
       "id": "UX-11",
       "situation": "Mode de réduction des animations activé",
       "expected": "Valeurs et graphiques directement visibles, aucune parallaxe obligatoire.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json"
+      ]
     },
     {
       "id": "UX-12",
@@ -173,7 +179,9 @@
       "expected": "Aucun débordement global, contrôles accessibles et unités lisibles.",
       "result": "partial",
       "evidence": [
-        "specs/cdc/2026-09-12.validation-locale.md"
+        "specs/cdc/2026-09-12.validation-locale.md",
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json"
       ]
     },
     {
@@ -189,7 +197,9 @@
       "expected": "Focus contenu dans le dialogue puis rendu au déclencheur.",
       "result": "partial",
       "evidence": [
-        "specs/cdc/2026-09-12.validation-locale.md"
+        "specs/cdc/2026-09-12.validation-locale.md",
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json"
       ]
     },
     {
@@ -747,53 +757,73 @@
       "id": "SEC-01",
       "situation": "TOGETHER ouvert par un compte sans Cercle",
       "expected": "Proposition d’un Moment accessible sans construire d’abord un réseau.",
-      "result": "partial",
+      "result": "passed",
       "evidence": [
         "tests/consolidation/shared-moments.test.mjs",
-        "specs/cdc/2026-09-12.shared-moments.md"
+        "specs/cdc/2026-09-12.shared-moments.md",
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json",
+        "validation/supabase-local-guests.mjs",
+        "validation/supabase-local.test.mjs"
       ]
     },
     {
       "id": "SEC-02",
       "situation": "Invité sans compte ouvre un lien valide",
       "expected": "Aperçu limité et réponse possible sans Passeport.",
-      "result": "partial",
+      "result": "passed",
       "evidence": [
         "specs/cdc/2026-09-11.implementation.md",
         "tests/consolidation/database.test.mjs",
-        "specs/cdc/2026-09-11.browser.md"
+        "specs/cdc/2026-09-11.browser.md",
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json",
+        "validation/supabase-local-guests.mjs",
+        "validation/supabase-local.test.mjs"
       ]
     },
     {
       "id": "SEC-03",
       "situation": "Invité répond avec un nom non vérifié",
       "expected": "Réponse clairement externe et à valider, aucune identité certifiée.",
-      "result": "partial",
+      "result": "passed",
       "evidence": [
         "specs/cdc/2026-09-11.implementation.md",
         "tests/consolidation/database.test.mjs",
-        "specs/cdc/2026-09-11.browser.md"
+        "specs/cdc/2026-09-11.browser.md",
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json",
+        "validation/supabase-local-guests.mjs",
+        "validation/supabase-local.test.mjs"
       ]
     },
     {
       "id": "SEC-04",
       "situation": "Robot de messagerie prévisualise le lien",
       "expected": "Aucune acceptation ni consommation définitive du lien.",
-      "result": "partial",
+      "result": "passed",
       "evidence": [
         "specs/cdc/2026-09-11.implementation.md",
-        "tests/consolidation/database.test.mjs"
+        "tests/consolidation/database.test.mjs",
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json",
+        "validation/supabase-local-guests.mjs",
+        "validation/supabase-local.test.mjs"
       ]
     },
     {
       "id": "SEC-05",
       "situation": "Lien expiré, révoqué ou renouvelé",
       "expected": "Ancien accès refusé ; réponse historique préservée.",
-      "result": "partial",
+      "result": "passed",
       "evidence": [
         "specs/cdc/2026-09-11.implementation.md",
         "tests/consolidation/database.test.mjs",
-        "specs/cdc/2026-09-11.browser.md"
+        "specs/cdc/2026-09-11.browser.md",
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json",
+        "validation/supabase-local-guests.mjs",
+        "validation/supabase-local.test.mjs"
       ]
     },
     {
@@ -1003,22 +1033,33 @@
       "result": "partial",
       "evidence": [
         "tests/consolidation/legacy-storage.test.mjs",
-        "specs/cdc/2026-09-12.validation-locale.md"
-      ]
+        "specs/cdc/2026-09-12.validation-locale.md",
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json"
+      ],
+      "notes": "Le repli f069117 comprend les données CDC. Les onglets antérieurs au CDC ne sont pas certifiés : leur ancien affichage masque les messages serveur et leurs envois Storage directs sont refusés. Cette transition reste à résoudre avant production."
     },
     {
       "id": "LIV-03",
       "situation": "Version de repli testée après création de nouvelles données",
       "expected": "Fonctionnement compatible sans suppression de nouveaux souvenirs ou réponses.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json"
+      ],
+      "notes": "Repli f069117 testé dans le navigateur sur les nouvelles données : GPX, souvenir exact, effort absent et réponse externe confirmée/révoquée relus. Aucune migration inverse. Le périmètre complet des écritures de repli reste à valider."
     },
     {
       "id": "LIV-04",
       "situation": "Tests de performance avant/après sous mêmes conditions",
       "expected": "Mesures documentées, pas de régression critique masquée par un changement de protocole.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-12.browser-recovery.md",
+        "specs/cdc/2026-09-12.browser-results.json"
+      ],
+      "notes": "Trois mesures par page avant/après les corrections navigateur, même origine locale, 390 px, compte et API. Mesures de navigation uniquement ; ni réseau mobile, ni comparaison complète avant CDC, ni Core Web Vitals certifiés."
     },
     {
       "id": "LIV-05",

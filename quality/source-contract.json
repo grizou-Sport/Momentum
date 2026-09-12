@@ -81,7 +81,10 @@
     "supabase/functions/file-ingest/image-codec.mjs",
     "supabase/functions/file-ingest/handler.mjs",
     "supabase/functions/file-ingest/index.mjs",
-    "supabase/migrations/20260912111435_cdc_validated_file_ingestion.sql"
+    "supabase/migrations/20260912111435_cdc_validated_file_ingestion.sql",
+    "validation/layout-frame.mjs",
+    "validation/supabase-local-guests.mjs",
+    "validation/supabase-local-restore.mjs"
   ],
   "requiredTests": [
     "tests/activity-detail-fit.test.mjs",

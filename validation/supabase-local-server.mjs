@@ -4,7 +4,8 @@ import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
-const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+import {layoutFrame} from './layout-frame.mjs';
+const root=path.resolve(process.env.MOMENTUM_LOCAL_SOURCE_ROOT||path.join(path.dirname(fileURLToPath(import.meta.url)),'..'));
 const config=JSON.parse(await readFile(process.env.MOMENTUM_LOCAL_STATUS,'utf8'));
 assert.equal(config.API_URL,'http://127.0.0.1:54321');
 const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.jpg':'image/jpeg','.jpeg':'image/jpeg','.png':'image/png','.webp':'image/webp','.avif':'image/avif','.woff2':'font/woff2'};
@@ -12,6 +13,9 @@ http.createServer(async(req,res)=>{
  try{
   if(!['GET','HEAD'].includes(req.method)){res.writeHead(405);res.end();return;}
   const url=new URL(req.url,'http://127.0.0.1:3000');
+  if(url.pathname==='/__validation/layout.html'){
+   res.writeHead(200,{'Content-Type':'text/html','Cache-Control':'no-store'});res.end(layoutFrame(url));return;
+  }
   const name=decodeURIComponent(url.pathname==='/'?'/login.html':url.pathname);
   if(name==='/js/supabase.js'){
    res.writeHead(200,{'Content-Type':'text/javascript','Cache-Control':'no-store'});

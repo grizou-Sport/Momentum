@@ -6,6 +6,7 @@ import {readFile,writeFile} from 'node:fs/promises';
 import {randomUUID,randomBytes,createHash} from 'node:crypto';
 import {setTimeout as delay} from 'node:timers/promises';
 import pg from 'pg';
+import {verifyLocalGuests} from './supabase-local-guests.mjs';
 
 const config=JSON.parse(await readFile(process.env.MOMENTUM_LOCAL_STATUS,'utf8'));
 assert.equal(config.API_URL,'http://127.0.0.1:54321');
@@ -132,6 +133,9 @@ test('Full local Supabase: real identity, files, API, scheduler and deletion',as
   assert.equal(items.length,Number(exportJob.total));assert.ok(items.length>2);
   const exported=items.find(item=>item.kind==='activities'&&item.payload.id===activity.id);assert.equal(exported.payload.duration_min,80);assert.equal(exported.payload.rpe,null);
   assert.equal(exported.payload.source_file_url,sourcePath);
+ });
+ await step('Real anonymous invitations enforce origins, preview privacy, confirmation, renewal and revocation',async()=>{
+  await verifyLocalGuests({request,A,B});
  });
  await step('Vault + pg_cron + pg_net call the actual worker and physically delete retired files',async()=>{
   // Keep the deployment URL validation unchanged. Inside this disposable database only,
