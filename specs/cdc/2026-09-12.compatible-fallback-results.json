@@ -1,0 +1,24 @@
+{
+  "checkedAt": "2026-09-12T14:54:02.661Z",
+  "baseCommit": "f0691179ce1c267ae6c220fa6a7faaffd502d015",
+  "applicationChanges": [
+    "js/supabase.js",
+    "scripts/build-environment.mjs"
+  ],
+  "existingMomentsPreserved": 2,
+  "existingActivityFingerprintUnchanged": true,
+  "existingMemoryFingerprintUnchanged": true,
+  "newMomentDurationMinutes": 80,
+  "newMomentRpe": null,
+  "newMemory": "Recette fictive — créé par le repli compatible, effort absent.",
+  "originalGpxSha256": "da9654b583e96f0e0e633605205b53e52833318d1908bea7a20301e57c97b00a",
+  "unitTestsPassed": 198,
+  "staticFiles": 204,
+  "scope": "Local Docker with all 17 CDC migrations; no hosted rollback",
+  "existingGuestResponse": {
+    "response": "yes",
+    "confirmation": "confirmed",
+    "link": "revoked",
+    "visibleInFallback": true
+  }
+}
