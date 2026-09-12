@@ -7,12 +7,14 @@
   },
   "scripts": {
     "test": "node scripts/test.mjs",
+    "test:postgres": "node --test validation/postgres-concurrency.mjs",
     "check": "node scripts/check.mjs",
     "verify": "npm run check && npm test",
     "build": "npm run verify && node scripts/build.mjs",
     "check:cdc": "node scripts/check-cdc.mjs"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "0.5.8"
+    "@electric-sql/pglite": "0.5.8",
+    "pg": "8.16.3"
   }
 }

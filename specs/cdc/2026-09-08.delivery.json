@@ -35,7 +35,8 @@
     "js/momentum-account-deletion.js",
     "account-deletion-status.html",
     "js/momentum-shared-commands.js",
-    "supabase/migrations/20260911205620_cdc_shared_moment_commands.sql"
+    "supabase/migrations/20260911205620_cdc_shared_moment_commands.sql",
+    "supabase/migrations/20260912083358_cdc_legacy_storage_references.sql"
   ],
   "requirements": [
     {

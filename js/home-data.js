@@ -190,13 +190,19 @@ function mapSharedMomentRow(row, today = iso(new Date())) {
   };
 }
 
+function hasLocationCoordinates(location) {
+  const valid = (value, limit) => ['number', 'string'].includes(typeof value) && String(value).trim() !== '' &&
+    Number.isFinite(Number(value)) && Math.abs(Number(value)) <= limit;
+  return valid(location?.latitude, 90) && valid(location?.longitude, 180);
+}
+
 function routeLocationPoint(routeSummary) {
   const center = routeSummary?.center;
-  if (Number.isFinite(Number(center?.latitude)) && Number.isFinite(Number(center?.longitude))) {
+  if (hasLocationCoordinates(center)) {
     return { latitude:Number(center.latitude), longitude:Number(center.longitude) };
   }
   const firstPoint = routeSummary?.map_points?.[0];
-  if (Array.isArray(firstPoint) && Number.isFinite(Number(firstPoint[0])) && Number.isFinite(Number(firstPoint[1]))) {
+  if (Array.isArray(firstPoint) && hasLocationCoordinates({latitude:firstPoint[0],longitude:firstPoint[1]})) {
     return { latitude:Number(firstPoint[0]), longitude:Number(firstPoint[1]) };
   }
   return null;
@@ -332,8 +338,7 @@ function getDefaultUserLocation() {
 
   if (
     !profile.locationName ||
-    !Number.isFinite(latitude) ||
-    !Number.isFinite(longitude)
+    !hasLocationCoordinates(profile)
   ) {
     return null;
   }
@@ -415,8 +420,7 @@ async function loadPassportLocation() {
   const current = state.profile || {};
   const sameSavedPlace =
     current.locationName === locationName &&
-    Number.isFinite(Number(current.latitude)) &&
-    Number.isFinite(Number(current.longitude));
+    hasLocationCoordinates(current);
 
   if (sameSavedPlace) {
     return getDefaultUserLocation();

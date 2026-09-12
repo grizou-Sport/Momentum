@@ -55,6 +55,7 @@ async function renderHome() {
 
 function bindHome() {
   document.addEventListener("click", (event) => {
+    if (event.target.closest("[data-add-moment]")) openActivityDialog(iso(new Date()), true);
     if (event.target.closest("[data-home-retry]")) renderHome();
   });
   $("#closeActivityDialog")?.addEventListener("click", () => closeActivityDialog());

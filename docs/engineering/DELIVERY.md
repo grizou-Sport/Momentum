@@ -8,6 +8,7 @@
 | `api/` | Fonctions serveur |
 | `supabase/migrations/` | Historique SQL, immuable après application |
 | `tests/` | Tests exécutés récursivement, sans condition de présence |
+| `validation/` | Essais nécessitant PostgreSQL natif ; étape obligatoire distincte dans la CI |
 | `scripts/`, `quality/` | Vérifications et contrats de fichiers obligatoires |
 | `specs/cdc/` | État de couverture du CDC et preuves de recette |
 | `docs/incidents/` | Causes, récupération et limites constatées |
@@ -25,6 +26,8 @@ Le rangement des sources de l'application reste compatible avec ses liens exista
 5. Fusionner lorsque la version est complète pour son périmètre. Appliquer les migrations validées selon leur ordre de dépendance, puis vérifier le déploiement et son commit.
 
 `npm run build` vérifie les fichiers obligatoires, toutes les références locales HTML/CSS, la syntaxe des scripts externes et intégrés, les empreintes des migrations historiques, puis lance tous les tests. Il produit les seuls fichiers statiques utiles dans `dist/`, avec un `version.json` qui associe le commit et les empreintes des fichiers. Les fonctions de `api/` restent gérées séparément par l'hébergeur.
+
+La CI exécute aussi `npm test` puis `npm run test:postgres` avant la construction, afin de conserver les résultats métier même quand la recette CDC reste en attente. Cette seconde commande utilise un PostgreSQL 17.6 isolé ; elle exige un serveur local de test jetable sans rôles applicatifs préexistants et refuse les hôtes externes. Elle ne teste pas les services Supabase Auth, Storage ou le planificateur.
 
 Le workflow publie une preuve de construction uniquement après succès. Il n'écrit jamais dans les branches. `vercel.json` impose la même installation, la même vérification et la publication de `dist/` sur Vercel. Les fonctions de `api/` restent à la racine conformément au fonctionnement du runtime Vercel. La configuration GitHub Pages n'est pas modifiée par ce fichier.
 

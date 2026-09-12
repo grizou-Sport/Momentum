@@ -17,6 +17,18 @@ jobs:
     name: Source and tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17.6
+        env:
+          POSTGRES_PASSWORD: momentum-ci-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -27,6 +39,14 @@ jobs:
           cache: npm
       - name: Install the committed lockfile
         run: npm ci --ignore-scripts
+      - name: Run every test even while CDC acceptance is pending
+        run: npm test
+      - name: Verify simultaneous writes on isolated PostgreSQL
+        run: npm run test:postgres
+        env:
+          PGHOST: 127.0.0.1
+          PGUSER: postgres
+          PGPASSWORD: momentum-ci-only
       - name: Check source, run every test, build static output
         run: npm run build
       - name: Record the exact tested commit

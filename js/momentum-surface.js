@@ -6,7 +6,7 @@
     const target = document.querySelector('[data-direct-content]') || document.querySelector('main');
     if (target) {
       target.id ||= 'main-content'; target.tabIndex = -1;
-      const skip = document.createElement('a'); skip.className = 'skip-link'; skip.href = '#' + target.id; skip.textContent = 'Aller au contenu'; document.body.prepend(skip);
+      const skip = document.querySelector('.skip-link') || document.createElement('a'); skip.className = 'skip-link'; skip.href = '#' + target.id; skip.textContent = 'Aller au contenu'; document.body.prepend(skip);
     }
     const journal = document.querySelector('#journal');
     if (journal) {

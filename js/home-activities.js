@@ -5,6 +5,8 @@
    ========================================================= */
 
 function sessionLabel(session) {
+  const type = session.type || session.activity_type;
+  if (type === "Libre" && session.sport) return activitySportLabel(session.sport);
   return (
     session.type ||
     session.activity_type ||
@@ -170,8 +172,7 @@ function renderActivityList(date, sessions) {
 
   element.innerHTML = sessions
     .map((session) => {
-      const hasLocationPoint = Number.isFinite(Number(session.locationDetails?.latitude)) &&
-        Number.isFinite(Number(session.locationDetails?.longitude));
+      const hasLocationPoint = hasLocationCoordinates(session.locationDetails);
       const locationName = session.locationName || session.location_name || session.placeName ||
         (hasLocationPoint ? "Position GPS" : "Lieu à définir");
       const locationMarkup = window.MomentumLocationPopover?.triggerHTML(

@@ -292,8 +292,7 @@ function renderPersonalActivityCard(session, date) {
   const importLabel = activityImportLabel(session);
   const hasRoute = Array.isArray(session.routeSummary?.map_points) &&
     session.routeSummary.map_points.length >= 2;
-  const hasLocationPoint = Number.isFinite(Number(session.locationDetails?.latitude)) &&
-    Number.isFinite(Number(session.locationDetails?.longitude));
+  const hasLocationPoint = hasLocationCoordinates(session.locationDetails);
   const locationName = session.locationName || (hasLocationPoint ? "Position GPS" : "");
   const locationMarkup = locationName
     ? window.MomentumLocationPopover?.triggerHTML({ ...session.locationDetails, name:session.locationDetails?.name || locationName }, {

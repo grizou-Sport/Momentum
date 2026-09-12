@@ -2,8 +2,8 @@ import { readFile } from 'node:fs/promises';
 import { PGlite } from '@electric-sql/pglite';
 const read = path => readFile(new URL(path, import.meta.url), 'utf8');
 const A = '11111111-1111-4111-8111-111111111111', B = '22222222-2222-4222-8222-222222222222';
-export async function fixture() {
-  const db = new PGlite();
+export async function fixture({ database } = {}) {
+  const db = database || new PGlite();
   try {
   await db.exec(await read('./baseline.sql'));
   await db.exec(await read('../../supabase/migrations/20260905100319_activity_nutrition_v1.sql'));
@@ -34,6 +34,7 @@ export async function fixture() {
   await db.exec((await read('../../supabase/migrations/20260911202220_cdc_cleanup_schedule.sql')).replace(/^create extension[^;]+;$/gm,''));
   await db.exec(await read('../../supabase/migrations/20260911202513_cdc_account_deletion.sql'));
   await db.exec(await read('../../supabase/migrations/20260911205620_cdc_shared_moment_commands.sql'));
+  await db.exec(await read('../../supabase/migrations/20260912083358_cdc_legacy_storage_references.sql'));
   await db.query("select set_config('request.headers',$1,false)",[JSON.stringify({origin:'https://momentum-alpha-rho.vercel.app','x-forwarded-for':'192.0.2.10'})]);
   await db.query("select set_config('request.jwt.claim.sub',$1,false)", [A]);
   await db.exec('set role authenticated');

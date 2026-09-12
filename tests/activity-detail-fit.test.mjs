@@ -46,6 +46,7 @@ function loadCalendarFunctions() {
   };
 
   vm.createContext(context);
+  vm.runInContext(dataSource, context);
   vm.runInContext(calendarSource, context);
   return context;
 }

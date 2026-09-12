@@ -87,8 +87,10 @@
       "id": "UX-01",
       "situation": "Toucher chacun des quatre territoires sur téléphone",
       "expected": "Navigation directe homogène, sans menu intermédiaire imposé.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "UX-02",
@@ -167,8 +169,10 @@
       "id": "UX-12",
       "situation": "Largeurs de recette, zoom et reflow",
       "expected": "Aucun débordement global, contrôles accessibles et unités lisibles.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "UX-13",
@@ -181,8 +185,10 @@
       "id": "UX-14",
       "situation": "Ouverture puis fermeture d’un dialogue au clavier",
       "expected": "Focus contenu dans le dialogue puis rendu au déclencheur.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "UX-15",
@@ -198,15 +204,19 @@
       "result": "partial",
       "evidence": [
         "tests/consolidation/personal-form.test.cjs",
-        "specs/cdc/2026-09-12.personal-form.md"
+        "specs/cdc/2026-09-12.personal-form.md",
+        "tests/consolidation/home-entry.test.mjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
       ]
     },
     {
       "id": "MOM-02",
       "situation": "Ouvrir puis enregistrer sans toucher les sliders",
       "expected": "RPE et axes FLOW restent null, aucun 5 implicite.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "MOM-03",
@@ -243,8 +253,10 @@
       "id": "MOM-07",
       "situation": "Saisir `1:20` dans le composant de durée",
       "expected": "80 minutes, format cohérent dans tous les écrans.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "MOM-08",
@@ -285,43 +297,60 @@
       "id": "MOM-13",
       "situation": "Import du même fichier deux fois, y compris concurrent",
       "expected": "Une seule activité et proposition d’ouvrir l’existant.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "validation/postgres-concurrency.mjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "MOM-14",
       "situation": "Fichiers différents représentant un doublon probable",
       "expected": "Comparaison explicite, aucun écrasement ou fusion automatique.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "tests/consolidation/import-wellbeing.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "MOM-15",
       "situation": "Réimport après ajout de photos, ressenti et RPE manuel",
       "expected": "Enrichissements conservés et remplacements contrôlés.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "tests/consolidation/legacy-storage.test.mjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "MOM-16",
       "situation": "Coupure réseau après écriture puis nouvel essai",
       "expected": "Reprise idempotente, aucun doublon.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "validation/postgres-concurrency.mjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "MOM-17",
       "situation": "Fichier corrompu, trop volumineux ou type non permis",
       "expected": "Erreur compréhensible, aucune activité vide créée.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "tests/consolidation/import-wellbeing.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "MOM-18",
       "situation": "Souvenir seul sans axes chiffrés dans la base migrée",
       "expected": "Texte sauvegardé sans valeurs artificielles ; affichage sans point.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "MOM-19",
@@ -334,36 +363,51 @@
       "id": "MOM-20",
       "situation": "Création d’une activité datée dans le futur",
       "expected": "Statut prévu ; aucune contribution aux réalisés ni à la charge observée.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "tests/consolidation/training-load.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "DAT-01",
       "situation": "F01 : 60 minutes, RPE 6",
       "expected": "60 unités avant arrondi ; formule et source vérifiables.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "tests/consolidation/training-load.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "DAT-02",
       "situation": "F02 : massage 60 minutes",
       "expected": "Temps conservé au volume ; aucune charge sportive ni erreur de RPE manquant.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "tests/consolidation/training-load.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "DAT-03",
       "situation": "F03 : durée connue, effort absent",
       "expected": "Charge individuelle null, raison `missing_rpe`, pas de remplacement par zéro ou 5 ; aucune courbe fictive si aucune charge n’est calculable.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "tests/consolidation/training-load.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "DAT-04",
       "situation": "Une séance calculable et une inconnue le même jour",
       "expected": "Somme connue correcte et charge complète inconnue ; couverture partielle affichée.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "tests/consolidation/training-load.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "DAT-05",
@@ -372,71 +416,100 @@
       "result": "partial",
       "evidence": [
         "tests/consolidation/personal-form.test.cjs",
-        "specs/cdc/2026-09-12.personal-form.md"
+        "specs/cdc/2026-09-12.personal-form.md",
+        "tests/consolidation/training-load.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
       ]
     },
     {
       "id": "DAT-06",
       "situation": "RPE historique 5 d’origine incertaine",
       "expected": "Valeur préservée ; provenance non inventée.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "tests/consolidation/training-load.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "DAT-07",
       "situation": "Même historique, date et version dans FLOW et Progression",
       "expected": "Résultats identiques avant arrondi.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "tests/consolidation/training-load.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "DAT-08",
       "situation": "Changement de période d’affichage",
       "expected": "Les valeurs des dates communes ne changent pas ; début de calcul stable.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "tests/consolidation/training-load.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "DAT-09",
       "situation": "Nouveau compte sans activité",
       "expected": "Aucun profil physiologique fictif ni charge chronique personnalisée.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "tests/consolidation/training-load.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "DAT-10",
       "situation": "Passage du 41e au 42e jour",
       "expected": "Aucune promesse de fiabilité totale ou de personnalisation complète.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "tests/consolidation/training-load.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "DAT-11",
       "situation": "Semaine sans activité après historique existant",
       "expected": "Courbes consultables, état « aucune activité enregistrée » exact.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "tests/consolidation/training-load.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "DAT-12",
       "situation": "Période contenant des dates futures",
       "expected": "Pas de charges observées ni de fraîcheur simulée dans le futur.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "tests/consolidation/training-load.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "DAT-13",
       "situation": "RPE corrigé rétroactivement ou doublon supprimé",
       "expected": "Historique et caches recalculés, anciennes données source préservées.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "tests/consolidation/training-load.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "DAT-14",
       "situation": "Échec d’une page de chargement d’historique",
       "expected": "Pas de nouveau modèle calculé sur une liste tronquée présentée complète.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "tests/consolidation/training-load.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "DAT-15",
@@ -484,22 +557,31 @@
       "id": "DAT-21",
       "situation": "Mesure quotidienne absente ou chargement en erreur",
       "expected": "Ni zéro fabriqué ni continuité graphique trompeuse.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "tests/consolidation/import-wellbeing.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "DAT-22",
       "situation": "Deux sources de bien-être à la même date",
       "expected": "Priorité documentée et provenance visible, pas de moyenne arbitraire.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "tests/consolidation/import-wellbeing.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "DAT-23",
       "situation": "Note « Je ne suis pas malade »",
       "expected": "Aucune annotation automatique Maladie.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "tests/consolidation/import-wellbeing.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "DAT-24",
@@ -540,7 +622,9 @@
       "result": "partial",
       "evidence": [
         "specs/cdc/2026-09-11.implementation.md",
-        "tests/consolidation/database.test.mjs"
+        "tests/consolidation/database.test.mjs",
+        "tests/consolidation/home-entry.test.mjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
       ]
     },
     {
@@ -553,7 +637,8 @@
         "tests/consolidation/database.test.mjs",
         "specs/cdc/2026-09-11.browser.md",
         "tests/consolidation/personal-form.test.cjs",
-        "specs/cdc/2026-09-12.personal-form.md"
+        "specs/cdc/2026-09-12.personal-form.md",
+        "specs/cdc/2026-09-12.validation-locale.md"
       ]
     },
     {
@@ -725,7 +810,9 @@
         "specs/cdc/2026-09-11.implementation.md",
         "tests/consolidation/database.test.mjs",
         "tests/consolidation/shared-moments.test.mjs",
-        "specs/cdc/2026-09-12.shared-moments.md"
+        "specs/cdc/2026-09-12.shared-moments.md",
+        "validation/postgres-concurrency.mjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
       ]
     },
     {
@@ -781,7 +868,9 @@
       "result": "partial",
       "evidence": [
         "specs/cdc/2026-09-11.implementation.md",
-        "tests/consolidation/database.test.mjs"
+        "tests/consolidation/database.test.mjs",
+        "tests/consolidation/export.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
       ]
     },
     {
@@ -791,7 +880,10 @@
       "result": "partial",
       "evidence": [
         "specs/cdc/2026-09-11.implementation.md",
-        "tests/consolidation/database.test.mjs"
+        "tests/consolidation/database.test.mjs",
+        "tests/consolidation/legacy-storage.test.mjs",
+        "tests/consolidation/export.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
       ]
     },
     {
@@ -802,7 +894,8 @@
       "evidence": [
         "specs/cdc/2026-09-11.implementation.md",
         "tests/consolidation/database.test.mjs",
-        "tests/consolidation/export.test.cjs"
+        "tests/consolidation/export.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
       ]
     },
     {
@@ -812,7 +905,10 @@
       "result": "partial",
       "evidence": [
         "specs/cdc/2026-09-11.implementation.md",
-        "tests/consolidation/database.test.mjs"
+        "tests/consolidation/database.test.mjs",
+        "tests/consolidation/legacy-storage.test.mjs",
+        "tests/consolidation/export.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
       ]
     },
     {
@@ -844,7 +940,9 @@
         "tests/consolidation/storage-worker.test.mjs",
         "tests/consolidation/cleanup-schedule.test.mjs",
         "docs/engineering/ACCOUNT-DELETION.md",
-        "docs/engineering/STORAGE-CLEANUP.md"
+        "docs/engineering/STORAGE-CLEANUP.md",
+        "validation/postgres-concurrency.mjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
       ],
       "notes": "153 tests de la suite passent. Recette locale SQL avec 72 clés étrangères et services HTTP simulés. Les services Supabase réels et le nouveau parcours navigateur restent non vérifiés."
     },
@@ -863,22 +961,30 @@
       "evidence": [
         "specs/cdc/2026-09-11.implementation.md",
         "tests/consolidation/database.test.mjs",
-        "tests/consolidation/ui-security.test.cjs"
+        "tests/consolidation/ui-security.test.cjs",
+        "tests/consolidation/export.test.cjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
       ]
     },
     {
       "id": "LIV-01",
       "situation": "Migrations exécutées sur une copie représentative puis réexécutées selon leur contrat",
       "expected": "Résultat prévu, aucune perte, incompatibilités identifiées avant production.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "validation/postgres-concurrency.mjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "LIV-02",
       "situation": "Ancienne session navigateur rencontre le nouveau schéma",
       "expected": "Compatibilité ou demande de rechargement propre, aucune réintroduction de données artificielles.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "tests/consolidation/legacy-storage.test.mjs",
+        "specs/cdc/2026-09-12.validation-locale.md"
+      ]
     },
     {
       "id": "LIV-03",

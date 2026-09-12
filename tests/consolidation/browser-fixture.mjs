@@ -51,6 +51,12 @@ const server=http.createServer(async(req,res)=>{
      const dot=value.indexOf('.'),operator=value.slice(0,dot),operand=value.slice(dot+1);
      if(['eq','neq','gte','lte','gt','lt'].includes(operator)){params.push(operand);where.push(`${id(key)} ${{eq:'=',neq:'<>',gte:'>=',lte:'<=',gt:'>',lt:'<'}[operator]} $${params.length}`);}
      else if(operator==='is'&&operand==='null')where.push(`${id(key)} is null`);
+     else if(operator==='not'&&operand==='is.null')where.push(`${id(key)} is not null`);
+     else if(operator==='in'&&/^\([^()]*\)$/.test(operand)){
+      const values=operand.slice(1,-1).split(',');
+      if(values.some(value=>!/^[-a-zA-Z0-9_ ]+$/.test(value)))throw new Error('Valeur de filtre non prise en charge');
+      where.push(`${id(key)} in (${values.map(value=>{params.push(value);return '$'+params.length;}).join(',')})`);
+     }
      else throw new Error('Filtre de fixture non pris en charge : '+operator);
     }
     for(const segment of (url.searchParams.get('order')||'').split(',').filter(Boolean)){const [column,direction]=segment.split('.');order.push(id(column)+(direction==='desc'?' desc':' asc'));}
@@ -69,10 +75,10 @@ const server=http.createServer(async(req,res)=>{
    const result=queue.then(job);queue=result.catch(()=>{});const out=await result;reply(res,out.status||200,out.value,out.headers);return;
   }
   const filename=path.resolve(root,'.'+decodeURIComponent(url.pathname==='/'?'/login.html':url.pathname));
-  if(!filename.startsWith(root+path.sep)||!['.html','.css','.js','.svg','.jpg','.png','.webp','.woff2'].includes(path.extname(filename))){reply(res,404,{});return;}
+  if(!filename.startsWith(root+path.sep)||!['.html','.css','.js','.svg','.jpg','.jpeg','.png','.webp','.avif','.woff2'].includes(path.extname(filename))){reply(res,404,{});return;}
   let content=await readFile(filename);const ext=path.extname(filename);
   if(ext==='.html')content=Buffer.from(content.toString().replace('connect-src https://njcqcpyiiibudlalnzoa.supabase.co','connect-src '+origin).replace('</body>','<p style="position:fixed;top:0;right:0;z-index:20000;background:#fffbd4;color:#222;padding:4px;font:13px system-ui">Recette locale · Données fictives</p></body>'));
-  res.writeHead(200,{'Content-Type':{'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png','.webp':'image/webp','.woff2':'font/woff2'}[ext],'Cache-Control':'no-store'});res.end(content);
- }catch(error){reply(res,400,{code:error.code||'FIXTURE',message:error.message});}
+  res.writeHead(200,{'Content-Type':{'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.jpg':'image/jpeg','.jpeg':'image/jpeg','.png':'image/png','.webp':'image/webp','.avif':'image/avif','.woff2':'font/woff2'}[ext],'Cache-Control':'no-store'});res.end(content);
+ }catch(error){process.stderr.write(`${req.method} ${url.pathname}: ${error.code||'FIXTURE'} ${error.message}\n`);reply(res,400,{code:error.code||'FIXTURE',message:error.message});}
 });
 server.listen(port,'127.0.0.1',()=>process.stdout.write(`Fixture fictive : ${origin}/login.html\n`));
