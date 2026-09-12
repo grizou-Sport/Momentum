@@ -101,3 +101,9 @@ create policy "date options visible with moment" on public.moment_date_options f
 create policy "organizers add date options" on public.moment_date_options for insert to authenticated with check(private.can_manage_moment(moment_id));
 create policy "organizers delete date options" on public.moment_date_options for delete to authenticated using(private.can_manage_moment(moment_id));
 create policy "organizers update date options" on public.moment_date_options for update to authenticated using(private.can_manage_moment(moment_id)) with check(private.can_manage_moment(moment_id));
+-- Availability policies captured from the existing project on 2026-09-12.
+drop policy own_rows on public.moment_availability;
+create policy "availability visible with moment" on public.moment_availability for select to authenticated using(private.can_access_moment((select o.moment_id from public.moment_date_options o where o.id=moment_availability.date_option_id)));
+create policy "users add own availability" on public.moment_availability for insert to authenticated with check(user_id=(select auth.uid()) and private.can_access_moment((select o.moment_id from public.moment_date_options o where o.id=moment_availability.date_option_id)));
+create policy "users update own availability" on public.moment_availability for update to authenticated using(user_id=(select auth.uid()) and private.can_access_moment((select o.moment_id from public.moment_date_options o where o.id=moment_availability.date_option_id))) with check(user_id=(select auth.uid()) and private.can_access_moment((select o.moment_id from public.moment_date_options o where o.id=moment_availability.date_option_id)));
+create policy "users delete own availability" on public.moment_availability for delete to authenticated using(user_id=(select auth.uid()));

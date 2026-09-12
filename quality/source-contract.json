@@ -65,7 +65,8 @@
     "progression.html",
     "together.html",
     "welcome.html",
-    "you.html"
+    "you.html",
+    "js/momentum-shared-commands.js"
   ],
   "requiredTests": [
     "tests/activity-detail-fit.test.mjs",
@@ -95,7 +96,8 @@
     "tests/consolidation/storage-worker.test.mjs",
     "tests/consolidation/cleanup-schedule.test.mjs",
     "tests/consolidation/account-deletion.test.mjs",
-    "tests/consolidation/account-handler.test.mjs"
+    "tests/consolidation/account-handler.test.mjs",
+    "tests/consolidation/shared-moments.test.mjs"
   ],
   "migrations": {
     "supabase/migrations/202607120001_together_mvp.sql": "6538a7bae3bb38cfb395d17c8ec3f6d8f1d4f040041e98555d1014a61f4e0a1f",

@@ -643,8 +643,11 @@
       "id": "SEC-01",
       "situation": "TOGETHER ouvert par un compte sans Cercle",
       "expected": "Proposition d’un Moment accessible sans construire d’abord un réseau.",
-      "result": "not-run",
-      "evidence": []
+      "result": "partial",
+      "evidence": [
+        "tests/consolidation/shared-moments.test.mjs",
+        "specs/cdc/2026-09-12.shared-moments.md"
+      ]
     },
     {
       "id": "SEC-02",
@@ -706,7 +709,9 @@
       "result": "partial",
       "evidence": [
         "specs/cdc/2026-09-11.implementation.md",
-        "tests/consolidation/database.test.mjs"
+        "tests/consolidation/database.test.mjs",
+        "tests/consolidation/shared-moments.test.mjs",
+        "specs/cdc/2026-09-12.shared-moments.md"
       ]
     },
     {
@@ -750,7 +755,9 @@
       "result": "partial",
       "evidence": [
         "specs/cdc/2026-09-11.implementation.md",
-        "tests/consolidation/database.test.mjs"
+        "tests/consolidation/database.test.mjs",
+        "tests/consolidation/shared-moments.test.mjs",
+        "specs/cdc/2026-09-12.shared-moments.md"
       ]
     },
     {

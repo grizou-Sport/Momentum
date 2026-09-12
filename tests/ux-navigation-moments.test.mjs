@@ -60,13 +60,13 @@ test("the avatar opens YOU directly and OFF remains a distinct system action", a
   assert.match(you, /data-account-logout/);
 });
 
-test("Moment form follows visibility then Circle participant selection", () => {
+test("Moment form keeps visibility and participant selection in one shared command", () => {
   assert.ok(togetherPage.indexOf('id="momentVisibility"') < togetherPage.indexOf('id="momentParticipantPicker"'));
   assert.match(togetherPage, /value="PRIVATE">Privé/);
   assert.match(togetherPage, /value="CIRCLE">Cercle/);
   assert.match(togetherPage, /value="CLUB">Club/);
-  assert.match(together, /syncMomentParticipants/);
-  assert.match(together, /invitation_status: "PENDING"/);
+  assert.match(together, /MomentumSharedCommands\.request/);
+  assert.doesNotMatch(together, /\.from\("moment_participants"\)\.(insert|update)\(/);
 });
 
 test("Moment owners can edit, duplicate and delete while participants can answer", () => {

@@ -6,7 +6,7 @@ insert into private.guest_allowed_origins values ('https://momentum-alpha-rho.ve
 create table private.guest_invitations(
  id uuid primary key, moment_id uuid not null references public.moments(id) on delete cascade,
  owner_id uuid not null references auth.users(id) on delete cascade, response_id uuid not null unique default gen_random_uuid(),
- recipient_label text not null, message text not null default '', shared_location text,
+ recipient_label text not null, message text not null default '', shared_location text, share_location boolean not null default false,
  secret_hash text not null, generation integer not null default 1, expires_at timestamptz not null, revoked_at timestamptz,
  display_name text, answer text not null default 'none' check(answer in ('none','yes','maybe','no')),
  availability jsonb not null default '{}', responded_schedule_revision integer, response_revision integer not null default 0,
@@ -77,7 +77,7 @@ begin
    expiry:=least(coalesce((p_data->>'expires_at')::timestamptz,now()+interval '30 days'),now()+interval '30 days',coalesce(parent.end_at,parent.start_at,now()+interval '30 days')+interval '2 days');
    if expiry<=now() then return jsonb_build_object('error','invalid_response'); end if;
    raw_secret:=private.guest_secret();
-   insert into private.guest_invitations(id,moment_id,owner_id,recipient_label,message,shared_location,secret_hash,expires_at) values(target_id,target_moment,actor,btrim(p_data->>'label'),coalesce(p_data->>'message',''),case when (p_data->>'share_location')::boolean then parent.location_name end,private.guest_hash(raw_secret),expiry);
+   insert into private.guest_invitations(id,moment_id,owner_id,recipient_label,message,shared_location,share_location,secret_hash,expires_at) values(target_id,target_moment,actor,btrim(p_data->>'label'),coalesce(p_data->>'message',''),case when (p_data->>'share_location')::boolean then parent.location_name end,coalesce((p_data->>'share_location')::boolean,false),private.guest_hash(raw_secret),expiry);
    return jsonb_build_object('id',target_id,'secret',raw_secret,'view',private.guest_view(target_id));
   end if;
   select * into invitation from private.guest_invitations where id=(p_data->>'id')::uuid and owner_id=actor for update;

@@ -10,6 +10,9 @@ const TOGETHER = {
   view: "moments",
   section: "moments",
 };
+const momentEditor = {moment:null, request:null, busy:false};
+const sharedActions = new Map();
+let sharedSessionRevision = 0;
 
 const elements = {
   tabs: document.querySelectorAll("[data-view]"),
@@ -102,10 +105,42 @@ function invitationStatusLabel(value) {
   return ({ PENDING:"En attente", ACCEPTED:"Accepté", DECLINED:"Refusé", REMOVED:"Retiré" })[value] || value;
 }
 
-function renderMomentParticipantOptions(selectedIds = []) {
+function renderMomentParticipantOptions(selectedIds = [], profiles = []) {
   const selected = new Set(selectedIds);
-  const members = TOGETHER.circle.members || [];
-  elements.momentParticipantOptions.innerHTML = members.length ? members.map((member) => `<label class="participant-option"><input name="participant_ids" type="checkbox" value="${member.user_id}" ${selected.has(member.user_id) ? "checked" : ""} /><span>${circleIdentity(member, "mini-avatar")}<span><strong>${escapeHTML(member.display_name || "Membre MOMENTUM")}</strong><small>Dans ton Cercle</small></span></span></label>`).join("") : '<p class="participant-picker-empty">Ton Cercle est encore vide. Tu pourras inviter des participants plus tard.</p>';
+  const byId = new Map((TOGETHER.circle.members || []).map(member => [member.user_id, member]));
+  for (const id of selected) if (!byId.has(id)) byId.set(id, profiles.find(profile => profile.user_id === id) || {user_id:id});
+  byId.delete(TOGETHER.user.id);
+  const members = [...byId.values()];
+  elements.momentParticipantOptions.innerHTML = members.length ? members.map((member) => `<label class="participant-option"><input name="participant_ids" type="checkbox" value="${escapeHTML(member.user_id)}" ${selected.has(member.user_id) ? "checked" : ""} /><span>${circleIdentity(member, "mini-avatar")}<span><strong>${escapeHTML(member.display_name || "Membre MOMENTUM")}</strong><small>${selected.has(member.user_id) ? "Déjà sélectionné" : "Dans ton Cercle"}</small></span></span></label>`).join("") : '<p class="participant-picker-empty">Ton Cercle est encore vide. Tu pourras inviter des participants plus tard.</p>';
+}
+
+function setMomentFormStatus(message = '', error = false) {
+  const status = document.getElementById('momentFormStatus');
+  status.textContent = message;
+  status.classList.toggle('error', error);
+}
+
+function syncMomentDateMode() {
+  const fixed = elements.momentForm.elements.date_mode.value === 'fixed';
+  document.getElementById('momentFixedDate').hidden = !fixed;
+  document.getElementById('momentDatesField').hidden = fixed;
+}
+
+function appendDateOption(option = {}, duplicate = false) {
+  const row = document.createElement('div');
+  row.className = 'date-option-input';
+  row.dataset.id = duplicate ? crypto.randomUUID() : option.id || crypto.randomUUID();
+  row.dataset.endAt = option.end_at || '';
+  // The database also protects slots answered by guests, whose private answers are not exposed here.
+  const answered = !duplicate && Boolean(option.moment_availability?.length);
+  row.innerHTML = '<label>Créneau<input name="date_option" type="datetime-local" /></label><button type="button" aria-label="Supprimer ce créneau">×</button>';
+  const input = row.querySelector('input');
+  input.value = localDateTimeValue(option.start_at);
+  input.readOnly = answered;
+  row.querySelector('button').disabled = answered;
+  if (answered) row.title = 'Ce créneau a reçu des réponses et reste conservé.';
+  row.querySelector('button').addEventListener('click', () => row.remove());
+  elements.dateOptions.appendChild(row);
 }
 
 function syncMomentVisibility() {
@@ -116,18 +151,29 @@ function syncMomentVisibility() {
 }
 
 function openMomentForm(moment = null, options = {}) {
+  if (momentEditor.request || momentEditor.busy) {
+    if (!elements.momentDialog.open) elements.momentDialog.showModal();
+    setMomentFormStatus('Un enregistrement attend sa réponse. Réessaie pour le vérifier avant d’en commencer un autre.');
+    return;
+  }
   const duplicate = Boolean(options.duplicate);
   const participantIds = options.participantIds || [];
   elements.momentForm.reset();
+  momentEditor.moment = moment && !duplicate ? moment : null;
+  setMomentFormStatus();
+  elements.momentForm.querySelector('.moment-advanced').open = false;
   elements.dateOptions.innerHTML = "";
   elements.momentForm.elements.moment_id.value = moment && !duplicate ? moment.id : "";
   elements.momentDialogKicker.textContent = duplicate ? "Nouvelle aventure" : moment ? "Organisation" : "Nouveau";
   elements.momentDialogTitle.textContent = duplicate ? "Dupliquer le Moment" : moment ? "Modifier le Moment" : "Proposer un Moment";
-  elements.saveMoment.textContent = moment && !duplicate ? "Enregistrer" : "Créer le Moment";
+  elements.saveMoment.textContent = moment && !duplicate && moment.status !== 'DRAFT' ? 'Enregistrer' : 'Publier le Moment';
+  document.getElementById('saveMomentDraft').hidden = Boolean(moment && !duplicate && moment.status !== 'DRAFT');
   if (moment) {
     elements.momentForm.elements.title.value = duplicate ? `Copie — ${moment.title}` : moment.title;
     elements.momentForm.elements.moment_type.value = moment.moment_type || "OTHER";
     elements.momentForm.elements.start_at.value = localDateTimeValue(moment.start_at);
+    elements.momentForm.elements.date_mode.value = moment.start_at ? 'fixed' : 'options';
+    for (const option of moment.moment_date_options || []) appendDateOption(option, duplicate);
     if (moment.location_name) {
       elements.momentLocationPicker.setLocation({
         id:moment.location_id || null,
@@ -143,7 +189,8 @@ function openMomentForm(moment = null, options = {}) {
     elements.momentVisibility.value = "CLUB";
     elements.momentClub.value = options.clubId;
   }
-  renderMomentParticipantOptions(participantIds);
+  renderMomentParticipantOptions(participantIds, options.profiles);
+  syncMomentDateMode();
   syncMomentVisibility();
   if (moment?.club_id) elements.momentClub.value = moment.club_id;
   elements.momentDialog.showModal();
@@ -194,7 +241,7 @@ function momentCard(moment) {
     <article class="moment-card" style="--moment-color:${colors[moment.moment_type] || colors.OTHER}">
       <div class="moment-card-copy">
         <span class="moment-status">${escapeHTML(momentStatusLabel(moment.status))}</span>
-        <h3>${escapeHTML(moment.title)}</h3>
+        <h3>${escapeHTML(moment.title || "Moment à préparer")}</h3>
         <p>${escapeHTML(moment.description || "Un Moment à écrire ensemble.")}</p>
       </div>
       <div class="moment-card-details">
@@ -380,7 +427,7 @@ async function openMomentDetail(momentId) {
     return { ...media, signed_url: data?.signedUrl || null };
   }));
   const options = (moment.moment_date_options || []).sort((a, b) => new Date(a.start_at) - new Date(b.start_at));
-  const canManage = moment.created_by === TOGETHER.user.id;
+  const canManage = moment.created_by === TOGETHER.user.id || TOGETHER.clubMemberships.some(member => member.club_id === moment.club_id && member.membership_status === 'ACCEPTED' && ['OWNER','ADMIN','ORGANIZER'].includes(member.role)) || (participantsResult.data || []).some(member => member.user_id === TOGETHER.user.id && member.invitation_status === 'ACCEPTED' && ['OWNER','ORGANIZER'].includes(member.role));
   const participants = participantsResult.data || [];
   const participantIds = participants.map((participant) => participant.user_id);
   const { data: participantProfiles } = participantIds.length ? await window.momentumDB.rpc("shared_profiles",{p_user_ids:participantIds,p_moment_id:moment.id}) : { data: [] };
@@ -390,24 +437,28 @@ async function openMomentDetail(momentId) {
   const availableActivities = (activitiesResult.data || []).filter((activity) => !linkedIds.has(activity.id));
   const myReaction = (reactionsResult.data || []).find((reaction) => reaction.user_id === TOGETHER.user.id);
   const emojis = [["HEART","❤️"],["APPLAUSE","👏"],["FIRE","🔥"],["SPARKLES","✨"],["MOUNTAIN","🏔️"],["TENNIS","🎾"],["COFFEE","☕"]];
-  elements.momentDetail.innerHTML = `<div class="dialog-shell moment-memory-shell"><button class="dialog-close detail-close" type="button">×</button><span class="card-label">${escapeHTML(moment.status)}</span><h2>${escapeHTML(moment.title)}</h2><p class="detail-lead">${escapeHTML(moment.description || "Un Moment partagé.")}</p><div class="detail-facts"><span>${escapeHTML(formatDate(moment.start_at))}</span><span>${escapeHTML(moment.location_name || "Lieu à définir")}</span><span>${escapeHTML(visibilityLabel(moment.club_id ? "Club" : moment.visibility))}</span></div>
+  elements.momentDetail.innerHTML = `<div class="dialog-shell moment-memory-shell"><button class="dialog-close detail-close" type="button">×</button><span class="card-label">${escapeHTML(moment.status)}</span><h2>${escapeHTML(moment.title || "Moment à préparer")}</h2><p class="detail-lead">${escapeHTML(moment.description || "Un Moment partagé.")}</p><div class="detail-facts"><span>${escapeHTML(formatDate(moment.start_at))}</span><span>${escapeHTML(moment.location_name || "Lieu à définir")}</span><span>${escapeHTML(visibilityLabel(moment.club_id ? "Club" : moment.visibility))}</span></div>
+    <p data-moment-action-status role="status" aria-live="polite"></p>
     ${canManage ? '<div class="moment-owner-actions"><button class="together-secondary" id="editMoment" type="button">Modifier</button><button class="together-secondary" id="guestInvitations" type="button">Inviter sans compte</button><button class="together-secondary" id="duplicateMoment" type="button">Dupliquer</button><button class="moment-danger-action" id="deleteMoment" type="button">Supprimer</button></div>' : ""}
-    ${myParticipation?.invitation_status === "PENDING" ? '<section class="moment-invitation-answer"><div><strong>Ton invitation attend une réponse</strong><span>Ta décision sera immédiatement visible par l’organisateur.</span></div><div><button class="together-primary" data-answer-moment="ACCEPTED" type="button">Accepter</button><button class="together-secondary" data-answer-moment="DECLINED" type="button">Refuser</button></div></section>' : ""}
+    ${moment.status !== 'DRAFT' && (myParticipation?.invitation_status === 'PENDING' || myParticipation?.invitation_status === 'ACCEPTED' && (myParticipation?.confirmed_schedule_revision !== moment.schedule_revision || myParticipation?.participation_status === 'WAITLISTED')) ? '<section class="moment-invitation-answer"><div><strong>La date et le lieu attendent ta confirmation</strong><span>Ta décision sera immédiatement visible par l’organisateur.</span></div><div><button class="together-primary" data-answer-moment="ACCEPTED" type="button">Accepter</button><button class="together-secondary" data-answer-moment="DECLINED" type="button">Refuser</button></div></section>' : ""}
     ${canManage && moment.status === "CONFIRMED" ? '<button class="together-secondary" id="completeMoment" type="button">Marquer comme terminé</button>' : ""}
-    <section class="detail-section"><div class="detail-title"><h3>Participants</h3><span class="section-count">${participants.length}</span></div><div class="moment-participant-list">${participants.length ? participants.map((participant) => { const profile = participantProfileMap.get(participant.user_id) || {}; const name = participant.user_id === TOGETHER.user.id ? "Toi" : profile.display_name || "Membre MOMENTUM"; return `<div class="moment-participant-row">${circleIdentity(profile, "mini-avatar")}<span><strong>${escapeHTML(name)}</strong><small>${escapeHTML(participant.role === "OWNER" ? "Organisateur" : "Participant")}</small></span><span class="participant-invitation-status status-${participant.invitation_status.toLowerCase()}">${escapeHTML(participant.participation_status === "WAITLISTED" ? "En attente d’une place" : invitationStatusLabel(participant.invitation_status))}</span></div>`; }).join("") : '<p class="memory-empty">Aucun participant invité.</p>'}</div></section>
+    <section class="detail-section"><div class="detail-title"><h3>Participants</h3><span class="section-count">${participants.length}</span></div><div class="moment-participant-list">${participants.length ? participants.map((participant) => { const profile = participantProfileMap.get(participant.user_id) || {}; const name = participant.user_id === TOGETHER.user.id ? "Toi" : profile.display_name || "Membre MOMENTUM"; return `<div class="moment-participant-row">${circleIdentity(profile, "mini-avatar")}<span><strong>${escapeHTML(name)}</strong><small>${escapeHTML(participant.role === "OWNER" ? "Organisateur" : "Participant")}</small></span><span class="participant-invitation-status status-${participant.invitation_status.toLowerCase()}">${escapeHTML(participant.participation_status === 'WAITLISTED' ? 'En attente d’une place' : participant.invitation_status === 'ACCEPTED' && participant.confirmed_schedule_revision !== moment.schedule_revision ? 'À reconfirmer' : invitationStatusLabel(participant.invitation_status))}</span></div>`; }).join("") : '<p class="memory-empty">Aucun participant invité.</p>'}</div></section>
     ${options.length ? `<section class="detail-section"><div class="detail-title"><h3>Créneaux</h3></div><div class="option-list">${options.map((option) => { const mine = option.moment_availability?.find((item) => item.user_id === TOGETHER.user.id)?.availability_status || "NO_RESPONSE"; const yes = option.moment_availability?.filter((item) => item.availability_status === "AVAILABLE").length || 0; return `<article class="date-option ${option.is_selected ? "selected" : ""}"><div><strong>${escapeHTML(formatDate(option.start_at))}</strong><small>${escapeHTML(option.location_name || moment.location_name || "Lieu à définir")} · ${yes} disponible${yes > 1 ? "s" : ""}</small></div><div class="availability-actions">${[["AVAILABLE","Oui"],["MAYBE","Peut-être"],["UNAVAILABLE","Non"]].map(([value,label]) => `<button class="${mine === value ? "active" : ""}" data-availability="${option.id}" data-value="${value}" type="button">${label}</button>`).join("")}</div>${canManage && !option.is_selected && moment.status === "PLANNING" ? `<button class="confirm-option" data-confirm-option="${option.id}" type="button">Confirmer ce créneau</button>` : option.is_selected ? '<span class="confirmed-label">Créneau confirmé</span>' : ""}</article>`; }).join("")}</div></section>` : ""}
     <section class="detail-section"><div class="detail-title"><h3>Photos</h3><label class="memory-upload">Ajouter une photo<input id="momentPhoto" type="file" accept="image/png,image/jpeg,image/webp" /></label></div><div class="memory-gallery">${signedMedia.length ? signedMedia.map((media) => `<figure>${media.signed_url ? `<img src="${escapeHTML(media.signed_url)}" alt="${escapeHTML(media.caption || "Photo du Moment")}" />` : ""}${media.caption ? `<figcaption>${escapeHTML(media.caption)}</figcaption>` : ""}</figure>`).join("") : '<p class="memory-empty">Aucune photo pour l’instant.</p>'}</div></section>
     <section class="detail-section"><div class="detail-title"><h3>Activités liées</h3>${availableActivities.length ? `<select id="linkActivity"><option value="">Lier une activité HOME…</option>${availableActivities.map((activity) => `<option value="${activity.id}">${escapeHTML(sportLabel(activity.sport) || activity.activity_type || "Activité")} · ${escapeHTML(activity.activity_date || "Sans date")}</option>`).join("")}</select>` : ""}</div><div class="linked-activities">${(linksResult.data || []).length ? (linksResult.data || []).map((link) => activityMemoryCard(link.activities)).join("") : '<p class="memory-empty">Aucune activité liée.</p>'}</div></section>
     <section class="detail-section"><div class="detail-title"><h3>Encourager</h3></div><div class="reaction-picker">${emojis.map(([value,label]) => `<button class="${myReaction?.reaction_type === value ? "active" : ""}" data-reaction="${value}" type="button">${label}</button>`).join("")}</div><div class="preset-picker">${(presetsResult.data || []).map((preset) => `<button class="${myReaction?.preset_message_id === preset.id ? "active" : ""}" data-preset="${preset.id}" type="button">${escapeHTML(preset.label)}</button>`).join("")}</div>${myReaction ? '<button class="remove-reaction" id="removeReaction" type="button">Retirer ma réaction</button>' : ""}</section>
   </div>`;
   elements.momentDetail.querySelector(".detail-close")?.addEventListener("click", () => elements.momentDetailDialog.close());
+  if (sharedActions.has(moment.id)) showSharedRetry(moment, sharedActions.get(moment.id));
   const statusLabel = elements.momentDetail.querySelector(".card-label");
   if (statusLabel) statusLabel.textContent = momentStatusLabel(moment.status);
   elements.momentDetail.querySelectorAll("[data-availability]").forEach((button) => button.addEventListener("click", () => saveAvailability(button.dataset.availability, button.dataset.value, moment.id)));
   elements.momentDetail.querySelectorAll("[data-confirm-option]").forEach((button) => button.addEventListener("click", () => confirmDateOption(moment, button.dataset.confirmOption)));
   elements.momentDetail.querySelectorAll("[data-answer-moment]").forEach((button) => button.addEventListener("click", () => answerMomentInvitation(moment.id, button.dataset.answerMoment)));
-  document.getElementById("editMoment")?.addEventListener("click", () => { elements.momentDetailDialog.close(); openMomentForm(moment, { participantIds: participants.filter((participant) => participant.role !== "OWNER").map((participant) => participant.user_id) }); });
-  document.getElementById("duplicateMoment")?.addEventListener("click", () => { elements.momentDetailDialog.close(); openMomentForm(moment, { duplicate: true, participantIds: participants.filter((participant) => participant.role !== "OWNER").map((participant) => participant.user_id) }); });
+  if (['COMPLETED','CANCELLED','ONGOING'].includes(moment.status)) document.getElementById('editMoment')?.remove();
+  if (!['PLANNING','CONFIRMED'].includes(moment.status)) document.getElementById('guestInvitations')?.remove();
+  document.getElementById("editMoment")?.addEventListener("click", () => { elements.momentDetailDialog.close(); openMomentForm(moment, { profiles: participantProfiles || [], participantIds: participants.filter((participant) => participant.role !== "OWNER").map((participant) => participant.user_id) }); });
+  document.getElementById("duplicateMoment")?.addEventListener("click", () => { elements.momentDetailDialog.close(); openMomentForm(moment, { duplicate: true, profiles: participantProfiles || [], participantIds: participants.filter((participant) => participant.role !== "OWNER").map((participant) => participant.user_id) }); });
   document.getElementById("deleteMoment")?.addEventListener("click", () => deleteMoment(moment));
   document.getElementById("completeMoment")?.addEventListener("click", () => completeMoment(moment.id));
   document.getElementById("momentPhoto")?.addEventListener("change", (event) => addMomentPhoto(moment.id, event.target.files?.[0]));
@@ -424,20 +475,13 @@ function activityMemoryCard(activity = {}) {
 }
 
 async function completeMoment(momentId) {
-  const { error } = await window.momentumDB.from("moments").update({ status: "COMPLETED", updated_at: new Date().toISOString() }).eq("id", momentId);
-  if (error) return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
-  elements.momentDetailDialog.close(); setStatus("Le Moment rejoint maintenant les souvenirs."); await loadTogether();
+  const moment = TOGETHER.moments.find(item => item.id === momentId);
+  if (moment) await runSharedAction(moment, 'complete');
 }
 
 async function answerMomentInvitation(momentId, answer) {
-  const values = answer === "ACCEPTED"
-    ? { invitation_status: "ACCEPTED", participation_status: "REGISTERED", updated_at: new Date().toISOString() }
-    : { invitation_status: "DECLINED", participation_status: "DECLINED", updated_at: new Date().toISOString() };
-  const { data, error } = await window.momentumDB.from("moment_participants").update(values).eq("moment_id", momentId).eq("user_id", TOGETHER.user.id).select("participation_status").single();
-  if (error) return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
-  elements.momentDetailDialog.close();
-  setStatus(answer === "ACCEPTED" ? (data.participation_status === "WAITLISTED" ? "Réponse enregistrée : en attente d’une place." : "Invitation acceptée, place confirmée.") : "Invitation refusée.");
-  await loadTogether();
+  const moment = TOGETHER.moments.find(item => item.id === momentId);
+  if (moment) await runSharedAction(moment, 'answer', {answer});
 }
 
 async function deleteMoment(moment) {
@@ -487,22 +531,13 @@ async function removeReaction(momentId) {
   await openMomentDetail(momentId);
 }
 
-async function saveAvailability(optionId, status, momentId) {
-  const { data: existing } = await window.momentumDB.from("moment_availability").select("id").eq("date_option_id", optionId).eq("user_id", TOGETHER.user.id).maybeSingle();
-  const query = existing ? window.momentumDB.from("moment_availability").update({ availability_status: status, updated_at: new Date().toISOString() }).eq("id", existing.id) : window.momentumDB.from("moment_availability").insert({ date_option_id: optionId, user_id: TOGETHER.user.id, availability_status: status });
-  const { error } = await query;
-  if (error) return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
-  await loadTogether(); openMomentDetail(momentId);
+async function saveAvailability(optionId, answer, momentId) {
+  const moment = TOGETHER.moments.find(item => item.id === momentId);
+  if (moment) await runSharedAction(moment, 'availability', {option_id:optionId, answer});
 }
 
 async function confirmDateOption(moment, optionId) {
-  const option = moment.moment_date_options.find((item) => item.id === optionId);
-  if (!option) return;
-  const { error: optionError } = await window.momentumDB.from("moment_date_options").update({ is_selected: true }).eq("id", optionId);
-  if (optionError) return setStatus(`Créneau non confirmé : ${optionError.message}`, true);
-  const { error } = await window.momentumDB.from("moments").update({ start_at: option.start_at, end_at: option.end_at, location_id: option.location_id || moment.location_id || null, location_name: option.location_name || moment.location_name, status: "CONFIRMED", updated_at: new Date().toISOString() }).eq("id", moment.id);
-  if (error) return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
-  elements.momentDetailDialog.close(); setStatus("Le créneau est confirmé."); await loadTogether();
+  await runSharedAction(moment, 'confirm_date', {option_id:optionId});
 }
 
 async function loadTogether() {
@@ -562,83 +597,122 @@ async function loadTogether() {
   }
 }
 
-async function syncMomentParticipants(momentId, selectedIds) {
-  const { data: existing, error: existingError } = await window.momentumDB.from("moment_participants").select("id,user_id,role,invitation_status").eq("moment_id", momentId);
-  if (existingError) return existingError;
-  const selected = new Set(selectedIds.filter((id) => id !== TOGETHER.user.id));
-  const current = new Map((existing || []).map((participant) => [participant.user_id, participant]));
-  const inserts = [...selected].filter((id) => !current.has(id)).map((userId) => ({ moment_id: momentId, user_id: userId, role: "PARTICIPANT", invitation_status: "PENDING", participation_status: "INVITED" }));
-  if (inserts.length) {
-    const { error } = await window.momentumDB.from("moment_participants").insert(inserts);
-    if (error) return error;
+function freezeMomentForm(frozen) {
+  for (const control of elements.momentForm.querySelectorAll('input, select, textarea, button')) {
+    if (control.value === 'cancel' || control === elements.saveMoment) continue;
+    if (frozen && !control.hasAttribute('data-was-disabled')) control.dataset.wasDisabled = String(control.disabled);
+    control.disabled = frozen || control.dataset.wasDisabled === 'true';
+    if (!frozen) delete control.dataset.wasDisabled;
   }
-  for (const participant of existing || []) {
-    if (participant.role === "OWNER") continue;
-    const shouldInvite = selected.has(participant.user_id);
-    if (shouldInvite && participant.invitation_status === "REMOVED") {
-      const { error } = await window.momentumDB.from("moment_participants").update({ invitation_status: "PENDING", participation_status: "INVITED", updated_at: new Date().toISOString() }).eq("id", participant.id);
-      if (error) return error;
-    } else if (!shouldInvite && participant.invitation_status !== "REMOVED") {
-      const { error } = await window.momentumDB.from("moment_participants").update({ invitation_status: "REMOVED", participation_status: "DECLINED", updated_at: new Date().toISOString() }).eq("id", participant.id);
-      if (error) return error;
-    }
-  }
-  return null;
+  elements.momentLocationPicker.inert = frozen;
+  elements.saveMoment.disabled = momentEditor.busy;
 }
 
-async function createMoment(form) {
+async function createMoment(form, draft = false) {
+  if (momentEditor.busy) return;
+  momentEditor.busy = true;
+  const sessionRevision = sharedSessionRevision;
+  // Capture before disabling controls: disabled fields do not participate in FormData.
   const values = Object.fromEntries(new FormData(form));
-  const editingId = values.moment_id || null;
-  let locationResolution;
+  const participantIds = new FormData(form).getAll('participant_ids');
+  const options = [...elements.dateOptions.querySelectorAll('.date-option-input')].map(row => ({
+    id:row.dataset.id, start_at:row.querySelector('input').value, end_at:row.dataset.endAt || null
+  }));
+  freezeMomentForm(true);
+  setMomentFormStatus(momentEditor.request ? 'Vérification du même enregistrement…' : 'Enregistrement…');
   try {
-    locationResolution = await window.MomentumLocations.resolveForSave(
-      elements.momentLocationPicker,
-      TOGETHER.user.id
-    );
-  } catch (locationError) {
-    return setStatus(window.MomentumUI.errorMessage(locationError, "save"), true);
-  }
-  const proposedDates = [values.start_at, ...Array.from(form.querySelectorAll('[name="date_option"]')).map((input) => input.value)].filter(Boolean);
-  const participantIds = new FormData(form).getAll("participant_ids");
-  const payload = {
-    user_id: TOGETHER.user.id,
-    created_by: TOGETHER.user.id,
-    club_id: values.visibility === "CLUB" ? values.club_id || null : null,
-    title: values.title.trim(), description: values.description.trim() || null,
-    moment_type: values.moment_type,
-    start_at: proposedDates.length === 1 || editingId ? (proposedDates[0] ? new Date(proposedDates[0]).toISOString() : null) : null,
-    location_id: locationResolution.location?.id || null,
-    location_name: locationResolution.location?.name || String(values.location_name || "").trim() || null,
-    capacity: values.capacity ? Number(values.capacity) : null,
-    visibility: values.visibility === "CLUB" ? "PARTICIPANTS" : values.visibility,
-  };
-  if (editingId) {
-    delete payload.user_id;
-    delete payload.created_by;
-    const { data, error } = await window.momentumDB.from("moments").update({ ...payload, updated_at: new Date().toISOString() }).eq("id", editingId).select().single();
-    if (error) {
-      await window.MomentumLocations.rollbackCreated(locationResolution);
-      return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
+    if (!momentEditor.request) {
+      const fixed = values.date_mode === 'fixed';
+      const start = fixed && values.start_at ? new Date(values.start_at).toISOString() : null;
+      const previous = momentEditor.moment;
+      const end = start && previous?.start_at && new Date(previous.start_at).getTime() === new Date(start).getTime() ? previous.end_at || null : null;
+      if (!draft && (!values.title.trim() || (fixed ? !start : !options.some(option => option.start_at)))) {
+        return setMomentFormStatus('Ajoute un titre et une date ou des créneaux, ou garde ce Moment en brouillon.', true);
+      }
+      if (values.capacity && (!Number.isInteger(Number(values.capacity)) || Number(values.capacity) < 1 || Number(values.capacity) > 100000)) return setMomentFormStatus('La capacité doit être un nombre entier positif.', true);
+      const slots = options.filter(option => option.start_at).map(option => ({...option, start_at:new Date(option.start_at).toISOString()}));
+      if (start && !slots.some(option => option.start_at === start && option.end_at === end)) slots.push({id:crypto.randomUUID(),start_at:start,end_at:end});
+      if (slots.length > 30) return setMomentFormStatus('Un Moment peut proposer au maximum 30 créneaux.', true);
+      const locationResolution = await window.MomentumLocations.resolveForSave(elements.momentLocationPicker, TOGETHER.user.id);
+      if (sessionRevision !== sharedSessionRevision) return;
+      const data = {
+        id:values.moment_id || crypto.randomUUID(), title:values.title.trim(), description:values.description.trim() || null,
+        moment_type:values.moment_type, status:draft ? 'DRAFT' : fixed ? 'CONFIRMED' : 'PLANNING', date_mode:values.date_mode,
+        start_at:start, end_at:end, options:slots, participants:participantIds,
+        location_id:locationResolution.location?.id || null,
+        location_name:locationResolution.location?.name || String(values.location_name || '').trim() || null,
+        capacity:values.capacity ? Number(values.capacity) : null,
+        visibility:values.visibility === 'CLUB' ? 'PARTICIPANTS' : values.visibility,
+        club_id:values.visibility === 'CLUB' ? values.club_id || null : null,
+      };
+      if (values.visibility === 'CLUB' && !data.club_id) return setMomentFormStatus('Choisis le Club concerné.', true);
+      momentEditor.request = window.MomentumSharedCommands.request((...args) => window.momentumDB.rpc(...args), 'save', data, previous?.revision ?? null);
     }
-    const participantError = await syncMomentParticipants(data.id, participantIds);
-    if (participantError) return setStatus(`Moment modifié, mais invitations incomplètes : ${participantError.message}`, true);
-    form.reset(); elements.momentDialog.close(); setStatus("Le Moment a été modifié."); await loadTogether(); return;
+    const reply = await momentEditor.request.run();
+    if (sessionRevision !== sharedSessionRevision) return;
+    if (!reply.ok) {
+      setMomentFormStatus(reply.message, true);
+      if (!reply.uncertain) {
+        momentEditor.request = null;
+        if (reply.conflict) setMomentFormStatus('Le Moment a changé. Ferme cette fenêtre et rouvre-le après actualisation ; ta saisie reste affichée pour que tu puisses la conserver.', true);
+      }
+      return;
+    }
+    momentEditor.request = null;
+    form.reset();
+    elements.momentDialog.close();
+    await loadTogether();
+    setStatus(reply.data.status === 'DRAFT' ? 'Brouillon enregistré. Il reste privé jusqu’à sa publication.' : 'Le Moment, ses participants et ses créneaux sont enregistrés. Les invitations sont visibles dans MOMENTUM.');
+  } catch (error) {
+    if (sessionRevision === sharedSessionRevision) setMomentFormStatus(window.MomentumUI.errorMessage(error, 'save'), true);
+  } finally {
+    momentEditor.busy = false;
+    freezeMomentForm(Boolean(momentEditor.request));
+    elements.saveMoment.textContent = momentEditor.request ? 'Vérifier l’enregistrement' : momentEditor.moment && momentEditor.moment.status !== 'DRAFT' ? 'Enregistrer' : 'Publier le Moment';
   }
-  payload.status = proposedDates.length === 1 ? "CONFIRMED" : "PLANNING";
-  const { data, error } = await window.momentumDB.from("moments").insert(payload).select().single();
-  if (error) {
-    await window.MomentumLocations.rollbackCreated(locationResolution);
-    return setStatus(window.MomentumUI.errorMessage(error, "save"), true);
+}
+
+function showSharedRetry(moment, pending) {
+  const status = elements.momentDetail.querySelector('[data-moment-action-status]');
+  if (!status) return;
+  status.textContent = 'La réponse précédente attend une vérification. Vérifie-la avant de choisir une autre réponse.';
+  const retry = document.createElement('button');
+  retry.type = 'button'; retry.className = 'together-secondary'; retry.textContent = 'Vérifier cette réponse';
+  retry.addEventListener('click', () => runSharedAction(moment, pending.action, {}, true));
+  status.append(' ', retry);
+}
+
+async function runSharedAction(moment, action, data = {}, retry = false) {
+  const key = moment.id;
+  let pending = sharedActions.get(key);
+  if (pending && !retry) {
+    if (!pending.busy) showSharedRetry(moment, pending);
+    return;
   }
-  const participantResult = await window.momentumDB.from("moment_participants").insert({ moment_id: data.id, user_id: TOGETHER.user.id, role: "OWNER", invitation_status: "ACCEPTED", participation_status: "REGISTERED" });
-  if (participantResult.error) return setStatus("Moment créé, mais sa mise à jour est incomplète. Réessaie dans un instant.", true);
-  const inviteError = await syncMomentParticipants(data.id, participantIds);
-  if (inviteError) return setStatus(`Moment créé, mais invitations incomplètes : ${inviteError.message}`, true);
-  if (proposedDates.length) {
-    const { error: optionsError } = await window.momentumDB.from("moment_date_options").insert(proposedDates.map((date, index) => ({ moment_id: data.id, start_at: new Date(date).toISOString(), location_id: payload.location_id, location_name: payload.location_name, created_by: TOGETHER.user.id, is_selected: proposedDates.length === 1 && index === 0 })));
-    if (optionsError) return setStatus(`Moment créé, mais créneaux non enregistrés : ${optionsError.message}`, true);
+  if (!pending) {
+    pending = {action, request:window.MomentumSharedCommands.request((...args) => window.momentumDB.rpc(...args), action,
+      {id:moment.id, schedule_revision:moment.schedule_revision, ...data}, ['confirm_date','complete'].includes(action) ? moment.revision : null)};
+    sharedActions.set(key, pending);
   }
-  form.reset(); elements.momentDialog.close(); setStatus(participantIds.length ? "Le Moment a été créé et les invitations ont été envoyées." : "Le Moment a été créé."); await loadTogether();
+  if (pending.busy) return;
+  pending.busy = true;
+  const sessionRevision = sharedSessionRevision;
+  const status = elements.momentDetail.querySelector('[data-moment-action-status]');
+  if (status) status.textContent = 'Enregistrement…';
+  try {
+    const reply = await pending.request.run();
+    if (sessionRevision !== sharedSessionRevision) return;
+    if (!reply.ok) {
+      if (!reply.uncertain) sharedActions.delete(key);
+      if (status) status.textContent = reply.message;
+      if (reply.uncertain) showSharedRetry(moment, pending);
+      return;
+    }
+    sharedActions.delete(key);
+    elements.momentDetailDialog.close();
+    await loadTogether();
+    setStatus(reply.data.participation_status === 'WAITLISTED' ? 'Réponse enregistrée : en attente d’une place.' : pending.action === 'answer' ? 'Ta réponse est enregistrée.' : 'Le Moment a été mis à jour.');
+  } finally { pending.busy = false; }
 }
 
 async function uploadClubLogo(clubId, file) {
@@ -823,13 +897,8 @@ document.addEventListener("click", (event) => {
   if (event.target.closest("[data-together-retry]")) loadTogether();
   if (event.target.closest("[data-empty-create-moment]")) openMomentForm();
 });
-document.getElementById("addDateOption")?.addEventListener("click", () => {
-  const row = document.createElement("div");
-  row.className = "date-option-input";
-  row.innerHTML = '<input name="date_option" type="datetime-local" required /><button type="button" aria-label="Supprimer ce créneau">×</button>';
-  row.querySelector("button").addEventListener("click", () => row.remove());
-  elements.dateOptions.appendChild(row);
-});
+document.getElementById('addDateOption')?.addEventListener('click', () => appendDateOption());
+document.getElementById('momentDateMode')?.addEventListener('change', syncMomentDateMode);
 elements.clubLogo?.addEventListener("change", () => {
   const file = elements.clubLogo.files?.[0];
   if (!file) { elements.clubLogoPreview.textContent = "△"; return; }
@@ -837,7 +906,16 @@ elements.clubLogo?.addEventListener("change", () => {
   elements.clubLogoPreview.innerHTML = `<img src="${url}" alt="Aperçu du logo" />`;
 });
 elements.momentVisibility?.addEventListener("change", syncMomentVisibility);
-elements.momentForm?.addEventListener("submit", (event) => { event.preventDefault(); if (event.submitter?.value !== "cancel" && elements.momentForm.reportValidity()) createMoment(elements.momentForm); else elements.momentDialog.close(); });
+elements.momentForm?.addEventListener('submit', event => {
+  event.preventDefault();
+  if (event.submitter?.value === 'cancel') return elements.momentDialog.close();
+  if (momentEditor.request || event.submitter?.value === 'draft' || elements.momentForm.reportValidity()) createMoment(elements.momentForm, event.submitter?.value === 'draft');
+});
+window.addEventListener('momentum:session-cleared', () => {
+  sharedSessionRevision += 1;
+  momentEditor.request = null; momentEditor.moment = null; sharedActions.clear();
+  elements.momentForm.reset(); elements.momentDialog.close();
+});
 elements.clubForm?.addEventListener("submit", (event) => { event.preventDefault(); if (event.submitter?.value !== "cancel" && elements.clubForm.reportValidity()) createClub(elements.clubForm); else elements.clubDialog.close(); });
 elements.circleInviteForm?.addEventListener("submit", (event) => {
   event.preventDefault();

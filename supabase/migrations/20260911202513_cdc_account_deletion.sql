@@ -126,6 +126,7 @@ begin
  delete from private.guest_invitations where owner_id=job.user_id;
  delete from private.personal_exports where user_id=job.user_id;
  delete from private.moment_operations where user_id=job.user_id;
+ delete from private.shared_moment_operations where user_id=job.user_id;
  -- Parents last: foreign-key cascades and file-retirement triggers remain enabled.
  foreach relation in array array['activity_flow_assessments','activity_media','activity_timeline','moment_media','moment_availability','moment_participants','club_member_preferences','club_members','reactions','daily_wellbeing','user_locations','user_settings','user_sports','user_equipment','wellbeing_profile','user_sport_preferences','user_goals','user_load_estimates','onboarding_progress','circle_preferences','activities','user_missions','days','passports'] loop
   execute format('delete from public.%I where user_id=$1',relation) using job.user_id;

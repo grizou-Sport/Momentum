@@ -1,0 +1,57 @@
+[
+  {
+    "table_name": "moment_availability",
+    "conname": "moment_availability_availability_status_check",
+    "definition": "CHECK ((availability_status = ANY (ARRAY['AVAILABLE'::text, 'MAYBE'::text, 'UNAVAILABLE'::text, 'NO_RESPONSE'::text])))"
+  },
+  {
+    "table_name": "moment_availability",
+    "conname": "moment_availability_date_option_id_user_id_key",
+    "definition": "UNIQUE (date_option_id, user_id)"
+  },
+  {
+    "table_name": "moment_date_options",
+    "conname": "moment_date_options_check",
+    "definition": "CHECK (((end_at IS NULL) OR (end_at > start_at)))"
+  },
+  {
+    "table_name": "moment_participants",
+    "conname": "moment_participants_invitation_status_check",
+    "definition": "CHECK ((invitation_status = ANY (ARRAY['PENDING'::text, 'ACCEPTED'::text, 'DECLINED'::text, 'REMOVED'::text])))"
+  },
+  {
+    "table_name": "moment_participants",
+    "conname": "moment_participants_moment_id_user_id_key",
+    "definition": "UNIQUE (moment_id, user_id)"
+  },
+  {
+    "table_name": "moment_participants",
+    "conname": "moment_participants_participation_status_check",
+    "definition": "CHECK ((participation_status = ANY (ARRAY['INVITED'::text, 'AVAILABLE'::text, 'REGISTERED'::text, 'WAITLISTED'::text, 'DECLINED'::text])))"
+  },
+  {
+    "table_name": "moment_participants",
+    "conname": "moment_participants_role_check",
+    "definition": "CHECK ((role = ANY (ARRAY['OWNER'::text, 'ORGANIZER'::text, 'PARTICIPANT'::text, 'GUEST'::text])))"
+  },
+  {
+    "table_name": "moments",
+    "conname": "moments_capacity_check",
+    "definition": "CHECK (((capacity IS NULL) OR (capacity > 0)))"
+  },
+  {
+    "table_name": "moments",
+    "conname": "moments_dates_check",
+    "definition": "CHECK (((end_at IS NULL) OR (start_at IS NULL) OR (end_at > start_at)))"
+  },
+  {
+    "table_name": "moments",
+    "conname": "moments_status_check",
+    "definition": "CHECK ((status = ANY (ARRAY['DRAFT'::text, 'PLANNING'::text, 'CONFIRMED'::text, 'ONGOING'::text, 'COMPLETED'::text, 'CANCELLED'::text])))"
+  },
+  {
+    "table_name": "moments",
+    "conname": "moments_visibility_check",
+    "definition": "CHECK ((visibility = ANY (ARRAY['PRIVATE'::text, 'PARTICIPANTS'::text, 'CIRCLE'::text, 'SELECTED_USERS'::text])))"
+  }
+]
