@@ -12,7 +12,7 @@ const command = (db, payload, assessment = null, nutrition = null, operation = O
 
 test('MOM-02/16/18, SEC-12: atomic save, replay and ownership run in PostgreSQL', async t => {
   const db = await fixture(); t.after(() => db.close());
-  const payload = moment({ source_hash: 'a'.repeat(64) });
+  const payload = moment({ sport:'yoga',practice_variant:'active',qualifiers:['adventure'],is_memorable:true,source_hash: 'a'.repeat(64) });
   const memory = { perceived_challenge: null, perceived_mastery: null, retained_memory: 'Le lac au lever du jour.' };
   const first = await command(db, payload, memory);
   assert.equal(first.rows[0].result.revision, 1);
@@ -21,6 +21,8 @@ test('MOM-02/16/18, SEC-12: atomic save, replay and ownership run in PostgreSQL'
   const saved = (await db.query('select * from public.activity_flow_assessments')).rows[0];
   assert.equal(saved.perceived_challenge, null); assert.equal(saved.perceived_mastery, null); assert.equal(saved.retained_memory, memory.retained_memory);
   assert.equal((await db.query('select rpe from public.activities')).rows[0].rpe, null);
+  const practice=(await db.query('select practice_variant,qualifiers,is_memorable from public.activities')).rows[0];
+  assert.equal(practice.practice_variant,'active');assert.deepEqual(practice.qualifiers,['adventure']);assert.equal(practice.is_memorable,true);
   await assert.rejects(command(db, { ...payload, duration_min: 70 }, memory), e => e.code === '40001');
   await assert.rejects(command(db, { ...payload, id: B }, null, null, B), e => e.code === '23505');
   await db.query("select set_config('request.jwt.claim.sub',$1,false)", [B]);

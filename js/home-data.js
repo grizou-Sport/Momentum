@@ -9,7 +9,7 @@ const ACTIVITY_HOME_LEGACY_FIELDS = [
   "distance_km", "duration_min", "elevation_m", "avg_hr", "rpe",
   "gear", "notes", "created_at", "activity_date", "activity_time",
   "weather", "location_name", "location_id", "route_summary", "activity_category",
-  "source_file_url", "source_file_type", "gpx_url", "revision", "rpe_source", "duration_source", "timer_duration_seconds", "elapsed_duration_seconds", "moving_duration_seconds", "source_instant", "source_timezone", "source_hash", "qualifiers", "is_memorable", "nutrition_note", "nutrition_elapsed_override_seconds"
+  "source_file_url", "source_file_type", "gpx_url", "revision", "rpe_source", "duration_source", "timer_duration_seconds", "elapsed_duration_seconds", "moving_duration_seconds", "source_instant", "source_timezone", "source_hash", "practice_variant", "qualifiers", "is_memorable", "nutrition_note", "nutrition_elapsed_override_seconds"
 ].join(",");
 
 const ACTIVITY_HOME_FIT_FIELDS = [

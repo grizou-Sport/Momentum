@@ -19,6 +19,9 @@ small,.card-label,.chart-heading p,.chart-insight{font-size:14px}
 .card-label,.section-kicker{color:var(--muted-readable)}
 .skip-link{position:fixed;z-index:10000;left:16px;top:12px;padding:12px 20px;background:#fff;color:#111;transform:translateY(-180%);border:2px solid var(--focus-ring);border-radius:8px}
 .skip-link:focus{transform:none}
+[data-direct-content]{scroll-margin-top:24px}
+[data-content-link]{display:inline-flex;align-items:center;min-height:44px;padding:8px 0;text-underline-offset:4px;font-size:14px;color:inherit}
+[data-content-link]:focus-visible{outline:2px solid currentColor;outline-offset:4px}
 main{min-width:0}
 .momentum-rail{padding:20px 6px;background:rgba(247,247,245,.97)}
 .momentum-rail-link{width:90px;height:70px;min-height:70px;flex-basis:70px;gap:4px;padding:9px 2px;align-content:center;border-radius:14px}

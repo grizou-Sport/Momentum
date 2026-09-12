@@ -314,6 +314,7 @@ function initialiseActivityForm() {
   populateActivitySportOptions(form);
   populateWellbeingOptions(form);
   window.MomentumMomentForm?.setup(form);
+  getCurrentUser().then(user => { if (user) window.MomentumMomentForm?.loadPreferences(form, user.id); }).catch(() => {});
 
   if (form.dataset.initialised === "true") return;
 
@@ -552,6 +553,9 @@ async function openEditActivityDialog(activityId) {
   form.dataset.editActivityId = session.id;
   form.dataset.expectedRevision = String(session.revision ?? 0);
   form._originalActivity = session.original || {};
+  form.elements.practice_variant.value = session.original?.practice_variant || "";
+  for (const input of form.querySelectorAll('[name="qualifiers"]')) input.checked = (session.qualifiers || []).includes(input.value);
+  form.elements.is_memorable.checked = session.isMemorable === true;
   const formVersion = form.dataset.formVersion;
   form.dataset.experienceLoaded = "false";
   form.dataset.existingSourceFileUrl = session.sourceFileUrl || "";
@@ -587,6 +591,14 @@ async function openEditActivityDialog(activityId) {
     });
   }
   setFormValue(form, "notes", session.comment);
+  const typeFields = {
+    sport: "sport_activity_type",
+    wellbeing: "wellbeing_activity_type",
+    adventure: "adventure_activity_type"
+  };
+
+  setSelectValue(form, typeFields[category], session.type);
+  window.MomentumMomentForm?.syncNature(form, true);
   updateExperienceVisibility(form);
 
   try {
@@ -605,13 +617,6 @@ async function openEditActivityDialog(activityId) {
   });
 
   if (form.dataset.formVersion !== formVersion) return;
-  const typeFields = {
-    sport: "sport_activity_type",
-    wellbeing: "wellbeing_activity_type",
-    adventure: "adventure_activity_type"
-  };
-
-  setSelectValue(form, typeFields[category], session.type);
 
   const title = $("#activityDialogTitle");
   const saveButton = $("#saveActivityButton");
@@ -931,6 +936,7 @@ async function saveActivity(event) {
         id:form.dataset.editActivityId || form.dataset.newActivityId,
         user_id:user.id,activity_date:date,activity_time:String(values.get("activity_time") || "").trim() || null,
         activity_category:category,sport,activity_type:type,status,
+        practice_variant:values.get("practice_variant") || null,
         distance_km:metrics ? numberOrNull(values,"distance_km") : null,duration_min:duration,
         elevation_m:metrics ? numberOrNull(values,"elevation_m") : null,avg_hr:metrics ? numberOrNull(values,"avg_hr") : null,
         rpe:effort,rpe_source:form.dataset.rpeDirty === "true" ? "user" : original.rpe_source || "undocumented",

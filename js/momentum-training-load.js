@@ -105,5 +105,6 @@
     return { ...base, source_start: start, history_days: days.length, days, coverage: allCoverage,
       has_calculable: hasCalculable, status: partial ? 'partial' : 'complete' };
   }
-  return Object.freeze({ VERSION, UNIT, number, dateKey, daysBetween, eligibility, effortDuration, activityLoad, coverage, build });
+  const requiresVariant = practice => ambiguous.has(String(practice || '').trim().toLowerCase());
+  return Object.freeze({ VERSION, UNIT, number, dateKey, daysBetween, requiresVariant, eligibility, effortDuration, activityLoad, coverage, build });
 });

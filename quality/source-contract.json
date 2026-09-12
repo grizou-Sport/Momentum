@@ -97,7 +97,8 @@
     "tests/consolidation/cleanup-schedule.test.mjs",
     "tests/consolidation/account-deletion.test.mjs",
     "tests/consolidation/account-handler.test.mjs",
-    "tests/consolidation/shared-moments.test.mjs"
+    "tests/consolidation/shared-moments.test.mjs",
+    "tests/consolidation/personal-form.test.cjs"
   ],
   "migrations": {
     "supabase/migrations/202607120001_together_mvp.sql": "6538a7bae3bb38cfb395d17c8ec3f6d8f1d4f040041e98555d1014a61f4e0a1f",
