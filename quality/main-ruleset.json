@@ -21,7 +21,7 @@
       "type": "required_status_checks",
       "parameters": {
         "strict_required_status_checks_policy": true,
-        "required_status_checks": [{ "context": "Source and tests" }]
+        "required_status_checks": [{ "context": "Source and tests", "integration_id": 15368 }]
       }
     }
   ]

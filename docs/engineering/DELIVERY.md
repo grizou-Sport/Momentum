@@ -30,9 +30,11 @@ Le workflow publie une preuve de construction uniquement après succès. Il n'é
 
 ## Règles de la branche principale
 
-Configuration à activer dans GitHub : PR obligatoire, contrôle **Source and tests** obligatoire, branche à jour, conversations résolues, interdiction de supprimer `main` et de forcer son historique. Ne pas imposer une seconde personne lorsqu'une seule personne maintient le dépôt.
+Configuration activée le 12 septembre 2026 dans GitHub : PR obligatoire, contrôle **Source and tests** émis par GitHub Actions obligatoire, branche à jour, conversations résolues, interdiction de supprimer `main` et de forcer son historique. Aucune exception de contournement. Ne pas imposer une seconde personne lorsqu'une seule personne maintient le dépôt.
 
 Le fichier `quality/main-ruleset.json` décrit cette configuration. **Un fichier dans le dépôt n'active pas une règle GitHub.** Vérifier son activation dans les paramètres et consigner le résultat. L'intégration GitHub disponible peut écrire le code mais n'expose pas la modification des règles d'administration ; une session de navigateur authentifiée est nécessaire si aucun autre accès administrateur n'est disponible.
+
+La règle [main - verified changes](https://github.com/grizou-Sport/Momentum/rules/23020308) a été créée dans l'interface authentifiée, puis relue par l'API GitHub : état `active`, cible exacte `refs/heads/main`, liste de contournement vide et contrôle rattaché à GitHub Actions (`integration_id: 15368`). L'instantané de cette vérification est conservé dans `docs/engineering/main-ruleset-2026-09-12.json`. Il décrit l'état constaté à cette date et ne remplace pas une lecture des paramètres actuels. La PR CDC nº 4 reste en brouillon, sans fusion ni déploiement.
 
 ## CDC du 8 septembre
 
