@@ -30,7 +30,7 @@ Ouvrir `http://127.0.0.1:3000/login.html`. Le serveur charge les sources de l’
 
 ## Portée des preuves
 
-Le schéma applicatif initial reste **représentatif** : colonnes de référence déjà versionnées, contraintes capturées et migrations historiques. Auth, Storage et leurs règles internes sont fournis par Supabase réel, sans les adaptateurs des tests PGlite. Les anciennes règles des buckets `activities` et `avatars` et la lecture du catalogue `collections` sont explicitement définies pour la recette ; leur parité avec la production n’est pas certifiée. Le helper d’activation automatique de RLS propre à l’hébergement est absent localement. Les quinze migrations CDC sont exécutées sans modification.
+Le schéma applicatif initial reste **représentatif** : colonnes de référence déjà versionnées, contraintes capturées et migrations historiques. Auth, Storage et leurs règles internes sont fournis par Supabase réel, sans les adaptateurs des tests PGlite. Les anciennes règles des buckets `activities` et `avatars` et la lecture du catalogue `collections` sont explicitement définies pour la recette ; leur parité avec la production n’est pas certifiée. Le helper d’activation automatique de RLS propre à l’hébergement est absent localement. Les dix-sept migrations CDC sont exécutées sans modification.
 
 Les Edge Functions n’acceptent HTTP qu’avec `MOMENTUM_LOCAL_DEVELOPMENT=true`, défini côté serveur, et pour une liste fermée d’adresses locales. Ne pas activer ce réglage dans les fonctions hébergées. CORS, JWT utilisateur, réauthentification et secret de nettoyage restent contrôlés.
 

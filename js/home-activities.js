@@ -1001,7 +1001,8 @@ async function saveActivity(event) {
     if (returnToDay) openDay(date);
   } catch (error) {
     if (version !== form.dataset.formVersion) return;
-    const detail = error?.code ? "Vérifie les champs puis réessaie." : error?.message || "Réessaie sans fermer le formulaire.";
+    const detail = error?.code === "MM001" ? window.MomentumUI.errorMessage(error, "save")
+      : error?.code ? "Vérifie les champs puis réessaie." : error?.message || "Réessaie sans fermer le formulaire.";
     setActivityMessage(structuredSaved
       ? `Le Moment et son ressenti sont enregistrés. Échec pour ${stage}. Réessaie pour terminer : ${detail}`
       : `L’enregistrement n’est pas confirmé. ${detail}`, true);

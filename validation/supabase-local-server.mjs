@@ -19,8 +19,15 @@ http.createServer(async(req,res)=>{
   const name=decodeURIComponent(url.pathname==='/'?'/login.html':url.pathname);
   if(name==='/js/supabase.js'){
    res.writeHead(200,{'Content-Type':'text/javascript','Cache-Control':'no-store'});
-   // Only the anonymous public key is served. Credentials never leave the server.
-   res.end(`window.MomentumConfig=Object.freeze({url:${JSON.stringify(config.API_URL)},publishableKey:${JSON.stringify(config.ANON_KEY)}});if(window.supabase)window.momentumDB=window.supabase.createClient(window.MomentumConfig.url,window.MomentumConfig.publishableKey);`);return;
+   // Preserve the actual client's options, including their absence in a legacy checkout.
+   // Only the endpoint and anonymous public key are replaced; no privileged credential.
+   let source=await readFile(path.join(root,'js/supabase.js'),'utf8');
+   for(const [name,value] of [['SUPABASE_URL',config.API_URL],['SUPABASE_ANON_KEY',config.ANON_KEY]]){
+    const declaration=new RegExp('const '+name+' = "[^"\\n]+";');
+    assert.ok(declaration.test(source),'Known Supabase source configuration required');
+    source=source.replace(declaration,'const '+name+' = '+JSON.stringify(value)+';');
+   }
+   res.end(source);return;
   }
   const filename=path.resolve(root,'.'+name),ext=path.extname(filename);
   if(!filename.startsWith(root+path.sep)||!types[ext]||!/^\/(?:[^/]+\.(?:html|js)|(?:js|css|Assets)\/[^?]+)$/.test(name))throw new Error('Not found');

@@ -1,6 +1,6 @@
 # Recette avec cinq personnes
 
-État : protocole prêt, aucun essai humain réalisé. Prévoir cinq personnes qui ne connaissent pas les conventions de MOMENTUM, dont au moins deux utilisant surtout leur téléphone. Inclure une personne sans montre ni objectif chiffré et un essai avec un historique fourni. Utiliser uniquement des comptes et fichiers fictifs dans une recette distincte de la production.
+État : essais reportés explicitement par Christophe le 12 septembre 2026 ; aucun essai humain réalisé. Voir [la décision](../../specs/cdc/2026-09-12.human-tests-deferred.md). Le protocole ci-dessous est conservé pour leur reprise ultérieure. Prévoir cinq personnes qui ne connaissent pas les conventions de MOMENTUM, dont au moins deux utilisant surtout leur téléphone. Inclure une personne sans montre ni objectif chiffré et un essai avec un historique fourni. Utiliser uniquement des comptes et fichiers fictifs dans une recette distincte de la production.
 
 Sur le Mac de recette, la découverte est accessible à `http://127.0.0.1:3000/discover.html` lorsque le serveur local fonctionne. Cette adresse n’est pas accessible depuis les téléphones des participants. Une session sur téléphone demande une recette accessible, avec ses origines Auth/Storage/invitations configurées et des comptes de test. Ne pas exposer directement les ports Docker ni la clé privilégiée pour contourner cette étape.
 

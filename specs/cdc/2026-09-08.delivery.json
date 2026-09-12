@@ -42,7 +42,8 @@
     "supabase/functions/file-ingest/handler.mjs",
     "supabase/functions/file-ingest/content.mjs",
     "supabase/functions/file-ingest/image-codec.mjs",
-    "supabase/migrations/20260912111435_cdc_validated_file_ingestion.sql"
+    "supabase/migrations/20260912111435_cdc_validated_file_ingestion.sql",
+    "supabase/migrations/20260912141552_cdc_client_write_contract.sql"
   ],
   "requirements": [
     {
@@ -96,7 +97,9 @@
       "status": "unverified",
       "evidence": [
         "specs/cdc/2026-09-12.supabase-docker.md",
-        "specs/cdc/2026-09-12.docker-results.json"
+        "specs/cdc/2026-09-12.docker-results.json",
+        "specs/cdc/2026-09-12.client-access.md",
+        "specs/cdc/2026-09-12.client-access-results.json"
       ]
     },
     {
@@ -197,7 +200,9 @@
         "specs/cdc/2026-09-12.docker-results.json",
         "specs/cdc/2026-09-12.browser-recovery.md",
         "specs/cdc/2026-09-12.browser-results.json",
-        "specs/cdc/2026-09-12.recovery-results.json"
+        "specs/cdc/2026-09-12.recovery-results.json",
+        "specs/cdc/2026-09-12.client-access.md",
+        "specs/cdc/2026-09-12.client-access-results.json"
       ]
     },
     {
@@ -207,7 +212,9 @@
         "specs/cdc/2026-09-12.supabase-docker.md",
         "specs/cdc/2026-09-12.docker-results.json",
         "specs/cdc/2026-09-12.browser-recovery.md",
-        "specs/cdc/2026-09-12.browser-results.json"
+        "specs/cdc/2026-09-12.browser-results.json",
+        "specs/cdc/2026-09-12.client-access.md",
+        "specs/cdc/2026-09-12.client-access-results.json"
       ]
     },
     {
@@ -216,7 +223,11 @@
       "evidence": [
         "specs/cdc/2026-09-12.browser-recovery.md",
         "specs/cdc/2026-09-12.browser-results.json"
-      ]
+      ],
+      "technicalValidation": {
+        "status": "unverified",
+        "evidence": []
+      }
     },
     {
       "id": "chapter-28",
@@ -228,7 +239,9 @@
       "status": "unverified",
       "evidence": [
         "specs/cdc/2026-09-12.supabase-docker.md",
-        "specs/cdc/2026-09-12.docker-results.json"
+        "specs/cdc/2026-09-12.docker-results.json",
+        "specs/cdc/2026-09-12.client-access.md",
+        "specs/cdc/2026-09-12.client-access-results.json"
       ]
     },
     {
@@ -236,7 +249,9 @@
       "status": "unverified",
       "evidence": [
         "specs/cdc/2026-09-12.supabase-docker.md",
-        "specs/cdc/2026-09-12.docker-results.json"
+        "specs/cdc/2026-09-12.docker-results.json",
+        "specs/cdc/2026-09-12.client-access.md",
+        "specs/cdc/2026-09-12.client-access-results.json"
       ]
     },
     {
@@ -266,5 +281,14 @@
     "commit": null,
     "url": null,
     "evidence": []
+  },
+  "humanValidationDeferral": {
+    "scenario": "LIV-05",
+    "status": "deferred-by-owner",
+    "decision": "2026-09-12-human-tests-deferred",
+    "reason": "Christophe reporte explicitement les cinq essais humains pour le moment.",
+    "evidence": [
+      "specs/cdc/2026-09-12.human-tests-deferred.md"
+    ]
   }
 }

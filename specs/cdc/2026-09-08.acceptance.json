@@ -33,32 +33,47 @@
       "id": "ACC-04",
       "situation": "Ancien compte avec onboarding terminé se connecte",
       "expected": "Aucun nouveau parcours obligatoire et aucune donnée effacée.",
-      "result": "partial",
+      "result": "passed",
       "evidence": [
         "specs/cdc/2026-09-11.implementation.md",
-        "tests/consolidation/database.test.mjs"
+        "tests/consolidation/database.test.mjs",
+        "specs/cdc/2026-09-12.client-access.md",
+        "specs/cdc/2026-09-12.client-access-results.json",
+        "tests/consolidation/access.test.cjs"
       ]
     },
     {
       "id": "ACC-05",
       "situation": "Compte avec Passeport existant subit une erreur de lecture",
       "expected": "Écran récupérable, pas de renvoi erroné vers un nouveau Passeport.",
-      "result": "not-run",
-      "evidence": []
+      "result": "passed",
+      "evidence": [
+        "specs/cdc/2026-09-12.client-access.md",
+        "specs/cdc/2026-09-12.client-access-results.json",
+        "tests/consolidation/access.test.cjs"
+      ]
     },
     {
       "id": "ACC-06",
       "situation": "Session réellement absente ou expirée confirmée",
       "expected": "Redirection vers connexion, retour interne conservé après authentification.",
-      "result": "not-run",
-      "evidence": []
+      "result": "passed",
+      "evidence": [
+        "specs/cdc/2026-09-12.client-access.md",
+        "specs/cdc/2026-09-12.client-access-results.json",
+        "tests/consolidation/access.test.cjs"
+      ]
     },
     {
       "id": "ACC-07",
       "situation": "URL de retour externe injectée dans les paramètres",
       "expected": "Refus ou remplacement par destination interne sûre.",
-      "result": "not-run",
-      "evidence": []
+      "result": "passed",
+      "evidence": [
+        "specs/cdc/2026-09-12.client-access.md",
+        "specs/cdc/2026-09-12.client-access-results.json",
+        "tests/consolidation/access.test.cjs"
+      ]
     },
     {
       "id": "ACC-08",
@@ -75,15 +90,23 @@
       "id": "ACC-09",
       "situation": "Récupération de mot de passe ouverte via lien",
       "expected": "Fonctionnement préservé malgré les nouvelles routes publiques.",
-      "result": "not-run",
-      "evidence": []
+      "result": "passed",
+      "evidence": [
+        "specs/cdc/2026-09-12.client-access.md",
+        "specs/cdc/2026-09-12.client-access-results.json",
+        "tests/consolidation/access.test.cjs"
+      ]
     },
     {
       "id": "ACC-10",
       "situation": "Vérification d’accès ne répond pas",
       "expected": "État accessible et possibilité de réessayer, pas d’écran invisible permanent.",
-      "result": "not-run",
-      "evidence": []
+      "result": "passed",
+      "evidence": [
+        "specs/cdc/2026-09-12.client-access.md",
+        "specs/cdc/2026-09-12.client-access-results.json",
+        "tests/consolidation/access.test.cjs"
+      ]
     },
     {
       "id": "UX-01",
@@ -1030,12 +1053,15 @@
       "id": "LIV-02",
       "situation": "Ancienne session navigateur rencontre le nouveau schéma",
       "expected": "Compatibilité ou demande de rechargement propre, aucune réintroduction de données artificielles.",
-      "result": "partial",
+      "result": "passed",
       "evidence": [
         "tests/consolidation/legacy-storage.test.mjs",
         "specs/cdc/2026-09-12.validation-locale.md",
         "specs/cdc/2026-09-12.browser-recovery.md",
-        "specs/cdc/2026-09-12.browser-results.json"
+        "specs/cdc/2026-09-12.browser-results.json",
+        "specs/cdc/2026-09-12.client-access.md",
+        "specs/cdc/2026-09-12.client-access-results.json",
+        "tests/consolidation/client-contract.test.mjs"
       ],
       "notes": "Le repli f069117 comprend les données CDC. Les onglets antérieurs au CDC ne sont pas certifiés : leur ancien affichage masque les messages serveur et leurs envois Storage directs sont refusés. Cette transition reste à résoudre avant production."
     },
@@ -1065,8 +1091,11 @@
       "id": "LIV-05",
       "situation": "Tests qualitatifs sur les tâches principales",
       "expected": "Résultats et hésitations consignés ; problèmes répétés corrigés.",
-      "result": "not-run",
-      "evidence": []
+      "result": "deferred",
+      "evidence": [
+        "specs/cdc/2026-09-12.human-tests-deferred.md"
+      ],
+      "notes": "Report explicite du propriétaire ; aucun essai humain déclaré réussi."
     },
     {
       "id": "LIV-06",

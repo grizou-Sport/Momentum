@@ -11,7 +11,7 @@ const host=process.env.PGHOST||'127.0.0.1';
 assert.ok(['127.0.0.1','localhost','::1','/private/tmp/momentum-pg-validation-socket'].includes(host),'Use an isolated local test server');
 const config={host,port:Number(process.env.PGPORT||5432),user:process.env.PGUSER||'postgres',password:process.env.PGPASSWORD,connectionTimeoutMillis:5000,statement_timeout:15000};
 const A='11111111-1111-4111-8111-111111111111',B='22222222-2222-4222-8222-222222222222',C='33333333-3333-4333-8333-333333333333';
-const headers=JSON.stringify({origin:'https://momentum-alpha-rho.vercel.app','x-forwarded-for':'192.0.2.10'});
+const headers=JSON.stringify({origin:'https://momentum-alpha-rho.vercel.app','x-forwarded-for':'192.0.2.10','x-momentum-client':'cdc-2026-09-08'});
 const payload=(values={})=>({id:randomUUID(),user_id:A,activity_date:'2026-09-01',status:'done',activity_category:'sport',sport:'running',activity_type:'running',duration_min:60,rpe:null,...values});
 const save=(client,data,op=randomUUID(),revision=null)=>client.query('select public.save_personal_moment($1,$2,null,null,$3) result',[op,JSON.stringify(data),revision]).then(r=>r.rows[0].result);
 const become=async(client,user=A,role='authenticated')=>{await client.query('reset role');await client.query("select set_config('request.jwt.claim.sub',$1,false),set_config('request.headers',$2,false)",[user,headers]);await client.query('set role '+role);};
@@ -35,7 +35,7 @@ test('PostgreSQL 17: independent connections arbitrate simultaneous writes',asyn
  await fixture({database:db});
  await owner.query('reset role');
  const version=(await owner.query('show server_version')).rows[0].server_version;
- assert.match(version,/^17\./);t.diagnostic('Native PostgreSQL '+version+'; 16 CDC migrations applied to synthetic pre-CDC schema.');
+ assert.match(version,/^17\./);t.diagnostic('Native PostgreSQL '+version+'; 17 CDC migrations applied to synthetic pre-CDC schema.');
  const first=await connect(),second=await connect();
  const pid=(await second.query('select pg_backend_pid() pid')).rows[0].pid;
 

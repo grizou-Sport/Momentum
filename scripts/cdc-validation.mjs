@@ -23,6 +23,13 @@ export function inspectCDC(base, phase = 'complete') {
   try {
     if (!['release', 'complete'].includes(phase)) throw new Error('Unknown CDC validation phase');
     const manifest = json('specs/cdc/2026-09-08.delivery.json');
+    const humanDeferral=manifest.humanValidationDeferral;
+    let humanDeferred=false;
+    if(humanDeferral){
+      const valid=humanDeferral.scenario==='LIV-05'&&humanDeferral.status==='deferred-by-owner'&&humanDeferral.decision==='2026-09-12-human-tests-deferred'&&typeof humanDeferral.reason==='string'&&humanDeferral.reason.trim();
+      if(!valid)errors.push('Invalid human-validation deferral.');
+      else {evidence({...humanDeferral,status:'verified'},'Human-validation decision');humanDeferred=true;}
+    }
     const expectedStatus = phase === 'release' ? ['ready-for-release', 'verified'] : ['verified'];
     if (!expectedStatus.includes(manifest.status)) errors.push(`CDC is ${manifest.status}, not ${expectedStatus.join(' or ')}.`);
     if (!manifest.requiredFiles?.length) errors.push('CDC file inventory is missing.');
@@ -37,7 +44,10 @@ export function inspectCDC(base, phase = 'complete') {
       const matches = requirements.filter(r => r.id === id);
       if (matches.length !== 1) errors.push(`${id}: must appear exactly once`);
       // Chapter 32 includes the publication report; preparation is checked separately before release.
-      evidence(i === 32 && phase === 'release' ? manifest.preDeployment : matches[0], id);
+      if(i===27 && phase==='release' && humanDeferred && matches[0]?.status!=='verified') {
+        // Only 27.4/27.5 are deferred. Technical observability in 27.1–27.3 still needs proof.
+        evidence(matches[0]?.technicalValidation,id+' technical requirements (27.1–27.3)');
+      } else evidence(i === 32 && phase === 'release' ? manifest.preDeployment : matches[0], id);
     }
     const acceptance = json(manifest.acceptance);
     const specification = readFileSync(local(manifest.specification), 'utf8');
@@ -49,6 +59,9 @@ export function inspectCDC(base, phase = 'complete') {
       if (matches.length !== 1) { errors.push(`${id}: must appear exactly once`); continue; }
       const item = matches[0];
       if (id === 'LIV-06' && phase === 'release') continue;
+      if(id==='LIV-05'&&phase==='release'&&humanDeferred&&item.result==='deferred'){
+        evidence({...item,status:'verified'},id+' deferral');continue;
+      }
       if (item.result === 'not-applicable' && item.reason?.trim() && item.evidence?.length) evidence({ ...item, status: 'verified' }, id);
       else {
         if (item.result !== 'passed') errors.push(`${id}: ${item.result}`);

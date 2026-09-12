@@ -38,7 +38,8 @@ export async function fixture({ database } = {}) {
   // Session rows are an adapter in these SQL-only tests; real sessions are covered locally.
   await db.exec('create table auth.sessions(id uuid primary key,user_id uuid references auth.users(id) on delete cascade); create table storage.buckets(id text primary key,allowed_mime_types text[])');
   await db.exec(await read('../../supabase/migrations/20260912111435_cdc_validated_file_ingestion.sql'));
-  await db.query("select set_config('request.headers',$1,false)",[JSON.stringify({origin:'https://momentum-alpha-rho.vercel.app','x-forwarded-for':'192.0.2.10'})]);
+  await db.exec(await read('../../supabase/migrations/20260912141552_cdc_client_write_contract.sql'));
+  await db.query("select set_config('request.headers',$1,false)",[JSON.stringify({origin:'https://momentum-alpha-rho.vercel.app','x-forwarded-for':'192.0.2.10','x-momentum-client':'cdc-2026-09-08'})]);
   await db.query("select set_config('request.jwt.claim.sub',$1,false)", [A]);
   await db.exec('set role authenticated');
   return db;

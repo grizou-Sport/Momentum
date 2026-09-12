@@ -5,5 +5,6 @@ window.MomentumConfig = Object.freeze({url:SUPABASE_URL,publishableKey:SUPABASE_
 
 if (window.supabase) window.momentumDB = window.supabase.createClient(
     SUPABASE_URL,
-    SUPABASE_ANON_KEY
+    SUPABASE_ANON_KEY,
+    { global: { headers: { "x-momentum-client": "cdc-2026-09-08" } } }
   );

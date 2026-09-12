@@ -20,7 +20,7 @@ const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 const png=Uint8Array.from([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,4,0,0,0,181,28,12,2,0,0,0,11,73,68,65,84,120,218,99,100,248,15,0,1,5,1,1,39,24,227,102,0,0,0,0,73,69,78,68,174,66,96,130]);
 const gpx=new TextEncoder().encode('<?xml version="1.0"?><gpx version="1.1" creator="MOMENTUM local test"><trk><trkseg><trkpt lat="46.5" lon="6.6"><time>2026-09-12T06:00:00Z</time></trkpt></trkseg></trk></gpx>');
 async function request(path,{user,method='GET',body,headers={},raw=false}={}){
- const response=await fetch(config.API_URL+path,{method,headers:{apikey:config.ANON_KEY,Authorization:'Bearer '+(user?.access_token||config.ANON_KEY),origin,...(body===undefined?{}:{'Content-Type':'application/json'}),...headers},body:body===undefined?undefined:(raw?body:JSON.stringify(body)),redirect:'manual',signal:AbortSignal.timeout(90000)});
+ const response=await fetch(config.API_URL+path,{method,headers:{apikey:config.ANON_KEY,Authorization:'Bearer '+(user?.access_token||config.ANON_KEY),origin,'x-momentum-client':'cdc-2026-09-08',...(body===undefined?{}:{'Content-Type':'application/json'}),...headers},body:body===undefined?undefined:(raw?body:JSON.stringify(body)),redirect:'manual',signal:AbortSignal.timeout(90000)});
  if(raw&&method==='GET')return {status:response.status,bytes:new Uint8Array(await response.arrayBuffer())};
  const text=await response.text();let data;try{data=JSON.parse(text);}catch{data=text;}
  return {status:response.status,data,headers:response.headers};
@@ -99,6 +99,22 @@ test('Full local Supabase: real identity, files, API, scheduler and deletion',as
   assert.equal(expect(await request('/rest/v1/activities?id=eq.'+activity.id,{user:B}),200,'B private rows').length,0);
   expect(await rpc(B,'save_personal_moment',{...args,p_operation_id:randomUUID()}),403,'B cannot write A');
   const data=(await db.query('select duration_min,rpe from public.activities where id=$1',[activity.id])).rows[0];assert.equal(Number(data.duration_min),80);assert.equal(data.rpe,null);
+ });
+ await step('Legacy clients can read but cannot partially write; reloaded clients keep private data intact',async()=>{
+  const before=(await db.query('select rpe,notes,revision from public.activities where id=$1',[activity.id])).rows[0];
+  for(const version of ['', 'obsolete']){
+   const legacy={'x-momentum-client':version};
+   expect(await request('/rest/v1/activities?id=eq.'+activity.id,{user:A,headers:legacy}),200,'Legacy read');
+   for(const method of ['PATCH','DELETE']){
+    const failure=expect(await request('/rest/v1/activities?id=eq.'+activity.id,{user:A,method,headers:legacy,...(method==='PATCH'?{body:{rpe:9,notes:'Must not persist'}}:{})}),400,'Legacy '+method);
+    assert.equal(failure.code,'MM001');
+   }
+   const failure=expect(await request('/rest/v1/activities',{user:A,method:'POST',headers:legacy,body:{user_id:A.user.id,activity_date:'2026-09-12'}}),400,'Legacy insert');assert.equal(failure.code,'MM001');
+  }
+  assert.deepEqual((await db.query('select rpe,notes,revision from public.activities where id=$1',[activity.id])).rows[0],before);
+  expect(await request('/rest/v1/activities?id=eq.'+activity.id,{user:A,method:'PATCH',body:{notes:'Fictitious private A after reload'}}),204,'Current client save');
+  assert.equal((await db.query('select rpe from public.activities where id=$1',[activity.id])).rows[0].rpe,null);
+  assert.equal(expect(await request('/rest/v1/activities?id=eq.'+activity.id,{user:B}),200,'Other account still cannot read').length,0);
  });
  await step('Server validation preserves original bytes, survives retries and rejects direct or foreign writes',async()=>{
   const operation=randomUUID();

@@ -13,10 +13,10 @@ function fixture(t) {
   const dir = mkdtempSync(join(tmpdir(), 'momentum-release-'));
   t.after(() => rmSync(dir, { recursive:true, force:true }));
   const write = (file, content) => { mkdirSync(join(dir, file, '..'), {recursive:true}); writeFileSync(join(dir,file), typeof content === 'string' ? content : JSON.stringify(content)); };
-  const spec = '| ACC-01 | Task | Outcome |\n| LIV-06 | Published smoke test | Outcome |\n';
+  const spec = '| ACC-01 | Task | Outcome |\n| LIV-06 | Published smoke test | Outcome |\n| LIV-05 | Five human tests | Outcome |\n';
   const verified = {status:'verified',evidence:['proof.md']};
   const manifest = {status:'ready-for-release',specification:'spec.md',acceptance:'acceptance.json',requiredFiles:['app.js'],preDeployment:verified,requirements:Array.from({length:33},(_,i)=>({id:'chapter-'+String(i+1).padStart(2,'0'),...verified,...(i===31?{status:'unverified',evidence:[]}: {})}))};
-  const acceptance = {sha256:createHash('sha256').update(spec).digest('hex'),scenarios:[{id:'ACC-01',result:'passed',evidence:['proof.md']},{id:'LIV-06',result:'not-run',evidence:[]}]};
+  const acceptance = {sha256:createHash('sha256').update(spec).digest('hex'),scenarios:[{id:'ACC-01',result:'passed',evidence:['proof.md']},{id:'LIV-06',result:'not-run',evidence:[]},{id:'LIV-05',result:'passed',evidence:['proof.md']}]};
   write('app.js','void 0;');write('proof.md','Fixture proof');write('spec.md',spec);
   const save = () => { write('specs/cdc/2026-09-08.delivery.json',manifest);write('acceptance.json',acceptance); };
   save(); return {dir,write,save,manifest,acceptance};
@@ -29,6 +29,23 @@ test('production readiness requires all pre-release proof and permits only the p
 test('missing chapters, missing evidence and silently removed scenarios block readiness',t=>{
   const f=fixture(t);f.manifest.requirements.pop();f.acceptance.scenarios.shift();f.manifest.preDeployment={status:'verified',evidence:['missing.md']};f.save();
   const errors=inspectCDC(f.dir,'release').join('\n');assert.match(errors,/chapter-33/);assert.match(errors,/missing.md/);assert.match(errors,/ACC-01: must appear/);
+});
+test('an explicit owner decision defers only the five human tests before release, never final verification',t=>{
+ const f=fixture(t);f.acceptance.scenarios[2].result='deferred';f.save();assert.ok(inspectCDC(f.dir,'release').some(e=>e.includes('LIV-05')));
+ f.manifest.humanValidationDeferral={scenario:'LIV-05',status:'deferred-by-owner',decision:'2026-09-12-human-tests-deferred',reason:'Owner explicitly postponed five qualitative tests.',evidence:['proof.md']};f.save();
+ assert.deepEqual(inspectCDC(f.dir,'release'),[]);assert.ok(inspectCDC(f.dir,'complete').some(e=>e.includes('LIV-05')));
+ f.acceptance.scenarios[0].result='deferred';f.save();assert.ok(inspectCDC(f.dir,'release').some(e=>e.includes('ACC-01')));
+ f.manifest.humanValidationDeferral.scenario='ACC-01';f.save();assert.ok(inspectCDC(f.dir,'release').includes('Invalid human-validation deferral.'));
+});
+test('a human-test deferral needs a real decision file and cannot omit the scenario or other chapter proof',t=>{
+ const f=fixture(t);f.acceptance.scenarios[2].result='deferred';
+ f.manifest.humanValidationDeferral={scenario:'LIV-05',status:'deferred-by-owner',decision:'2026-09-12-human-tests-deferred',reason:'Explicit user request',evidence:['missing.md']};f.save();
+ assert.ok(inspectCDC(f.dir,'release').some(e=>e.includes('missing.md')));
+ f.manifest.humanValidationDeferral.evidence=['proof.md'];f.manifest.requirements[26].status='unverified';f.save();assert.ok(inspectCDC(f.dir,'release').some(e=>e.includes('chapter-27')));
+ f.manifest.requirements[26].technicalValidation={status:'verified',evidence:['proof.md']};f.save();assert.deepEqual(inspectCDC(f.dir,'release'),[]);
+ assert.ok(inspectCDC(f.dir,'complete').some(e=>e.includes('chapter-27')));
+ f.manifest.requirements[26].technicalValidation.evidence=[];f.save();assert.ok(inspectCDC(f.dir,'release').some(e=>e.includes('chapter-27 technical requirements')));
+ f.acceptance.scenarios.pop();f.save();assert.ok(inspectCDC(f.dir,'release').some(e=>e.includes('LIV-05: must appear')));
 });
 test('complete delivery additionally requires the actual published commit, URL and successful smoke-test evidence',t=>{
   const f=fixture(t);f.manifest.status='verified';f.manifest.requirements[31]={id:'chapter-32',status:'verified',evidence:['proof.md']};f.acceptance.scenarios[1]={id:'LIV-06',result:'passed',evidence:['proof.md']};f.save();assert.ok(inspectCDC(f.dir).some(x=>x.includes('Published')));

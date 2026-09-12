@@ -84,7 +84,8 @@
     "supabase/migrations/20260912111435_cdc_validated_file_ingestion.sql",
     "validation/layout-frame.mjs",
     "validation/supabase-local-guests.mjs",
-    "validation/supabase-local-restore.mjs"
+    "validation/supabase-local-restore.mjs",
+    "supabase/migrations/20260912141552_cdc_client_write_contract.sql"
   ],
   "requiredTests": [
     "tests/activity-detail-fit.test.mjs",
@@ -123,7 +124,9 @@
     "tests/release-gates.test.mjs",
     "tests/consolidation/file-content.test.mjs",
     "tests/consolidation/file-ingest.test.mjs",
-    "tests/consolidation/file-uploads.test.mjs"
+    "tests/consolidation/file-uploads.test.mjs",
+    "tests/consolidation/client-contract.test.mjs",
+    "tests/consolidation/access.test.cjs"
   ],
   "migrations": {
     "supabase/migrations/202607120001_together_mvp.sql": "6538a7bae3bb38cfb395d17c8ec3f6d8f1d4f040041e98555d1014a61f4e0a1f",

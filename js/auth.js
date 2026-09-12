@@ -182,14 +182,22 @@ newPasswordForm.addEventListener("submit", async (event) => {
   const button = newPasswordForm.querySelector('button[type="submit"]');
   button.disabled = true;
   setMessage(message, "Mise à jour…");
+  let passwordUpdated = false;
   try {
     const { error } = await momentumDB.auth.updateUser({ password });
     if (error) return setMessage(message, friendlyAuthError(error), "error");
+    passwordUpdated = true;
+    const { data, error: userError } = await momentumDB.auth.getUser();
+    if (userError) throw userError;
+    const destination = await destinationForUser(data.user);
     setMessage(message, "Mot de passe mis à jour. Ton espace s'ouvre…", "success");
-    const { data } = await momentumDB.auth.getUser();
-    setTimeout(async () => window.location.replace(await destinationForUser(data.user)), 650);
+    setTimeout(() => window.location.replace(destination), 650);
   } catch (error) {
-    setMessage(message, friendlyAuthError(error), "error");
+    if (passwordUpdated) {
+      recoveringPassword = false;
+      showMode("login");
+      setMessage(document.getElementById("authMessage"), "Ton mot de passe est mis à jour. Ton espace est momentanément indisponible ; utilise ton nouveau mot de passe pour réessayer avec Continuer.", "error");
+    } else setMessage(message, friendlyAuthError(error), "error");
   } finally {
     button.disabled = false;
   }
