@@ -1016,16 +1016,13 @@ async function uploadActivityPhoto(file, activityId, userId) {
   if (!extension) throw new Error("Choisis une photo JPG, PNG ou WebP.");
   if (file.size > 10 * 1024 * 1024) throw new Error("La photo dépasse 10 Mo.");
 
-  const path = `${userId}/${activityId}/${crypto.randomUUID()}.${extension}`;
-  const { error:uploadError } = await window.momentumDB.storage
-    .from("activity-media")
-    .upload(path, file, { contentType:file.type, cacheControl:"3600", upsert:false });
-  if (uploadError) throw uploadError;
+  const {path} = await window.MomentumUploads.upload(file,{bucket:"activity-media",resource:activityId});
 
   const { error:mediaError } = await window.momentumDB
     .from("activity_media")
     .insert({ activity_id:activityId, user_id:userId, file_path:path });
   if (mediaError) {
+    window.MomentumUploads.forget(file);
     const { error:cleanupError } = await window.momentumDB.rpc("discard_uploaded_file", {p_bucket:"activity-media",p_path:path});
     if (cleanupError) throw new Error("La photo n’est pas rattachée au Moment. Son fichier sera vérifié par le nettoyage automatique après 24 heures.");
     throw mediaError;

@@ -978,31 +978,7 @@ async function uploadActivityFile(
     );
   }
 
-  const path = createActivityStoragePath(
-    userId,
-    activityDate,
-    file
-  );
-
-  const { error } = await window.momentumDB
-    .storage
-    .from(ACTIVITY_BUCKET)
-    .upload(path, file, {
-      cacheControl: "3600",
-      upsert: false,
-      contentType:
-        file.type ||
-        "application/octet-stream"
-    });
-
-  if (error) {
-    console.error(
-      "HOME : téléversement impossible.",
-      error
-    );
-
-    throw new Error("UPLOAD_FAILED");
-  }
+  const {path} = await window.MomentumUploads.upload(file,{bucket:ACTIVITY_BUCKET});
 
   return {
     path,

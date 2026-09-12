@@ -82,6 +82,7 @@ try {
    using(bucket_id='avatars' and (storage.foldername(name))[1]=auth.uid()::text);
  `);
  for(const name of files.filter(f=>f>='20260911'))await step(name,await read('../supabase/migrations/'+name));
+ await step('local-storage-origin', "insert into private.storage_origins(origin) values('http://127.0.0.1:54321') on conflict do nothing");
  await db.query("notify pgrst, 'reload schema'");
  console.log('Local schema ready. Auth, Storage, Vault, pg_cron and pg_net are real provider services.');
 }finally{await db.end();}

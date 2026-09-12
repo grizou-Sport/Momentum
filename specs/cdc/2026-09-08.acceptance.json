@@ -865,7 +865,9 @@
         "tests/consolidation/shared-moments.test.mjs",
         "specs/cdc/2026-09-12.shared-moments.md",
         "validation/supabase-local.test.mjs",
-        "specs/cdc/2026-09-12.supabase-docker.md"
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-12.file-validation.md",
+        "tests/consolidation/file-content.test.mjs"
       ]
     },
     {
@@ -892,7 +894,9 @@
         "tests/consolidation/export.test.cjs",
         "specs/cdc/2026-09-12.validation-locale.md",
         "validation/supabase-local.test.mjs",
-        "specs/cdc/2026-09-12.supabase-docker.md"
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-12.file-validation.md",
+        "tests/consolidation/file-content.test.mjs"
       ]
     },
     {
@@ -953,7 +957,9 @@
         "validation/postgres-concurrency.mjs",
         "specs/cdc/2026-09-12.validation-locale.md",
         "validation/supabase-local.test.mjs",
-        "specs/cdc/2026-09-12.supabase-docker.md"
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-12.file-validation.md",
+        "tests/consolidation/file-content.test.mjs"
       ],
       "notes": "181 tests unitaires réussis. Huit scénarios HTTP réels (9 tests Node avec le parent) réussissent dans Supabase Docker : réauthentification, ancien JWT bloqué, suppression physique Storage puis Auth, reçu final et droits d’un autre participant. Restent le parcours complet dans le navigateur et la parité avec la configuration hébergée."
     },
@@ -974,7 +980,10 @@
         "tests/consolidation/database.test.mjs",
         "tests/consolidation/ui-security.test.cjs",
         "tests/consolidation/export.test.cjs",
-        "specs/cdc/2026-09-12.validation-locale.md"
+        "specs/cdc/2026-09-12.validation-locale.md",
+        "specs/cdc/2026-09-12.file-validation.md",
+        "tests/consolidation/file-content.test.mjs",
+        "validation/supabase-local.test.mjs"
       ]
     },
     {

@@ -497,12 +497,13 @@ async function addMomentPhoto(momentId, file) {
   if (!file) return;
   if (file.size > 10 * 1024 * 1024) return setStatus("La photo dépasse 10 Mo.", true);
   const caption = await window.MomentumUI.prompt({ title:"Ajouter une légende", message:"Quelques mots peuvent donner du contexte à cette photo.", inputLabel:"Légende", confirmLabel:"Ajouter" });
-  const extension = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
-  const path = `${momentId}/${crypto.randomUUID()}.${extension}`;
-  const { error: uploadError } = await window.momentumDB.storage.from("moment-media").upload(path, file, { contentType: file.type, cacheControl: "3600", upsert: false });
-  if (uploadError) return setStatus(window.MomentumUI.errorMessage(uploadError, "upload"), true);
+  if (caption === null) return;
+  let path;
+  try { ({path}=await window.MomentumUploads.upload(file,{bucket:"moment-media",resource:momentId})); }
+  catch (error) { return setStatus(error.userMessage || "La photo n’a pas pu être vérifiée.",true); }
   const { error } = await window.momentumDB.from("moment_media").insert({ moment_id: momentId, user_id: TOGETHER.user.id, file_path: path, caption });
   if (error) {
+    window.MomentumUploads.forget(file);
     const {error:cleanupError}=await window.momentumDB.rpc("discard_uploaded_file",{p_bucket:"moment-media",p_path:path});
     return setStatus(cleanupError?"Photo non ajoutée. Son fichier sera vérifié par le nettoyage automatique après 24 heures.":"Photo non ajoutée. Son fichier attend le nettoyage automatique.",true);
   }
@@ -718,10 +719,7 @@ async function runSharedAction(moment, action, data = {}, retry = false) {
 async function uploadClubLogo(clubId, file) {
   if (!file) return null;
   if (file.size > 5 * 1024 * 1024) throw new Error("Le logo dépasse 5 Mo.");
-  const extension = (file.name.split(".").pop() || "png").toLowerCase().replace(/[^a-z0-9]/g, "");
-  const path = `${clubId}/logo-${Date.now()}.${extension}`;
-  const { error } = await window.momentumDB.storage.from("club-logos").upload(path, file, { contentType: file.type, cacheControl: "3600", upsert: false });
-  if (error) throw error;
+  const {path}=await window.MomentumUploads.upload(file,{bucket:"club-logos",resource:clubId});
   return path;
 }
 

@@ -35,7 +35,7 @@ test('PostgreSQL 17: independent connections arbitrate simultaneous writes',asyn
  await fixture({database:db});
  await owner.query('reset role');
  const version=(await owner.query('show server_version')).rows[0].server_version;
- assert.match(version,/^17\./);t.diagnostic('Native PostgreSQL '+version+'; 15 CDC migrations applied to synthetic pre-CDC schema.');
+ assert.match(version,/^17\./);t.diagnostic('Native PostgreSQL '+version+'; 16 CDC migrations applied to synthetic pre-CDC schema.');
  const first=await connect(),second=await connect();
  const pid=(await second.query('select pg_backend_pid() pid')).rows[0].pid;
 
@@ -102,4 +102,25 @@ test('PostgreSQL 17: independent connections arbitrate simultaneous writes',asyn
   assert.equal(result.first.length,1);assert.deepEqual(result.second.value,[]);
   assert.equal(new Set([...result.first,...result.second.value].map(job=>job.id)).size,1);
  });
+ await t.test('an upload registers before account deletion, and its late files stay queued until the upload lease expires',async()=>{
+  const session=randomUUID(),op=randomUUID(),deletion=randomUUID();
+  await owner.query('insert into auth.sessions(id,user_id) values($1,$2)',[session,C]);
+  await owner.query("update private.cleanup_runtime set configured_at=now(),last_success_at=now()");
+  const beginUpload=client=>client.query("select public.begin_file_upload($1,$2,$3,'avatars',$1,$4,'jpeg','png','image/jpeg') result",[C,session,op,'c'.repeat(64)]).then(r=>r.rows[0].result);
+  const result=await overlap(()=>beginUpload(first),()=>second.query('select public.begin_account_deletion($1,$2,$3) result',[C,deletion,'d'.repeat(64)]));
+  assert.equal(result.first.state,'uploading');assert.equal(result.second.value.rows[0].result.stage,'queued');
+  const lease=randomUUID();await owner.query('update private.account_deletions set lease=$1 where id=$2',[lease,deletion]);
+  assert.equal((await first.query('select public.purge_account_records($1,$2) result',[deletion,lease])).rows[0].result,true);
+  const pending=(await owner.query('select path,available_at from private.storage_cleanup where user_id=$1',[C])).rows;
+  assert.equal(pending.length,2,'Even objects absent from Storage are registered for later deletion');
+  assert.ok(pending.every(item=>new Date(item.available_at)>=new Date(result.first.leased_until)));
+  assert.equal((await first.query('select public.account_ready_for_identity($1,$2) result',[deletion,lease])).rows[0].result,false);
+ });
+ await t.test('an account deletion that wins the race denies a new upload before any storage receipt exists',async()=>{
+  const session=randomUUID(),op=randomUUID();await owner.query('insert into auth.sessions(id,user_id) values($1,$2)',[session,B]);
+  const result=await overlap(()=>first.query('select public.begin_account_deletion($1,$2,$3)',[B,randomUUID(),'e'.repeat(64)]),()=>second.query("select public.begin_file_upload($1,$2,$3,'activities',null,$4,'gpx',null,'application/gpx+xml')",[B,session,op,'f'.repeat(64)]));
+  assert.equal(result.second.error?.code,'42501');
+  assert.equal((await owner.query('select count(*)::int n from private.file_uploads where operation_id=$1',[op])).rows[0].n,0);
+ });
+
 });

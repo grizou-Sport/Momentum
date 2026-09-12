@@ -17,6 +17,8 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",
+    "@imagemagick/magick-wasm": "0.0.43",
+    "@xmldom/xmldom": "0.9.12",
     "pg": "8.16.3"
   }
 }

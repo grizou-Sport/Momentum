@@ -9,6 +9,7 @@
   };
 
   function errorMessage(_error, context = "action") {
+    if (_error?.name === "MomentumUploadError" && typeof _error.userMessage === "string") return _error.userMessage;
     return messages[context] || messages.action;
   }
 

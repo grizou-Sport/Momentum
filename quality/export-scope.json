@@ -38,7 +38,8 @@
     "moment_date_options",
     "moment_activities",
     "locations",
-    "guest_invitations"
+    "guest_invitations",
+    "media_originals"
   ],
   "fileMode": "structured-data-with-optional-expiring-links",
   "excluded": [

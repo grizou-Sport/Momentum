@@ -60,6 +60,7 @@
       };
       for(const a of data.activities||[]){add('activities',a.source_file_url);add('activities',a.gpx_url);}
       for(const m of data.activity_media||[])add('activity-media',m.file_path);
+      for(const m of data.media_originals||[])add('activity-media',m.file_path);
       for(const m of data.moment_media||[])add('moment-media',m.file_path);
       for(const c of data.clubs||[])add('club-logos',c.logo_url);
       for(const p of data.passports||[])add('avatars',p.avatar_url);

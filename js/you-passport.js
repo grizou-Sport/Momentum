@@ -153,18 +153,7 @@ async function prepareAvatarCrop(event) {
 async function uploadAvatar(file) {
   if (!file) return YOU.passport?.avatar_url || null;
 
-  const fileName = `${YOU.currentUser.id}-${Date.now()}.jpg`;
-  const filePath = `${YOU.currentUser.id}/${fileName}`;
-
-  const { error } = await window.momentumDB.storage
-    .from("avatars")
-    .upload(filePath, file, {
-      cacheControl: "3600",
-      contentType: "image/jpeg",
-      upsert: false,
-    });
-
-  if (error) throw error;
+  const {path:filePath}=await window.MomentumUploads.upload(file,{bucket:"avatars",resource:YOU.currentUser.id});
 
   const { data } = window.momentumDB.storage
     .from("avatars")

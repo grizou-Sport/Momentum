@@ -11,7 +11,9 @@ test('SEC-19: deleting an activity queues files atomically, denies reuse and res
  const db=await fixture();t.after(()=>db.close());
  await db.query("insert into public.activities(id,user_id,source_file_url,gpx_url) values($1,$2,$3,$3)",[ID,A,A+'/trace.gpx']);
  await db.query("insert into public.activity_media(activity_id,user_id,file_path) values($1,$2,$3)",[ID,A,A+'/photo.jpg']);
- await db.query("insert into storage.objects(bucket_id,name,owner_id) values ('activities',$1,$3),('activity-media',$2,$3)",[A+'/trace.gpx',A+'/photo.jpg',A]);
+ // Seed pre-existing provider metadata as the SQL fixture administrator. New client uploads are forbidden.
+ await db.exec('reset role');
+ await db.query("insert into storage.objects(bucket_id,name,owner_id) values ('activities',$1,$3),('activity-media',$2,$3)",[A+'/trace.gpx',A+'/photo.jpg',A]);await authenticated(db);
  await assert.rejects(db.query('select public.delete_personal_activity($1,999)',[ID]),e=>e.code==='40001');
  await db.exec('reset role');assert.equal((await db.query('select count(*) from private.storage_cleanup')).rows[0].count,0);await authenticated(db);
  const result=(await db.query('select public.delete_personal_activity($1,1) result',[ID])).rows[0].result;
@@ -43,7 +45,8 @@ test('SEC-19/21: another account file is never queued; a file still referenced e
 
 test('SEC-19: lost upload replies are collected after 24h; recent uploads and referenced files are retained',async t=>{
  const db=await fixture();t.after(()=>db.close());
- await db.query("insert into storage.objects(bucket_id,name,owner_id,created_at) values('activities',$1,$4,now()-interval '25 hours'),('activities',$2,$4,now()-interval '25 hours'),('activities',$3,$4,now())",[A+'/orphan.gpx',A+'/used.gpx',A+'/recent.gpx',A]);
+ await db.exec('reset role');
+ await db.query("insert into storage.objects(bucket_id,name,owner_id,created_at) values('activities',$1,$4,now()-interval '25 hours'),('activities',$2,$4,now()-interval '25 hours'),('activities',$3,$4,now())",[A+'/orphan.gpx',A+'/used.gpx',A+'/recent.gpx',A]);await authenticated(db);
  await db.query('insert into public.activities(user_id,source_file_url) values($1,$2)',[A,A+'/used.gpx']);
  await service(db);assert.equal((await db.query('select public.collect_orphan_uploads() result')).rows[0].result,1);
  const jobs=await claim(db);assert.equal(jobs.length,1);assert.equal(jobs[0].path,A+'/orphan.gpx');

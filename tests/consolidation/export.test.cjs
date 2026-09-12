@@ -23,9 +23,10 @@ function fileFixture(data,{fail=false}={}) {
     storage:{from(bucket){return {async createSignedUrl(path,seconds){calls.push({bucket,path,seconds});return fail?{error:new Error('Storage unavailable')}:{data:{signedUrl:origin+'/storage/v1/object/sign/'+bucket+'/'+path+'?token=new-export-only'}};}};}}};
 }
 test('SEC-14: old signed URLs become fresh links; both distinct sources and avatars are exported',async()=>{
-  const db=fileFixture({activities:[{source_file_url:origin+'/storage/v1/object/sign/activities/owner/source.fit?token=old-secret',gpx_url:'owner/trace.gpx'}],activity_media:[{file_path:'owner/photo.jpg'}],passports:[{avatar_url:origin+'/storage/v1/object/public/avatars/owner/avatar.jpg?cache=42'}],clubs:[{logo_url:origin+'/storage/v1/object/public/club-logos/club/logo.jpg'}]});
+  const db=fileFixture({activities:[{source_file_url:origin+'/storage/v1/object/sign/activities/owner/source.fit?token=old-secret',gpx_url:'owner/trace.gpx'}],activity_media:[{file_path:'owner/photo.jpg'}],passports:[{avatar_url:origin+'/storage/v1/object/public/avatars/owner/avatar.jpg?cache=42'}],clubs:[{logo_url:origin+'/storage/v1/object/public/club-logos/club/logo.jpg'}],media_originals:[{file_path:'owner/shared-originals/photo.jpg'}]});
   const result=await exporter.collect(db,{withFiles:true,storageOrigin:origin});
-  assert.equal(result.files.length,5);assert.equal(db.calls.length,5);
+  assert.equal(result.files.length,6);assert.equal(db.calls.length,6);
+  assert.ok(db.calls.some(x=>x.bucket==='activity-media'&&x.path==='owner/shared-originals/photo.jpg'));
   assert.ok(db.calls.every(x=>!x.path.includes('http')&&x.seconds===3600));
   assert.ok(db.calls.some(x=>x.bucket==='avatars'));assert.ok(db.calls.some(x=>x.path==='owner/trace.gpx'));
   assert.ok(!JSON.stringify(result).includes('old-secret'));assert.ok(result.files.every(x=>x.url.endsWith('token=new-export-only')));
