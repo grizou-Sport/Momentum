@@ -16,3 +16,4 @@ maintenance/cdc-finalize/
 
 # Local Supabase CLI state
 supabase/.temp/
+.supabase-local/

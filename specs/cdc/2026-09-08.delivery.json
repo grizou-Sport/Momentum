@@ -82,7 +82,10 @@
     {
       "id": "chapter-09",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-12.docker-results.json"
+      ]
     },
     {
       "id": "chapter-10",
@@ -92,12 +95,18 @@
     {
       "id": "chapter-11",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-12.docker-results.json"
+      ]
     },
     {
       "id": "chapter-12",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-12.docker-results.json"
+      ]
     },
     {
       "id": "chapter-13",
@@ -152,7 +161,10 @@
     {
       "id": "chapter-23",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-12.docker-results.json"
+      ]
     },
     {
       "id": "chapter-24",
@@ -162,12 +174,18 @@
     {
       "id": "chapter-25",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-12.docker-results.json"
+      ]
     },
     {
       "id": "chapter-26",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-12.docker-results.json"
+      ]
     },
     {
       "id": "chapter-27",
@@ -182,12 +200,18 @@
     {
       "id": "chapter-29",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-12.docker-results.json"
+      ]
     },
     {
       "id": "chapter-30",
       "status": "unverified",
-      "evidence": []
+      "evidence": [
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-12.docker-results.json"
+      ]
     },
     {
       "id": "chapter-31",

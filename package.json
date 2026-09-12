@@ -8,6 +8,7 @@
   "scripts": {
     "test": "node scripts/test.mjs",
     "test:postgres": "node --test validation/postgres-concurrency.mjs",
+    "test:supabase": "node validation/supabase-local-run.mjs",
     "check": "node scripts/check.mjs",
     "verify": "npm run check && npm test",
     "build": "npm run verify && node scripts/build.mjs",

@@ -1,3 +1,4 @@
+import {supabaseEndpoint} from '../_shared/endpoint.mjs';
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const hash=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),b=>b.toString(16).padStart(2,'0')).join('');
 async function bodyJSON(req) {
@@ -8,9 +9,9 @@ async function bodyJSON(req) {
  return JSON.parse(new TextDecoder().decode(bytes));
 }
 
-export function createAccountDeletionHandler({url,serviceKey,publishableKey,allowedOrigins,fetchImpl=fetch}) {
- const endpoint=new URL(url);const origins=new Set(allowedOrigins);
- if(endpoint.protocol!=='https:'||!serviceKey||!publishableKey||!origins.size)throw new Error('Account deletion configuration missing');
+export function createAccountDeletionHandler({url,serviceKey,publishableKey,allowedOrigins,allowLocal=false,fetchImpl=fetch}) {
+ const endpoint=supabaseEndpoint(url,{allowLocal});const origins=new Set(allowedOrigins);
+ if(!serviceKey||!publishableKey||!origins.size)throw new Error('Account deletion configuration missing');
  async function api(path,{method='POST',body,authorization=`Bearer ${serviceKey}`,key=serviceKey}={}) {
   const response=await fetchImpl(new URL(path,endpoint),{method,headers:{'Content-Type':'application/json',apikey:key,Authorization:authorization},...(body===undefined?{}:{body:JSON.stringify(body)}),signal:AbortSignal.timeout(10000),redirect:'error'});
   if(!response.ok)throw new Error('Operation unavailable');

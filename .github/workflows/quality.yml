@@ -16,7 +16,7 @@ jobs:
   verify:
     name: Source and tests
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:17.6
@@ -47,6 +47,11 @@ jobs:
           PGHOST: 127.0.0.1
           PGUSER: postgres
           PGPASSWORD: momentum-ci-only
+      - uses: supabase/setup-cli@46f7f98c7f948ad727d22c1e67fab04c223a0520 # v3
+        with:
+          version: 2.117.0
+      - name: Verify real Supabase Auth, Storage, API and cleanup in Docker
+        run: npm run test:supabase -- --ci
       - name: Check source, run every test, build static output
         run: npm run build
       - name: Record the exact tested commit

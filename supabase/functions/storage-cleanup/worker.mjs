@@ -1,12 +1,13 @@
 import {processAccountDeletions} from './accounts.mjs';
+import {supabaseEndpoint} from '../_shared/endpoint.mjs';
 const allowedBuckets=new Set(['activities','activity-media','moment-media','avatars','club-logos']);
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const json=(value,status=200)=>new Response(JSON.stringify(value),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
 
 // This endpoint has no browser CORS permission and accepts only the dedicated cron credential.
-export function createCleanupHandler({url,serviceKey,workerSecret,fetchImpl=fetch}) {
- const endpoint=new URL(url);
- if(endpoint.protocol!=='https:'||endpoint.pathname!=='/'||!serviceKey||!workerSecret||workerSecret.length<32)throw new Error('Cleanup configuration missing');
+export function createCleanupHandler({url,serviceKey,workerSecret,allowLocal=false,fetchImpl=fetch}) {
+ const endpoint=supabaseEndpoint(url,{allowLocal});
+ if(!serviceKey||!workerSecret||workerSecret.length<32)throw new Error('Cleanup configuration missing');
  const headers={'Content-Type':'application/json',apikey:serviceKey,Authorization:`Bearer ${serviceKey}`};
  async function request(path,body,method='POST',allowMissingUser=false) {
   const response=await fetchImpl(new URL(path,endpoint),{method,headers,body:JSON.stringify(body),signal:AbortSignal.timeout(8000),redirect:'error'});

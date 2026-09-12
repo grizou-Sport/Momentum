@@ -16,6 +16,6 @@ Ces opérations ne sont pas activées par un déploiement statique Vercel. La fo
 
 ## Preuves et limites actuelles
 
-Les tests PostgreSQL locaux couvrent les transactions, refus d’accès, baux, reprises, références encore utilisées et orphelins. Les tests du gestionnaire HTTP simulent une panne de stockage et une réponse perdue. Les adaptateurs locaux du planificateur vérifient les droits, l’unicité et la rotation ; ils ne prouvent ni le chiffrement de Vault, ni l’exécution de `pg_cron`, ni la suppression de vrais objets. La recette Supabase isolée reste obligatoire avant activation.
+Les tests PostgreSQL couvrent les transactions, refus d’accès, baux, reprises, références encore utilisées et orphelins. Les tests unitaires HTTP simulent une panne de stockage et une réponse perdue. La [recette Docker du 12 septembre](../../specs/cdc/2026-09-12.supabase-docker.md) vérifie désormais aussi Vault, l’exécution réelle de `pg_cron` et `pg_net`, le worker et la disparition physique des fichiers via Storage. Elle s’exécute avec `npm run test:supabase` et dans le contrôle GitHub obligatoire. Le schéma de départ reste représentatif ; la configuration hébergée et les autres scénarios de panne restent à vérifier avant activation en production.
 
 Références de mise en œuvre : [planification des fonctions](https://supabase.com/docs/guides/functions/schedule-functions), [Vault](https://supabase.com/docs/guides/database/vault), [configuration des fonctions](https://supabase.com/docs/guides/functions/function-configuration).

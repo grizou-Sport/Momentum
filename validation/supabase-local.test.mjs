@@ -1,0 +1,170 @@
+// Integration tests against real local GoTrue, PostgREST, Storage and Edge Runtime.
+// See supabase-local-setup.mjs for the explicitly representative application baseline.
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile,writeFile} from 'node:fs/promises';
+import {randomUUID,randomBytes,createHash} from 'node:crypto';
+import {setTimeout as delay} from 'node:timers/promises';
+import pg from 'pg';
+
+const config=JSON.parse(await readFile(process.env.MOMENTUM_LOCAL_STATUS,'utf8'));
+assert.equal(config.API_URL,'http://127.0.0.1:54321');
+assert.equal(new URL(config.DB_URL).hostname,'127.0.0.1');
+assert.equal(new URL(config.DB_URL).port,'54322');
+const localConfig=await readFile(process.env.MOMENTUM_LOCAL_CONFIG,'utf8');
+assert.match(localConfig,/project_id = "momentum-cdc-validation"/);
+const workerSecret=localConfig.match(/MOMENTUM_CLEANUP_SECRET = "([a-f0-9]{64})"/)[1];
+const origin='http://127.0.0.1:3000';
+const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
+const png=Uint8Array.from([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,4,0,0,0,181,28,12,2,0,0,0,11,73,68,65,84,120,218,99,100,248,15,0,1,5,1,1,39,24,227,102,0,0,0,0,73,69,78,68,174,66,96,130]);
+const gpx=new TextEncoder().encode('<?xml version="1.0"?><gpx version="1.1" creator="MOMENTUM local test"><trk><trkseg><trkpt lat="46.5" lon="6.6"><time>2026-09-12T06:00:00Z</time></trkpt></trkseg></trk></gpx>');
+async function request(path,{user,method='GET',body,headers={},raw=false}={}){
+ const response=await fetch(config.API_URL+path,{method,headers:{apikey:config.ANON_KEY,Authorization:'Bearer '+(user?.access_token||config.ANON_KEY),origin,...(body===undefined?{}:{'Content-Type':'application/json'}),...headers},body:body===undefined?undefined:(raw?body:JSON.stringify(body)),redirect:'manual',signal:AbortSignal.timeout(20000)});
+ if(raw&&method==='GET')return {status:response.status,bytes:new Uint8Array(await response.arrayBuffer())};
+ const text=await response.text();let data;try{data=JSON.parse(text);}catch{data=text;}
+ return {status:response.status,data,headers:response.headers};
+}
+function expect(result,status,label){
+ assert.equal(result.status,status,label+'; '+(result.data?.code||result.data?.error||result.data?.message||''));return result.data;
+}
+const rpc=(user,name,body={})=>request('/rest/v1/rpc/'+name,{user,method:'POST',body});
+const cleanup=()=>request('/functions/v1/storage-cleanup',{method:'POST',body:{},headers:{'x-cleanup-secret':workerSecret}});
+async function eventually(check,{timeout=140000,label}={}){
+ const deadline=Date.now()+timeout;
+ while(Date.now()<deadline){if(await check())return;await delay(2000);}
+ assert.fail(label+' did not complete before the deadline');
+}
+async function signup(label){
+ const email='momentum-'+label+'-'+randomUUID()+'@example.invalid',password='Local!'+randomBytes(24).toString('hex');
+ const signed=expect(await request('/auth/v1/signup',{method:'POST',body:{email,password}}),200,'Signup');
+ assert.ok(signed.id&&!signed.access_token,'Confirmation must be required');
+ let message;
+ await eventually(async()=>{
+  const data=await (await fetch('http://127.0.0.1:54324/api/v1/messages')).json();
+  message=data.messages?.find(m=>m.To?.some(to=>to.Address===email));return Boolean(message);
+ },{timeout:10000,label:'Captured confirmation email'});
+ const mail=await (await fetch('http://127.0.0.1:54324/api/v1/message/'+message.ID)).json();
+ const link=mail.HTML.match(/href="([^"]*\/auth\/v1\/verify\?[^"]+)"/)[1].replaceAll('&amp;','&');
+ assert.equal(new URL(link).origin,config.API_URL,'Confirmation stays on the local provider');
+ const verification=await fetch(link,{redirect:'manual'});assert.equal(verification.status,303);
+ assert.ok(!verification.headers.get('location')?.includes('error='),'Confirmation succeeds');
+ const session=expect(await request('/auth/v1/token?grant_type=password',{method:'POST',body:{email,password}}),200,'Sign in');
+ assert.ok(session.access_token&&session.refresh_token);assert.equal(session.user.id,signed.id);
+ return {...session,email,password};
+}
+const save=(user,data)=>rpc(user,'save_personal_moment',{p_operation_id:randomUUID(),p_activity:{id:randomUUID(),user_id:user.user.id,activity_date:'2026-09-12',activity_category:'sport',sport:'walking',activity_type:'walking',status:'done',duration_min:80,rpe:null,...data}});
+async function upload(user,bucket,path,bytes,type){
+ return request('/storage/v1/object/'+bucket+'/'+path,{user,method:'POST',body:bytes,raw:true,headers:{'Content-Type':type}});
+}
+async function download(user,bucket,path){return request('/storage/v1/object/authenticated/'+bucket+'/'+path,{user,raw:true});}
+
+test('Full local Supabase: real identity, files, API, scheduler and deletion',async t=>{
+ const db=new pg.Client({connectionString:config.DB_URL});await db.connect();t.after(()=>db.end());
+ assert.ok((await db.query("select to_regclass('momentum_validation.applied') as marker")).rows[0].marker);
+ async function step(label,run){
+  let failed;await t.test(label,async()=>{try{await run();}catch(error){failed=error;throw error;}});
+  if(failed)throw new Error('Stopped at failed integration boundary: '+label,{cause:failed});
+ }
+ let A,B,C,activity,exportJob,shared;
+ const sourceName=randomUUID()+'.gpx',photoName=randomUUID()+'.png';
+ await step('Health and handler boundaries run in the real Edge Runtime',async()=>{
+  expect(await request('/auth/v1/health'),200,'Auth health');
+  expect(await request('/functions/v1/storage-cleanup',{method:'POST',body:{}}),401,'Worker credential required');
+  expect(await request('/functions/v1/account-deletion'),405,'Only POST supported');
+  expect(await request('/functions/v1/account-deletion',{headers:{origin:'https://unrelated.example'}}),403,'Foreign origin rejected');
+ });
+ await step('Three real accounts confirm locally captured emails and obtain real sessions',async()=>{
+  A=await signup('a');B=await signup('b');C=await signup('c');
+  assert.equal((await db.query('select count(*)::int count from auth.identities where user_id=any($1::uuid[])',[[A.user.id,B.user.id,C.user.id]])).rows[0].count,3);
+  if(process.env.MOMENTUM_LOCAL_ACCOUNTS)await writeFile(process.env.MOMENTUM_LOCAL_ACCOUNTS,JSON.stringify({A,B,C}),{mode:0o600});
+ });
+ if(!A||!B||!C)throw new Error('Real confirmed accounts are required for the remaining integration tests');
+ await step('Minimal onboarding persists without physiological estimates',async()=>{
+  let row=expect(await request('/rest/v1/onboarding_progress?user_id=eq.'+A.user.id,{user:A}),200,'Read progress')[0];
+  for(const [step,values] of [[1,{display_name:'Camille Docker'}],[2,{skipped:true}],[3,{intention:'Retrouver les sentiers sans objectif de temps.'}]]){
+   row=expect(await rpc(A,'save_minimal_onboarding',{p_step:step,p_values:values,p_operation_id:randomUUID(),p_expected_updated_at:row.updated_at}),200,'Setup step '+step);
+  }
+  assert.equal(row.complete,true);
+  const load=(await db.query('select chronic_load from public.user_load_estimates where user_id=$1',[A.user.id])).rows[0];assert.equal(load.chronic_load,null);
+ });
+ await step('Personal save is idempotent and two real JWTs enforce private rows',async()=>{
+  const args={p_operation_id:randomUUID(),p_activity:{id:randomUUID(),user_id:A.user.id,activity_date:'2026-09-12',activity_category:'sport',sport:'walking',activity_type:'walking',status:'done',duration_min:80,rpe:null,notes:'Fictitious private A'}};
+  activity=expect(await rpc(A,'save_personal_moment',args),200,'Save A');
+  assert.deepEqual(expect(await rpc(A,'save_personal_moment',args),200,'Retry same operation'),activity);
+  assert.equal(expect(await request('/rest/v1/activities?id=eq.'+activity.id,{user:B}),200,'B private rows').length,0);
+  expect(await rpc(B,'save_personal_moment',{...args,p_operation_id:randomUUID()}),403,'B cannot write A');
+  const data=(await db.query('select duration_min,rpe from public.activities where id=$1',[activity.id])).rows[0];assert.equal(Number(data.duration_min),80);assert.equal(data.rpe,null);
+ });
+ await step('Storage preserves real bytes and refuses another account’s path and signed links',async()=>{
+  const source=A.user.id+'/'+sourceName,photo=A.user.id+'/'+activity.id+'/'+photoName;
+  expect(await upload(A,'activities',source,gpx,'application/gpx+xml'),200,'Upload source');
+  expect(await upload(A,'activity-media',photo,png,'image/png'),200,'Upload image');
+  const forbidden=await upload(B,'activity-media',A.user.id+'/'+randomUUID()+'.png',png,'image/png');assert.ok(forbidden.status>=400,'Foreign upload denied');
+  const signed=await request('/storage/v1/object/sign/activity-media/'+photo,{user:B,method:'POST',body:{expiresIn:60}});assert.ok(signed.status>=400,'Foreign signed link denied');
+  const downloaded=await download(A,'activities',source);assert.equal(downloaded.status,200);assert.equal(sha(downloaded.bytes),sha(gpx));
+  expect(await request('/rest/v1/activities?id=eq.'+activity.id,{user:A,method:'PATCH',body:{source_file_url:source,source_file_type:'gpx'}}),204,'Attach source');
+  expect(await request('/rest/v1/activity_media',{user:A,method:'POST',body:{activity_id:activity.id,user_id:A.user.id,file_path:photo}}),201,'Attach image');
+ });
+ await step('Paged export is account-owned, includes source paths and rejects another JWT',async()=>{
+  exportJob=expect(await rpc(A,'begin_personal_export'),200,'Start export');
+  const foreign=await rpc(B,'read_personal_export',{p_export_id:exportJob.export_id});assert.ok(foreign.status>=400,'B export access denied');
+  let after=0,items=[];
+  for(let i=0;i<100;i++){
+   const page=expect(await rpc(A,'read_personal_export',{p_export_id:exportJob.export_id,p_after:after,p_limit:2}),200,'Export page');
+   items.push(...page.items);after=page.next_cursor;if(page.done)break;
+  }
+  assert.equal(items.length,Number(exportJob.total));assert.ok(items.length>2);
+  const exported=items.find(item=>item.kind==='activities'&&item.payload.id===activity.id);assert.equal(exported.payload.duration_min,80);assert.equal(exported.payload.rpe,null);
+  assert.equal(exported.payload.source_file_url,A.user.id+'/'+sourceName);
+ });
+ await step('Vault + pg_cron + pg_net call the actual worker and physically delete retired files',async()=>{
+  // Keep the deployment URL validation unchanged. Inside this disposable database only,
+  // the scheduler's Vault URL uses the Docker transport instead of managed HTTPS.
+  await db.query('begin');
+  try{
+   await db.query('select private.configure_storage_cleanup($1,$2)',['https://aaaaaaaaaaaaaaaaaaaa.supabase.co',workerSecret]);
+   await db.query("select vault.update_secret((select id from vault.secrets where name='momentum_cleanup_url'),$1)",['http://kong:8000']);
+   await db.query('commit');
+  }catch(error){await db.query('rollback');throw error;}
+  expect(await cleanup(),200,'Real worker initial health');
+  const revision=(await db.query('select revision from public.activities where id=$1',[activity.id])).rows[0].revision;
+  expect(await rpc(A,'delete_personal_activity',{p_id:activity.id,p_expected_revision:Number(revision)}),200,'Delete activity');
+  const start=Date.now();
+  await eventually(async()=>{
+   const row=(await db.query("select count(*)::int count from storage.objects where bucket_id='activities' and name=$1",[A.user.id+'/'+sourceName])).rows[0];return row.count===0;
+  },{timeout:85000,label:'Actual scheduled file removal'});
+  assert.equal((await db.query("select count(*)::int count from storage.objects where name=$1",[A.user.id+'/'+activity.id+'/'+photoName])).rows[0].count,0);
+  assert.ok((await download(A,'activities',A.user.id+'/'+sourceName)).status>=400);
+  assert.ok((await db.query("select 1 from cron.job_run_details where status='succeeded' and start_time>=$1",[new Date(start)])).rowCount);
+ });
+ await step('Account deletion requires a password, blocks old JWT writes, removes Auth/files and preserves another participant',async()=>{
+  await db.query("insert into public.connections(user_low_id,user_high_id,status) values(least($1::uuid,$2::uuid),greatest($1::uuid,$2::uuid),'active')",[C.user.id,B.user.id]);
+  shared=expect(await rpc(C,'save_shared_moment',{p_operation_id:randomUUID(),p_data:{id:randomUUID(),title:'Sortie fictive Docker',status:'CONFIRMED',date_mode:'fixed',start_at:'2026-09-20T09:00:00Z',end_at:null,moment_type:'OTHER',description:null,location_id:null,location_name:null,capacity:3,visibility:'PRIVATE',club_id:null,participants:[B.user.id],options:[{id:randomUUID(),start_at:'2026-09-20T09:00:00Z',end_at:null}]}}),200,'Create shared moment');
+  const sharedId=shared.id;
+  const peerPhoto=sharedId+'/'+randomUUID()+'.png';
+  expect(await upload(B,'moment-media',peerPhoto,png,'image/png'),200,'Participant photo');
+  expect(await request('/rest/v1/moment_media',{user:B,method:'POST',body:{moment_id:sharedId,user_id:B.user.id,file_path:peerPhoto}}),201,'Participant photo reference');
+  const ownPath=C.user.id+'/'+randomUUID()+'.gpx';expect(await upload(C,'activities',ownPath,gpx,'application/gpx+xml'),200,'Deletion source');
+  expect(await save(C,{source_file_url:ownPath,source_file_type:'gpx'}),200,'Deletion activity');
+  expect(await cleanup(),200,'Recent worker health');
+  assert.equal(expect(await rpc(C,'prepare_account_deletion'),200,'Prepare deletion').ready,true);
+  const command={id:randomUUID(),receipt:randomBytes(32).toString('hex'),action:'begin',confirmation:'SUPPRIMER',password:C.password};
+  expect(await request('/functions/v1/account-deletion',{user:C,method:'POST',body:{...command,password:'Wrong password'}}),401,'Reauthentication required');
+  const start=expect(await request('/functions/v1/account-deletion',{user:C,method:'POST',body:command}),202,'Begin deletion');assert.equal(start.stage,'queued');
+  assert.ok((await save(C,{notes:'Must be rejected'})).status>=400,'Old JWT cannot write after deletion begins');
+  assert.ok((await upload(C,'activities',C.user.id+'/'+randomUUID()+'.gpx',gpx,'application/gpx+xml')).status>=400,'Old JWT cannot upload');
+  const statusBody={action:'status',id:command.id,receipt:command.receipt};
+  expect(await request('/functions/v1/account-deletion',{method:'POST',body:{...statusBody,receipt:randomBytes(32).toString('hex')}}),404,'Receipt secrecy');
+  expect(await cleanup(),200,'Process deletion and files');
+  await eventually(async()=>{
+   const state=expect(await request('/functions/v1/account-deletion',{method:'POST',body:statusBody}),200,'Deletion receipt');return state.stage==='complete';
+  },{timeout:145000,label:'Scheduled final identity removal'});
+  assert.equal((await db.query('select 1 from auth.users where id=$1',[C.user.id])).rowCount,0);
+  assert.equal((await db.query('select 1 from storage.objects where name=$1',[ownPath])).rowCount,0);
+  assert.equal((await db.query('select 1 from storage.objects where name=$1',[peerPhoto])).rowCount,1);
+  assert.equal((await db.query('select 1 from public.moment_participants where moment_id=$1 and user_id=$2',[sharedId,B.user.id])).rowCount,1);
+  assert.equal((await download(B,'moment-media',peerPhoto)).status,200);
+  assert.ok((await request('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:C.refresh_token}})).status>=400);
+  assert.equal(expect(await request('/functions/v1/account-deletion',{user:C,method:'POST',body:command}),202,'Lost response retry').stage,'complete');
+ });
+});

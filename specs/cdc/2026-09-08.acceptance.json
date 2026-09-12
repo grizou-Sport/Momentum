@@ -24,7 +24,9 @@
       "evidence": [
         "specs/cdc/2026-09-11.implementation.md",
         "tests/consolidation/database.test.mjs",
-        "specs/cdc/2026-09-11.browser.md"
+        "specs/cdc/2026-09-11.browser.md",
+        "validation/supabase-local.test.mjs",
+        "specs/cdc/2026-09-12.supabase-docker.md"
       ]
     },
     {
@@ -357,7 +359,10 @@
       "situation": "Suppression d’une photo ou d’une activité",
       "expected": "Mise à jour des vues, accès retiré et nettoyage de stockage traçable.",
       "result": "not-run",
-      "evidence": []
+      "evidence": [
+        "validation/supabase-local.test.mjs",
+        "specs/cdc/2026-09-12.supabase-docker.md"
+      ]
     },
     {
       "id": "MOM-20",
@@ -858,7 +863,9 @@
         "specs/cdc/2026-09-11.implementation.md",
         "tests/consolidation/database.test.mjs",
         "tests/consolidation/shared-moments.test.mjs",
-        "specs/cdc/2026-09-12.shared-moments.md"
+        "specs/cdc/2026-09-12.shared-moments.md",
+        "validation/supabase-local.test.mjs",
+        "specs/cdc/2026-09-12.supabase-docker.md"
       ]
     },
     {
@@ -883,7 +890,9 @@
         "tests/consolidation/database.test.mjs",
         "tests/consolidation/legacy-storage.test.mjs",
         "tests/consolidation/export.test.cjs",
-        "specs/cdc/2026-09-12.validation-locale.md"
+        "specs/cdc/2026-09-12.validation-locale.md",
+        "validation/supabase-local.test.mjs",
+        "specs/cdc/2026-09-12.supabase-docker.md"
       ]
     },
     {
@@ -942,9 +951,11 @@
         "docs/engineering/ACCOUNT-DELETION.md",
         "docs/engineering/STORAGE-CLEANUP.md",
         "validation/postgres-concurrency.mjs",
-        "specs/cdc/2026-09-12.validation-locale.md"
+        "specs/cdc/2026-09-12.validation-locale.md",
+        "validation/supabase-local.test.mjs",
+        "specs/cdc/2026-09-12.supabase-docker.md"
       ],
-      "notes": "153 tests de la suite passent. Recette locale SQL avec 72 clés étrangères et services HTTP simulés. Les services Supabase réels et le nouveau parcours navigateur restent non vérifiés."
+      "notes": "181 tests unitaires réussis. Huit scénarios HTTP réels (9 tests Node avec le parent) réussissent dans Supabase Docker : réauthentification, ancien JWT bloqué, suppression physique Storage puis Auth, reçu final et droits d’un autre participant. Restent le parcours complet dans le navigateur et la parité avec la configuration hébergée."
     },
     {
       "id": "SEC-20",
