@@ -15,7 +15,7 @@ Lire `CONSTITUTION.md`, puis `docs/engineering/DELIVERY.md`.
 - Les tests ne doivent jamais être optionnels. Ajouter les nouveaux tests au contrat `quality/source-contract.json` lorsqu'ils constituent une obligation de livraison.
 - Une migration historique est immuable. Ajouter une nouvelle migration et la tester sur une base isolée.
 - Tester les erreurs et les données manquantes ; ne pas remplacer les contrôles par des assertions qui répètent le code.
-- Pour le CDC du 8 septembre, tenir à jour `specs/cdc/2026-09-08.delivery.json` et exécuter aussi `npm run check:cdc`.
+- Pour le CDC du 8 septembre, tenir à jour `specs/cdc/2026-09-08.delivery.json` et exécuter `npm run check:release` avant fusion, puis `npm run check:cdc` pour la clôture après publication.
 
 ## Livraison
 

@@ -27,9 +27,15 @@ Le rangement des sources de l'application reste compatible avec ses liens exista
 
 `npm run build` vérifie les fichiers obligatoires, toutes les références locales HTML/CSS, la syntaxe des scripts externes et intégrés, les empreintes des migrations historiques, puis lance tous les tests. Il produit les seuls fichiers statiques utiles dans `dist/`, avec un `version.json` qui associe le commit et les empreintes des fichiers. Les fonctions de `api/` restent gérées séparément par l'hébergeur.
 
-La CI exécute aussi `npm test` puis `npm run test:postgres` avant la construction, afin de conserver les résultats métier même quand la recette CDC reste en attente. Cette seconde commande utilise un PostgreSQL 17.6 isolé ; elle exige un serveur local de test jetable sans rôles applicatifs préexistants et refuse les hôtes externes. Elle ne teste pas les services Supabase Auth, Storage ou le planificateur.
+La CI distingue trois résultats : **Build and tests** (sources, tests unitaires, PostgreSQL, Supabase Docker, construction), **CDC readiness** (preuves nécessaires avant publication) et **Source and tests** (contrôle de fusion déjà obligatoire, réussi uniquement si les deux précédents réussissent). Un échec ou une annulation de l’un des deux bloque la fusion. Aucun contrôle ne dépend du nom de la branche.
 
-Le workflow publie une preuve de construction uniquement après succès. Il n'écrit jamais dans les branches. `vercel.json` impose la même installation, la même vérification et la publication de `dist/` sur Vercel. Les fonctions de `api/` restent à la racine conformément au fonctionnement du runtime Vercel. La configuration GitHub Pages n'est pas modifiée par ce fichier.
+Une construction technique réussie produit un artefact `tested-preview` et un `version.json` avec le commit, l’environnement, l’accès aux comptes et les empreintes des fichiers effectivement servis. Elle ne certifie pas la livraison du CDC.
+
+Sur Vercel, `VERCEL_ENV=production` impose le contrôle de préparation à la publication avant de produire les fichiers. Une valeur d’environnement inconnue ou absente dans Vercel est refusée. La même protection s’applique à un appel direct du constructeur.
+
+Les constructions locales et les prévisualisations n’utilisent jamais implicitement la base de production. Sans `MOMENTUM_TEST_SUPABASE_URL` et `MOMENTUM_TEST_SUPABASE_KEY`, les pages de compte sont remplacées, dans l’artefact uniquement, par un message explicite ; la découverte fictive reste consultable. Avec une configuration de test, la clé doit être publique et le projet distinct de la production. Seules les constructions locales permettent une API HTTP sur localhost. Les sources et les originaux restent inchangés.
+
+Les scénarios complets sont exécutés dans Docker avec les véritables services Supabase. Aucune base de test hébergée payante n’est nécessaire. Une prévisualisation distante sans base reliée ne constitue pas une preuve des parcours authentifiés.
 
 ## Règles de la branche principale
 
@@ -41,11 +47,11 @@ La règle [main - verified changes](https://github.com/grizou-Sport/Momentum/rul
 
 ## CDC du 8 septembre
 
-Le CDC complet reste distinct de la réparation de sa chaîne de livraison. Le contrôle `npm run check:cdc` échoue tant que ses sources, ses tests et ses preuves ne sont pas réunis. Les branches dont le nom contient `cdc-consolidation` ou `cdc-recovery` le lancent automatiquement. Les contrôles métier et d'intégrité de base s'exécutent sur **toutes** les branches et PR.
+Le CDC complet reste distinct de la construction technique. `npm run check:release` exige les 33 chapitres, l’inventaire des scénarios de la spécification et les preuves préalables. Pour le chapitre 32, la préparation est consignée dans `preDeployment` ; le scénario LIV-06 est le seul reporté après publication. Les autres scénarios doivent être réussis ou non applicables avec justification et preuve. Les statuts partiels et non exécutés bloquent la préparation.
 
-Le contrôle général détecte aussi la présence des nouveaux fichiers du CDC ou un changement de son état de livraison : il impose alors `check:cdc`, même si la branche a un autre nom. Un dossier de tests vide ne suffit pas à passer ce contrôle.
+`npm run check:cdc` est la clôture complète : il exige aussi le chapitre 32 finalisé, LIV-06 réussi et un relevé `deployment` contenant le commit publié, l’URL et ses preuves. Le statut global peut devenir `ready-for-release` après validation préalable ; il ne devient `verified` qu’après les contrôles publiés. Ces phases évitent de demander une preuve de publication avant de permettre sa préparation.
 
-Ne pas renommer une branche pour contourner une recette. Une PR qui annonce le CDC comme livré doit présenter le résultat de `check:cdc`, quel que soit son nom. Passer un chapitre à `verified` nécessite des preuves versionnées et adaptées : tests fonctionnels, recette navigateur ou compte rendu de validation. Les validations humaines prévues au CDC ne peuvent pas être remplacées par une assertion automatique.
+Les empreintes de la spécification, les scénarios manquants ou dupliqués et les preuves absentes sont contrôlés. Passer un chapitre à `verified` nécessite des preuves adaptées au contenu de ce chapitre. Les validations humaines prévues au CDC ne peuvent pas être remplacées par une assertion automatique. Une prévisualisation ne doit jamais être promue directement en production : sa configuration de test et ses preuves ne constituent pas une autorisation de production.
 
 ## Retour arrière et données
 

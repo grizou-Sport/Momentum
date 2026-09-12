@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   verify:
-    name: Source and tests
+    name: Build and tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
     services:
@@ -58,7 +58,7 @@ jobs:
         run: git rev-parse HEAD > tested-commit.txt
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: verified-site-${{ github.sha }}
+          name: tested-preview-${{ github.sha }}
           path: |
             dist/
             tested-commit.txt
@@ -66,8 +66,7 @@ jobs:
           retention-days: 14
 
   cdc:
-    name: CDC completeness
-    if: contains(github.head_ref || github.ref_name, 'cdc-consolidation') || contains(github.head_ref || github.ref_name, 'cdc-recovery')
+    name: CDC readiness
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -77,4 +76,21 @@ jobs:
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version-file: .nvmrc
-      - run: node scripts/check-cdc.mjs
+      - run: npm run check:release
+
+  release_gate:
+    name: Source and tests
+    needs: [verify, cdc]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require technical checks and CDC readiness before merging
+        env:
+          BUILD_RESULT: ${{ needs.verify.result }}
+          CDC_RESULT: ${{ needs.cdc.result }}
+        run: |
+          if [ "$BUILD_RESULT" != "success" ] || [ "$CDC_RESULT" != "success" ]; then
+            echo "Production remains blocked: build=$BUILD_RESULT, CDC readiness=$CDC_RESULT"
+            exit 1
+          fi

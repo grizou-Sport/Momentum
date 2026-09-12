@@ -76,7 +76,7 @@ test('empty required source files are rejected', t => {
 
 test('build copies the public application and excludes internal files and transfers', t => {
   const dir = fixture(t);
-  for (const path of ['scripts/lib.mjs', 'scripts/build.mjs']) write(dir, path, readFileSync(join(root, path)));
+  for (const path of ['scripts/lib.mjs', 'scripts/build.mjs', 'scripts/build-environment.mjs', 'scripts/cdc-validation.mjs']) write(dir, path, readFileSync(join(root, path)));
   write(dir, 'index.html', '<h1>MOMENTUM</h1>');
   write(dir, 'js/app.js', 'void 0;');
   write(dir, 'Assets/image.svg', '<svg/>');
@@ -86,7 +86,7 @@ test('build copies the public application and excludes internal files and transf
   write(dir, 'recovery/index.html', 'Incomplete recovered page');
   write(dir, 'api/example.js', 'export default function handler() {}');
   const commit = 'a'.repeat(40);
-  const result = spawnSync(process.execPath, ['scripts/build.mjs'], { cwd: dir, encoding: 'utf8', env: { ...process.env, VERCEL_GIT_COMMIT_SHA: commit } });
+  const result = spawnSync(process.execPath, ['scripts/build.mjs'], { cwd: dir, encoding: 'utf8', env: { ...process.env, VERCEL_ENV:'preview', VERCEL_GIT_COMMIT_SHA: commit, MOMENTUM_TEST_SUPABASE_URL:'', MOMENTUM_TEST_SUPABASE_KEY:'' } });
   assert.equal(result.status, 0, result.stderr);
   assert.equal(existsSync(join(dir, 'dist/index.html')), true);
   assert.equal(existsSync(join(dir, 'dist/js/app.js')), true);
@@ -98,7 +98,7 @@ test('build copies the public application and excludes internal files and transf
 
 test('a green base test run does not certify an incomplete CDC', t => {
   const dir = fixture(t);
-  for (const path of ['scripts/lib.mjs', 'scripts/check-cdc.mjs']) write(dir, path, readFileSync(join(root, path)));
+  for (const path of ['scripts/lib.mjs', 'scripts/check-cdc.mjs', 'scripts/cdc-validation.mjs']) write(dir, path, readFileSync(join(root, path)));
   write(dir, 'specs/cdc/2026-09-08.delivery.json', JSON.stringify({ status: 'recovery-incomplete', requiredFiles: ['js/momentum-training-load.js'], requirements: [{ id: 'chapter-15', status: 'unverified', evidence: [] }] }));
   const result = spawnSync(process.execPath, ['scripts/check-cdc.mjs'], { cwd: dir, encoding: 'utf8' });
   assert.notEqual(result.status, 0);
