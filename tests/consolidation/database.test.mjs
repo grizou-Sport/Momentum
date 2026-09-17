@@ -40,6 +40,28 @@ test('MOM-16: a failed experience rolls back the activity and receipt; retry can
   assert.equal((await db.query('select count(*) from public.activities')).rows[0].count, 1);
 });
 
+test('MOM-03/04/05: effort, FLOW axes and retained memory can be edited independently', async t => {
+  const db = await fixture(); t.after(() => db.close());
+  const created = await command(db, moment({ rpe:4, rpe_source:'user' }), {
+    perceived_challenge:6, perceived_mastery:7, retained_memory:'Souvenir conservé'
+  });
+  const second = await command(db, moment({ rpe:4, rpe_source:'user' }), {
+    perceived_challenge:8, perceived_mastery:9, retained_memory:'Souvenir conservé'
+  }, null, 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', created.rows[0].result.revision);
+  let row = (await db.query('select a.rpe,f.perceived_challenge,f.perceived_mastery,f.retained_memory from public.activities a join public.activity_flow_assessments f on f.activity_id=a.id')).rows[0];
+  assert.deepEqual(row, { rpe:4, perceived_challenge:8, perceived_mastery:9, retained_memory:'Souvenir conservé' });
+  const third = await command(db, moment({ rpe:8, rpe_source:'user' }), {
+    perceived_challenge:8, perceived_mastery:9, retained_memory:'Souvenir conservé'
+  }, null, 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', second.rows[0].result.revision);
+  row = (await db.query('select a.rpe,f.perceived_challenge,f.perceived_mastery,f.retained_memory from public.activities a join public.activity_flow_assessments f on f.activity_id=a.id')).rows[0];
+  assert.deepEqual(row, { rpe:8, perceived_challenge:8, perceived_mastery:9, retained_memory:'Souvenir conservé' });
+  await command(db, moment({ rpe:8, rpe_source:'user' }), {
+    perceived_challenge:null, perceived_mastery:null, retained_memory:'Souvenir conservé'
+  }, null, 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', third.rows[0].result.revision);
+  row = (await db.query('select a.rpe,f.perceived_challenge,f.perceived_mastery,f.retained_memory from public.activities a join public.activity_flow_assessments f on f.activity_id=a.id')).rows[0];
+  assert.deepEqual(row, { rpe:8, perceived_challenge:null, perceived_mastery:null, retained_memory:'Souvenir conservé' });
+});
+
 test('PER-07/08/11/12: planned and consumed snapshots stay separate and stable', async t => {
   const db = await fixture(); t.after(() => db.close());
   const product = (await db.query("insert into public.nutrition_products(name,category,unit_label,created_by,carbohydrates_g,sodium_mg) values ('Produit fictif','gel','sachet',$1,25,null) returning id", [A])).rows[0].id;

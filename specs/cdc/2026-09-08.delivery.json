@@ -1,6 +1,6 @@
 {
   "id": "CDC-2026-09-08",
-  "status": "implementation-in-progress",
+  "status": "ready-for-release",
   "referenceCommit": "dd8b37eb72c4ddc1a255c8f4e3a3f42f9f9fcfa0",
   "requiredFiles": [
     "js/momentum-training-load.js",
@@ -43,178 +43,226 @@
     "supabase/functions/file-ingest/content.mjs",
     "supabase/functions/file-ingest/image-codec.mjs",
     "supabase/migrations/20260912111435_cdc_validated_file_ingestion.sql",
-    "supabase/migrations/20260912141552_cdc_client_write_contract.sql"
+    "supabase/migrations/20260912141552_cdc_client_write_contract.sql",
+    "js/momentum-surface.js",
+    "tests/cdc-release-readiness.test.mjs",
+    "docs/engineering/COMPATIBLE-FALLBACK.md",
+    "specs/cdc/2026-09-12.compatible-fallback-results.json",
+    "specs/cdc/2026-09-17.production-preflight.json",
+    "specs/cdc/2026-09-17.release-readiness.md"
   ],
   "requirements": [
     {
       "id": "chapter-01",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "specs/cdc/2026-09-17.release-readiness.md"
+      ]
     },
     {
       "id": "chapter-02",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "specs/cdc/2026-09-17.release-readiness.md"
+      ]
     },
     {
       "id": "chapter-03",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "specs/cdc/2026-09-17.release-readiness.md"
+      ]
     },
     {
       "id": "chapter-04",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "specs/cdc/2026-09-17.release-readiness.md"
+      ]
     },
     {
       "id": "chapter-05",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "specs/cdc/2026-09-17.release-readiness.md"
+      ]
     },
     {
       "id": "chapter-06",
-      "status": "unverified",
+      "status": "verified",
       "evidence": [
         "specs/cdc/2026-09-12.browser-recovery.md",
-        "specs/cdc/2026-09-12.browser-results.json"
+        "specs/cdc/2026-09-12.browser-results.json",
+        "specs/cdc/2026-09-17.release-readiness.md"
       ]
     },
     {
       "id": "chapter-07",
-      "status": "unverified",
+      "status": "verified",
       "evidence": [
         "specs/cdc/2026-09-12.browser-recovery.md",
-        "specs/cdc/2026-09-12.browser-results.json"
+        "specs/cdc/2026-09-12.browser-results.json",
+        "specs/cdc/2026-09-17.release-readiness.md"
       ]
     },
     {
       "id": "chapter-08",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "specs/cdc/2026-09-17.release-readiness.md"
+      ]
     },
     {
       "id": "chapter-09",
-      "status": "unverified",
+      "status": "verified",
       "evidence": [
-        "specs/cdc/2026-09-12.supabase-docker.md",
-        "specs/cdc/2026-09-12.docker-results.json",
+        "specs/cdc/2026-09-12.client-access-results.json",
         "specs/cdc/2026-09-12.client-access.md",
-        "specs/cdc/2026-09-12.client-access-results.json"
+        "specs/cdc/2026-09-12.docker-results.json",
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-17.release-readiness.md"
       ]
     },
     {
       "id": "chapter-10",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "specs/cdc/2026-09-17.release-readiness.md"
+      ]
     },
     {
       "id": "chapter-11",
-      "status": "unverified",
+      "status": "verified",
       "evidence": [
+        "specs/cdc/2026-09-12.docker-results.json",
         "specs/cdc/2026-09-12.supabase-docker.md",
-        "specs/cdc/2026-09-12.docker-results.json"
+        "specs/cdc/2026-09-17.release-readiness.md"
       ]
     },
     {
       "id": "chapter-12",
-      "status": "unverified",
+      "status": "verified",
       "evidence": [
+        "specs/cdc/2026-09-12.docker-results.json",
         "specs/cdc/2026-09-12.supabase-docker.md",
-        "specs/cdc/2026-09-12.docker-results.json"
+        "specs/cdc/2026-09-17.release-readiness.md"
       ]
     },
     {
       "id": "chapter-13",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "specs/cdc/2026-09-17.release-readiness.md"
+      ]
     },
     {
       "id": "chapter-14",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "specs/cdc/2026-09-17.release-readiness.md"
+      ]
     },
     {
       "id": "chapter-15",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "specs/cdc/2026-09-17.release-readiness.md"
+      ]
     },
     {
       "id": "chapter-16",
-      "status": "unverified",
+      "status": "verified",
       "evidence": [
         "specs/cdc/2026-09-12.browser-recovery.md",
-        "specs/cdc/2026-09-12.browser-results.json"
+        "specs/cdc/2026-09-12.browser-results.json",
+        "specs/cdc/2026-09-17.release-readiness.md"
       ]
     },
     {
       "id": "chapter-17",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "specs/cdc/2026-09-17.release-readiness.md"
+      ]
     },
     {
       "id": "chapter-18",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "specs/cdc/2026-09-17.release-readiness.md"
+      ]
     },
     {
       "id": "chapter-19",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "specs/cdc/2026-09-17.release-readiness.md"
+      ]
     },
     {
       "id": "chapter-20",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "specs/cdc/2026-09-17.release-readiness.md"
+      ]
     },
     {
       "id": "chapter-21",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "specs/cdc/2026-09-17.release-readiness.md"
+      ]
     },
     {
       "id": "chapter-22",
-      "status": "unverified",
+      "status": "verified",
       "evidence": [
         "specs/cdc/2026-09-12.browser-recovery.md",
-        "specs/cdc/2026-09-12.browser-results.json"
+        "specs/cdc/2026-09-12.browser-results.json",
+        "specs/cdc/2026-09-17.release-readiness.md"
       ]
     },
     {
       "id": "chapter-23",
-      "status": "unverified",
+      "status": "verified",
       "evidence": [
+        "specs/cdc/2026-09-12.docker-results.json",
         "specs/cdc/2026-09-12.supabase-docker.md",
-        "specs/cdc/2026-09-12.docker-results.json"
+        "specs/cdc/2026-09-17.release-readiness.md"
       ]
     },
     {
       "id": "chapter-24",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "specs/cdc/2026-09-17.release-readiness.md"
+      ]
     },
     {
       "id": "chapter-25",
-      "status": "unverified",
+      "status": "verified",
       "evidence": [
-        "specs/cdc/2026-09-12.supabase-docker.md",
-        "specs/cdc/2026-09-12.docker-results.json",
         "specs/cdc/2026-09-12.browser-recovery.md",
         "specs/cdc/2026-09-12.browser-results.json",
-        "specs/cdc/2026-09-12.recovery-results.json",
+        "specs/cdc/2026-09-12.client-access-results.json",
         "specs/cdc/2026-09-12.client-access.md",
-        "specs/cdc/2026-09-12.client-access-results.json"
+        "specs/cdc/2026-09-12.docker-results.json",
+        "specs/cdc/2026-09-12.recovery-results.json",
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-17.release-readiness.md"
       ]
     },
     {
       "id": "chapter-26",
-      "status": "unverified",
+      "status": "verified",
       "evidence": [
-        "specs/cdc/2026-09-12.supabase-docker.md",
-        "specs/cdc/2026-09-12.docker-results.json",
         "specs/cdc/2026-09-12.browser-recovery.md",
         "specs/cdc/2026-09-12.browser-results.json",
+        "specs/cdc/2026-09-12.client-access-results.json",
         "specs/cdc/2026-09-12.client-access.md",
-        "specs/cdc/2026-09-12.client-access-results.json"
+        "specs/cdc/2026-09-12.docker-results.json",
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-17.release-readiness.md"
       ]
     },
     {
@@ -222,42 +270,54 @@
       "status": "unverified",
       "evidence": [
         "specs/cdc/2026-09-12.browser-recovery.md",
-        "specs/cdc/2026-09-12.browser-results.json"
+        "specs/cdc/2026-09-12.browser-results.json",
+        "specs/cdc/2026-09-17.release-readiness.md"
       ],
       "technicalValidation": {
-        "status": "unverified",
-        "evidence": []
+        "status": "verified",
+        "evidence": [
+          "specs/cdc/2026-09-17.release-readiness.md",
+          "tests/cdc-release-readiness.test.mjs",
+          "specs/cdc/2026-09-12.browser-recovery.md",
+          "specs/cdc/2026-09-12.browser-results.json"
+        ]
       }
     },
     {
       "id": "chapter-28",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "specs/cdc/2026-09-17.release-readiness.md"
+      ]
     },
     {
       "id": "chapter-29",
-      "status": "unverified",
+      "status": "verified",
       "evidence": [
-        "specs/cdc/2026-09-12.supabase-docker.md",
-        "specs/cdc/2026-09-12.docker-results.json",
+        "specs/cdc/2026-09-12.client-access-results.json",
         "specs/cdc/2026-09-12.client-access.md",
-        "specs/cdc/2026-09-12.client-access-results.json"
+        "specs/cdc/2026-09-12.docker-results.json",
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-17.release-readiness.md"
       ]
     },
     {
       "id": "chapter-30",
-      "status": "unverified",
+      "status": "verified",
       "evidence": [
-        "specs/cdc/2026-09-12.supabase-docker.md",
-        "specs/cdc/2026-09-12.docker-results.json",
+        "specs/cdc/2026-09-12.client-access-results.json",
         "specs/cdc/2026-09-12.client-access.md",
-        "specs/cdc/2026-09-12.client-access-results.json"
+        "specs/cdc/2026-09-12.docker-results.json",
+        "specs/cdc/2026-09-12.supabase-docker.md",
+        "specs/cdc/2026-09-17.release-readiness.md"
       ]
     },
     {
       "id": "chapter-31",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "specs/cdc/2026-09-17.release-readiness.md"
+      ]
     },
     {
       "id": "chapter-32",
@@ -266,15 +326,21 @@
     },
     {
       "id": "chapter-33",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "specs/cdc/2026-09-17.release-readiness.md"
+      ]
     }
   ],
   "specification": "specs/CDC_MOMENTUM_Consolidation_Experience_V1_2026-09-08.md",
   "acceptance": "specs/cdc/2026-09-08.acceptance.json",
   "preDeployment": {
-    "status": "unverified",
-    "evidence": []
+    "status": "verified",
+    "evidence": [
+      "specs/cdc/2026-09-17.release-readiness.md",
+      "specs/cdc/2026-09-17.production-preflight.json",
+      "specs/cdc/2026-09-12.release-phases.md"
+    ]
   },
   "deployment": {
     "status": "pending",
