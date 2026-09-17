@@ -322,8 +322,10 @@
     },
     {
       "id": "chapter-32",
-      "status": "unverified",
-      "evidence": []
+      "status": "verified",
+      "evidence": [
+        "specs/cdc/2026-09-17.production-deployment.md"
+      ]
     },
     {
       "id": "chapter-33",
@@ -344,10 +346,12 @@
     ]
   },
   "deployment": {
-    "status": "pending",
-    "commit": null,
-    "url": null,
-    "evidence": []
+    "status": "verified",
+    "commit": "00b47d0a11be0cee6df8e31d2f4b1889f8894ff5",
+    "url": "https://momentum-alpha-rho.vercel.app",
+    "evidence": [
+      "specs/cdc/2026-09-17.production-deployment.md"
+    ]
   },
   "humanValidationDeferral": {
     "scenario": "LIV-05",

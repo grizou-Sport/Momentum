@@ -1308,8 +1308,11 @@
       "id": "LIV-06",
       "situation": "Déploiement de la version validée",
       "expected": "Commit et migrations concordants, état prêt vérifié, parcours essentiel testé sur l’URL publiée.",
-      "result": "not-run",
-      "evidence": []
+      "result": "passed",
+      "evidence": [
+        "specs/cdc/2026-09-17.production-deployment.md"
+      ],
+      "notes": "Commit final 00b47d0a publié sur Vercel ; 36 migrations, trois fonctions actives, cron réussi, CORS corrigé et parcours public/protégé vérifié sans écriture de données."
     },
     {
       "id": "LIV-07",
