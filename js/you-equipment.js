@@ -19,15 +19,15 @@ function renderEquipment() {
               return `
                 <section class="equipment-group">
                   <div class="equipment-group-head">
-                    <span>${category.name}</span>
+                    <span>${escapeHTML(category.name)}</span>
                   </div>
 
                   <div class="equipment-items">
                     ${items.map((item) => `
-                      <button class="equipment-row" type="button" data-equipment-detail="${item.id}">
+                      <button class="equipment-row" type="button" data-equipment-detail="${escapeHTML(item.id)}">
                         <div>
-                          <strong>${item.nickname || item.name}</strong>
-                          <em>${[item.brand, item.model].filter(Boolean).join(" ") || "Compagnon de route"}</em>
+                          <strong>${escapeHTML(item.nickname || item.name)}</strong>
+                          <em>${escapeHTML([item.brand, item.model].filter(Boolean).join(" ") || "Compagnon de route")}</em>
                         </div>
                         <span>${item.favorite ? "Favori" : "Actif"}</span>
                       </button>
@@ -66,8 +66,8 @@ function openEquipmentModal(item = null) {
 
   const categoriesOptions = YOU.equipmentCategories
     .map((category) => `
-      <option value="${category.id}" ${item?.category_id === category.id ? "selected" : ""}>
-        ${category.name}
+      <option value="${escapeHTML(category.id)}" ${item?.category_id === category.id ? "selected" : ""}>
+        ${escapeHTML(category.name)}
       </option>
     `)
     .join("");
@@ -80,7 +80,7 @@ function openEquipmentModal(item = null) {
       <button class="equipment-modal-close" type="button">×</button>
 
       <p class="section-kicker">${isEdit ? "Modifier" : "Ajouter"}</p>
-      <h2>${isEdit ? item.nickname || item.name : "Un compagnon de route"}</h2>
+      <h2>${escapeHTML(isEdit ? item.nickname || item.name : "Un compagnon de route")}</h2>
 
       <form id="equipmentForm" class="you-form">
         <label class="full">Catégorie
@@ -91,35 +91,35 @@ function openEquipmentModal(item = null) {
         </label>
 
         <label>Nom
-          <input name="name" value="${item?.name || ""}" required />
+          <input name="name" value="${escapeHTML(item?.name || "")}" required />
         </label>
 
         <label>Surnom
-          <input name="nickname" value="${item?.nickname || ""}" />
+          <input name="nickname" value="${escapeHTML(item?.nickname || "")}" />
         </label>
 
         <label>Marque
-          <input name="brand" value="${item?.brand || ""}" />
+          <input name="brand" value="${escapeHTML(item?.brand || "")}" />
         </label>
 
         <label>Modèle
-          <input name="model" value="${item?.model || ""}" />
+          <input name="model" value="${escapeHTML(item?.model || "")}" />
         </label>
 
         <label>Date d’achat
-          <input name="purchase_date" type="date" value="${item?.purchase_date || ""}" />
+          <input name="purchase_date" type="date" value="${escapeHTML(item?.purchase_date || "")}" />
         </label>
 
         <label>Première utilisation
-          <input name="first_used_at" type="date" value="${item?.first_used_at || ""}" />
+          <input name="first_used_at" type="date" value="${escapeHTML(item?.first_used_at || "")}" />
         </label>
 
         <label class="full">Photo URL
-          <input name="photo_url" value="${item?.photo_url || ""}" />
+          <input name="photo_url" value="${escapeHTML(item?.photo_url || "")}" />
         </label>
 
         <label class="full">Notes
-          <textarea name="notes" rows="4">${item?.notes || ""}</textarea>
+          <textarea name="notes" rows="4">${escapeHTML(item?.notes || "")}</textarea>
         </label>
 
         <label class="equipment-check full">

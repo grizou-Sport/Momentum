@@ -1,0 +1,31 @@
+{
+  "kind": "offline-local-supabase-recovery",
+  "startedAt": "2026-09-12T13:29:28.897Z",
+  "project": "momentum-cdc-validation",
+  "scope": "Representative local baseline; no hosted production data",
+  "services": 10,
+  "databaseVolume": {
+    "files": 2198,
+    "manifestSha256": "98b4bd8e91038e48a73eb049521f786495b054c421afa2d87b5ce2f76622e2b2",
+    "archiveSha256": "95d0a2634241143e66cf2f2da9189e3f645555624057013b150ade2bb51791fa"
+  },
+  "storageVolume": {
+    "files": 5,
+    "manifestSha256": "9b8449c5249708f6210ffa72f57f1de263dd48fe51eb0efc2ab0daddda4d533c",
+    "archiveSha256": "45f8fba016e24b5860ef32d21ab560d2401135f95d91ae7c4b8f26a54d0fd136"
+  },
+  "vaultSecretsRestored": true,
+  "tables": 92,
+  "rows": 427,
+  "policies": 110,
+  "exactDatabaseFingerprint": true,
+  "existingAccountsSignIn": 2,
+  "privateRowsProtected": true,
+  "browserSourceBytesPreserved": true,
+  "foreignFileDenied": true,
+  "realWorkerResumed": true,
+  "schedulerRestored": true,
+  "completedAt": "2026-09-12T13:30:00.121Z",
+  "status": "passed",
+  "originalsRetained": true
+}

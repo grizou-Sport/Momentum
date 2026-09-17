@@ -1,0 +1,26 @@
+{
+  "checkedAt": "2026-09-17",
+  "project": "momentum-alpha",
+  "projectRef": "njcqcpyiiibudlalnzoa",
+  "postgresVersion": "17.6",
+  "productionCommit": "60d4abfbf4c521d2044f242e175def884a706a2f",
+  "publicTables": 41,
+  "publicColumns": 423,
+  "rowLevelSecurityTables": 42,
+  "policies": 106,
+  "authUserCount": 4,
+  "storageBuckets": 6,
+  "storageObjects": 47,
+  "schemaBeforeCanonicalSha256": "9c043ca2c2456ad0b6f2a4f87687824c2c02c96d576d86a1853988464bff422d",
+  "repositorySchemaBeforeCanonicalSha256": "9c043ca2c2456ad0b6f2a4f87687824c2c02c96d576d86a1853988464bff422d",
+  "requiredBaseTablesPresent": true,
+  "requiredBaseConstraintsPresent": true,
+  "hostedMigrationsBeforeCdc": 18,
+  "cdcMigrationsAlreadyPresent": 0,
+  "edgeFunctionsBeforeCdc": 0,
+  "extensionsBeforeCdc": [
+    "pgcrypto",
+    "supabase_vault"
+  ],
+  "scope": "Structure-only hosted preflight; no personal row content, identifiers, paths, secrets, or file names were read."
+}

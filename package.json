@@ -2,12 +2,23 @@
   "name": "momentum",
   "version": "0.1.0",
   "private": true,
-  "engines": { "node": ">=22 <25" },
+  "engines": {
+    "node": ">=22 <25"
+  },
   "scripts": {
     "test": "node scripts/test.mjs",
+    "test:postgres": "node --test validation/postgres-concurrency.mjs",
+    "test:supabase": "node validation/supabase-local-run.mjs",
     "check": "node scripts/check.mjs",
     "verify": "npm run check && npm test",
     "build": "npm run verify && node scripts/build.mjs",
-    "check:cdc": "node scripts/check-cdc.mjs"
+    "check:cdc": "node scripts/check-cdc.mjs",
+    "check:release": "node scripts/check-cdc.mjs --release"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
+    "@imagemagick/magick-wasm": "0.0.43",
+    "@xmldom/xmldom": "0.9.12",
+    "pg": "8.16.3"
   }
 }

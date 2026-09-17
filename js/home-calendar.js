@@ -23,6 +23,7 @@ function renderLivingWeek(centerDate = new Date()) {
   if (!container) return;
 
   const today = iso(new Date());
+  const previousScroll = container.scrollLeft;
 
   container.innerHTML = Array.from({ length: 7 }, (_, index) => {
     const date = addDays(centerDate, index - 3);
@@ -63,7 +64,8 @@ function renderLivingWeek(centerDate = new Date()) {
     `;
   }).join("");
 
-  centerLivingWeekOnToday(container);
+  container.scrollLeft = previousScroll;
+  if (!container.dataset.initiallyCentered) { centerLivingWeekOnToday(container); container.dataset.initiallyCentered="true"; }
 }
 
 function centerLivingWeekOnToday(container = $("#livingWeek"), behavior = "auto") {
@@ -290,8 +292,7 @@ function renderPersonalActivityCard(session, date) {
   const importLabel = activityImportLabel(session);
   const hasRoute = Array.isArray(session.routeSummary?.map_points) &&
     session.routeSummary.map_points.length >= 2;
-  const hasLocationPoint = Number.isFinite(Number(session.locationDetails?.latitude)) &&
-    Number.isFinite(Number(session.locationDetails?.longitude));
+  const hasLocationPoint = hasLocationCoordinates(session.locationDetails);
   const locationName = session.locationName || (hasLocationPoint ? "Position GPS" : "");
   const locationMarkup = locationName
     ? window.MomentumLocationPopover?.triggerHTML({ ...session.locationDetails, name:session.locationDetails?.name || locationName }, {

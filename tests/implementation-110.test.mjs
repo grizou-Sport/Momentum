@@ -51,7 +51,7 @@ test("the shared slider starts unset and owns all three required responses", () 
   assert.match(sliderSource, /setFormValue\(disabled \|\| missing \? null/);
   assert.equal((homePage.match(/<momentum-slider /g) || []).length, 3);
   assert.doesNotMatch(homePage, /name="(?:rpe|perceived_challenge|perceived_mastery)"[^>]*value="5"/);
-  assert.match(homePage, /title="Effort physique"[^>]*min-label="Facile"[^>]*max-label="Maximal"/);
+  assert.match(homePage, /<momentum-slider\b(?=[^>]*title="Effort physique")(?=[^>]*min-label="Facile")(?=[^>]*max-label="Maximal")/);
   assert.match(activitySource, /setFormValue\(form, "rpe", ""\)/);
 });
 
@@ -85,7 +85,7 @@ test("empty states remain distinct from loading and errors", () => {
 });
 
 test("FLOW and Progression share the completed activity status", () => {
-  assert.match(flowSource, /\.eq\("status", "done"\)/);
-  assert.match(progressionSource, /\.eq\("status", "done"\)/);
+  assert.match(flowSource, /activity\.status === "done"/);
+  assert.match(progressionSource, /MomentumMoments\?\.isCompletedActivity/);
   assert.match(progressionSource, /MomentumMoments\?\.isCompletedActivity/);
 });

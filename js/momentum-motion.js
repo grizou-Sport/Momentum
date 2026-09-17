@@ -62,25 +62,22 @@
   function animateNumber(element, duration = 500) {
     const target = Number(element?.dataset.motionValue);
     if (!element || !Number.isFinite(target)) return;
-
-    if (prefersReducedMotion() || typeof global.requestAnimationFrame !== "function") {
-      setCounterValue(element, target);
-      return;
-    }
-
-    const startedAt = global.performance?.now?.() ?? Date.now();
-    const tick = (now) => {
-      const progress = Math.min(1, (now - startedAt) / duration);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCounterValue(element, target * eased);
-      if (progress < 1) global.requestAnimationFrame(tick);
-    };
-
-    global.requestAnimationFrame(tick);
+    // The value is meaningful data, including when animation is paused or offscreen.
+    // Animate its appearance without temporarily reporting invented intermediate values.
+    setCounterValue(element, target);
+    if (prefersReducedMotion()) return;
+    element.animate?.([
+      {opacity:0.65,transform:"translateY(4px)"},
+      {opacity:1,transform:"translateY(0)"}
+    ], {duration,easing:"ease-out"});
   }
 
   function animateNumbers(root = document) {
     const counters = root.querySelectorAll?.("[data-motion-number]") || [];
+    for (const element of counters) {
+      const target=Number(element.dataset.motionValue);
+      if (Number.isFinite(target)) setCounterValue(element,target);
+    }
     observeOnce(counters, (element) => animateNumber(element), {
       threshold: 0.6,
       rootMargin: "0px"

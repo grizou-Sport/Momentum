@@ -9,8 +9,26 @@
   };
 
   function errorMessage(_error, context = "action") {
+    if (_error?.code === "MM001") return "Une nouvelle version est disponible. Conserve ton texte puis recharge la page avant de réessayer.";
+    if (_error?.name === "MomentumUploadError" && typeof _error.userMessage === "string") return _error.userMessage;
     return messages[context] || messages.action;
   }
+
+  window.document?.addEventListener("keydown", event => {
+    if (event.key !== "Tab" || event.defaultPrevented) return;
+    const active=window.document.activeElement;
+    const dialog=active?.closest?.("dialog[open]");
+    if (!dialog) return;
+    const controls=[...dialog.querySelectorAll('button,a[href],input,select,textarea,[tabindex]')].filter(control =>
+      control.tabIndex >= 0 && !control.matches(':disabled') && !control.closest('[inert]') &&
+      control.getClientRects().length && window.getComputedStyle(control).visibility !== 'hidden'
+    );
+    if (!controls.length) { event.preventDefault(); dialog.focus(); return; }
+    if (active===dialog || event.shiftKey && active===controls[0] || !event.shiftKey && active===controls.at(-1)) {
+      event.preventDefault();
+      (event.shiftKey ? controls.at(-1) : controls[0]).focus();
+    }
+  });
 
   function createDialog({ title, message, confirmLabel = "Continuer", cancelLabel = "Annuler", inputLabel = "", inputValue = "", danger = false }) {
     const dialog = document.createElement("dialog");
@@ -21,9 +39,9 @@
   }
 
   function escapeText(value) {
-    const node = document.createElement("span");
-    node.textContent = String(value || "");
-    return node.innerHTML;
+    return String(value ?? "").replace(/[&<>"'`]/g, character => ({
+      '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;', '`':'&#96;'
+    })[character]);
   }
 
   function escapeAttribute(value) {
@@ -55,5 +73,5 @@
     });
   }
 
-  window.MomentumUI = { errorMessage, confirm: confirmAction, prompt: promptText };
+  window.MomentumUI = { errorMessage, escapeText, escapeAttribute, confirm: confirmAction, prompt: promptText };
 })();

@@ -7,6 +7,7 @@
   <link rel="icon" href="Assets/icons/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/navigation.css" />
+  <link rel="stylesheet" href="css/consolidation.css" />
   <link rel="stylesheet" href="css/together.css" />
   <link rel="stylesheet" href="css/location-picker.css" />
 </head>
@@ -17,20 +18,20 @@
     <section class="together-hero">
       <div>
         <p class="section-kicker">Les aventures que l’on partage</p>
-        <h1>TOGETHER</h1>
+        <h1>TOGETHER</h1><a data-content-link href="#together-content">Aller au contenu</a>
         <p class="together-lead">Organiser le futur. Vivre le présent. Garder quelques traces du passé.</p>
       </div>
-      <button class="together-primary" id="primaryTogetherAction" type="button">Inviter dans mon Cercle</button>
+      <button class="together-primary" id="primaryTogetherAction" type="button">Proposer un Moment</button>
     </section>
 
-    <div class="together-tabs" role="tablist" aria-label="Sections Together">
-      <button id="circleTab" class="active" data-view="circle" role="tab" aria-selected="true" aria-controls="circleView" tabindex="0" type="button">CERCLE</button>
-      <button id="momentsTab" data-view="moments" role="tab" aria-selected="false" aria-controls="momentsView" tabindex="-1" type="button">MOMENTS</button>
+    <div id="together-content" data-direct-content class="together-tabs" role="tablist" aria-label="Sections Together">
+      <button id="momentsTab" class="active" data-view="moments" role="tab" aria-selected="true" aria-controls="momentsView" tabindex="0" type="button">MOMENTS</button>
+      <button id="circleTab" data-view="circle" role="tab" aria-selected="false" aria-controls="circleView" tabindex="-1" type="button">CERCLE</button>
     </div>
 
     <section id="togetherStatus" class="together-status" aria-live="polite"></section>
-    <section id="circleView" class="together-view" role="tabpanel" aria-labelledby="circleTab" tabindex="0"></section>
-    <section id="momentsView" class="together-view" role="tabpanel" aria-labelledby="momentsTab" tabindex="0" hidden></section>
+    <section id="momentsView" class="together-view" role="tabpanel" aria-labelledby="momentsTab" tabindex="0"></section>
+    <section id="circleView" class="together-view" role="tabpanel" aria-labelledby="circleTab" tabindex="0" hidden></section>
   </main>
 
   <dialog id="circleInviteDialog" class="together-dialog circle-invite-dialog">
@@ -55,11 +56,19 @@
         <button class="dialog-close" value="cancel" formnovalidate aria-label="Fermer">×</button>
       </div>
       <div class="together-form-grid">
-        <label class="wide">Titre<input name="title" required maxlength="120" placeholder="Soirée Padel" /></label>
+        <label class="wide">Titre<input name="title" maxlength="120" placeholder="Soirée Padel" /></label>
         <label>Type<select name="moment_type"><option value="SPORT">Sport</option><option value="ADVENTURE">Aventure</option><option value="TRAVEL">Voyage</option><option value="SOCIAL">Rencontre</option><option value="OTHER">Autre</option></select></label>
-        <label>Date et heure<input name="start_at" type="datetime-local" /></label>
+        <label>Organisation de la date<select name="date_mode" id="momentDateMode"><option value="fixed">Une date choisie</option><option value="options">Des créneaux à proposer</option></select></label>
+        <label id="momentFixedDate">Date et heure<input name="start_at" type="datetime-local" /></label>
         <label>Lieu<momentum-location-picker id="momentLocationPicker" name="location_name" location-id-name="location_id"></momentum-location-picker></label>
-        <label>Capacité<input name="capacity" type="number" min="1" placeholder="8" /></label>
+        <div class="wide date-options-field" id="momentDatesField">
+          <div><span>Créneaux proposés</span><button id="addDateOption" class="text-button" type="button">+ Ajouter un créneau</button></div>
+          <div id="dateOptions"></div>
+          <small>Les créneaux ayant reçu des réponses restent conservés. Pour changer la date, ajoute un nouveau créneau.</small>
+        </div>
+      </div>
+      <details class="moment-advanced"><summary>Participants et détails</summary><div class="together-form-grid">
+        <label>Capacité, organisateur compris<input name="capacity" type="number" min="1" step="1" max="100000" placeholder="Sans limite" /></label>
         <label>Visibilité<select name="visibility" id="momentVisibility"><option value="PRIVATE">Privé</option><option value="CIRCLE">Cercle</option><option value="CLUB">Club</option></select></label>
         <label id="momentClubField" hidden>Club<select name="club_id" id="momentClub"><option value="">Choisir un Club</option></select></label>
         <fieldset class="wide participant-picker" id="momentParticipantPicker">
@@ -67,13 +76,10 @@
           <p>Sélectionne les personnes de ton Cercle à inviter.</p>
           <div id="momentParticipantOptions"></div>
         </fieldset>
-        <label class="wide">Description<textarea name="description" rows="4" placeholder="Quelques mots pour donner le ton…"></textarea></label>
-        <div class="wide date-options-field">
-          <div><span>Autres créneaux proposés</span><button id="addDateOption" class="text-button" type="button">+ Ajouter un créneau</button></div>
-          <div id="dateOptions"></div>
-        </div>
-      </div>
-      <div class="dialog-actions"><button class="together-secondary" value="cancel" formnovalidate>Annuler</button><button class="together-primary" id="saveMoment" value="default">Créer le Moment</button></div>
+        <label class="wide">Description<textarea name="description" rows="4" maxlength="5000" placeholder="Quelques mots pour donner le ton…"></textarea></label>
+      </div></details>
+      <p id="momentFormStatus" role="status" aria-live="polite"></p>
+      <div class="dialog-actions"><button class="together-secondary" value="cancel" formnovalidate>Fermer</button><button class="together-secondary" id="saveMomentDraft" value="draft" formnovalidate>Garder en brouillon</button><button class="together-primary" id="saveMoment" value="default">Publier le Moment</button></div>
     </form>
   </dialog>
 
@@ -109,6 +115,10 @@
   <script src="js/navigation.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
+<script src="js/momentum-uploads.js"></script>
+  <script src="js/momentum-access.js"></script>
+  <script src="js/momentum-session.js"></script>
+  <script src="js/momentum-preferences.js"></script>
   <script src="js/momentum-ui.js"></script>
   <script src="js/guard.js"></script>
   <script src="js/momentum-sports.js"></script>
@@ -116,6 +126,9 @@
   <script src="js/momentum-duration-picker.js"></script>
   <script src="js/momentum-empty-state.js"></script>
   <script src="js/momentum-location-picker.js"></script>
+  <script src="js/momentum-guest-manager.js"></script>
+  <script src="js/momentum-shared-commands.js"></script>
   <script src="js/together.js"></script>
+  <script src="js/momentum-surface.js"></script>
 </body>
 </html>

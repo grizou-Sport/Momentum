@@ -134,7 +134,7 @@ async function reverseGeocode(latitude, longitude) {
   });
 
   const response = await fetch(
-    `https://nominatim.openstreetmap.org/reverse?${params}`
+    `https://nominatim.openstreetmap.org/reverse?${params}`, { signal:AbortSignal.timeout(5000) }
   );
 
   if (!response.ok) {
@@ -157,6 +157,7 @@ async function reverseGeocode(latitude, longitude) {
 
 async function parseGpx(file) {
   const text = await file.text();
+  if (/<!DOCTYPE|<!ENTITY/i.test(text)) throw new Error("Les entités XML externes ne sont pas acceptées.");
   const xml = new DOMParser().parseFromString(
     text,
     "application/xml"
@@ -168,14 +169,14 @@ async function parseGpx(file) {
 
   const points = [...xml.querySelectorAll("trkpt")]
     .map((point) => ({
-      lat: Number(point.getAttribute("lat")),
-      lon: Number(point.getAttribute("lon")),
-      ele: Number(point.querySelector("ele")?.textContent || 0),
+      lat: point.hasAttribute("lat") ? Number(point.getAttribute("lat")) : NaN,
+      lon: point.hasAttribute("lon") ? Number(point.getAttribute("lon")) : NaN,
+      ele: point.querySelector("ele") ? Number(point.querySelector("ele").textContent) : null,
       time: point.querySelector("time")?.textContent || null
     }))
     .filter((point) =>
       Number.isFinite(point.lat) &&
-      Number.isFinite(point.lon)
+      Number.isFinite(point.lon) && Math.abs(point.lat) <= 90 && Math.abs(point.lon) <= 180
     );
 
   if (!points.length) {
@@ -434,6 +435,7 @@ async function parseFit(file) {
   }
 
   const definitions = new Map();
+  let processedMessages = 0;
 
   let offset = headerSize;
   let session = null;
@@ -444,6 +446,7 @@ async function parseFit(file) {
   let lastFitTimestamp = null;
 
   while (offset < dataEnd) {
+    if (++processedMessages % 1024 === 0) await new Promise(resolve => setTimeout(resolve, 0));
     const header = view.getUint8(offset);
     offset += 1;
 
@@ -771,8 +774,7 @@ async function parseFit(file) {
 
   return {
     date:
-      fitDate(startTime) ||
-      iso(new Date()),
+      fitDate(startTime) || null,
 
     sport:
       fitSportLabel(session.sport),
@@ -786,12 +788,7 @@ async function parseFit(file) {
       ),
 
     duration:
-      Math.round(
-        secondsToMinutes(
-          session.totalTimerSeconds ||
-          session.totalElapsedSeconds
-        )
-      ),
+      secondsToMinutes(session.totalTimerSeconds || session.totalElapsedSeconds),
 
     elevation:
       session.totalAscent || "",
@@ -802,7 +799,9 @@ async function parseFit(file) {
     startedAt:startTime,
     endedAt:endTime,
     totalDurationSeconds:session.totalElapsedSeconds || null,
-    movingTimeSeconds:session.totalTimerSeconds || null,
+    timerDurationSeconds:session.totalTimerSeconds || null,
+    movingTimeSeconds:null, // No actual moving time is supplied by this supported FIT field.
+    actualMovingSeconds:null,
     pausedTimeSeconds:Math.max(0, (session.totalElapsedSeconds || 0) - (session.totalTimerSeconds || 0)),
     distanceMeters:session.totalDistanceKm ? session.totalDistanceKm * 1000 : null,
     totalAscentMeters:session.totalAscent ?? null,
@@ -857,9 +856,9 @@ async function parseActivityFile(file) {
       date:
         route.startTime
           ? iso(new Date(route.startTime))
-          : iso(new Date()),
+          : null,
 
-      sport: "running",
+      sport: null, // A GPX trace alone does not identify a discipline.
 
       type:
         file.name.replace(/\.gpx$/i, ""),
@@ -868,15 +867,15 @@ async function parseActivityFile(file) {
         Number(route.distance.toFixed(2)),
 
       duration:
-        Math.round(route.duration),
+        route.duration || null,
 
       elevation: "",
       avgHr: "",
       startedAt:route.startTime,
       endedAt:route.endTime,
       totalDurationSeconds:route.duration ? route.duration * 60 : null,
-      movingTimeSeconds:route.duration ? route.duration * 60 : null,
-      pausedTimeSeconds:0,
+      movingTimeSeconds:null,
+      pausedTimeSeconds:null,
       distanceMeters:route.distance ? route.distance * 1000 : null,
       totalAscentMeters:null,
       averageHeartRateBpm:null,
@@ -979,31 +978,7 @@ async function uploadActivityFile(
     );
   }
 
-  const path = createActivityStoragePath(
-    userId,
-    activityDate,
-    file
-  );
-
-  const { error } = await window.momentumDB
-    .storage
-    .from(ACTIVITY_BUCKET)
-    .upload(path, file, {
-      cacheControl: "3600",
-      upsert: false,
-      contentType:
-        file.type ||
-        "application/octet-stream"
-    });
-
-  if (error) {
-    console.error(
-      "HOME : téléversement impossible.",
-      error
-    );
-
-    throw new Error("UPLOAD_FAILED");
-  }
+  const {path} = await window.MomentumUploads.upload(file,{bucket:ACTIVITY_BUCKET});
 
   return {
     path,
@@ -1013,44 +988,63 @@ async function uploadActivityFile(
 
 async function removeUploadedActivityFile(path) {
   if (!path) return;
-
-  const { error } = await window.momentumDB
-    .storage
-    .from(ACTIVITY_BUCKET)
-    .remove([path]);
-
-  if (error) {
-    console.warn(
-      "HOME : fichier non supprimé après échec.",
-      error
-    );
-  }
+  const { error } = await window.momentumDB.rpc("discard_uploaded_file", {p_bucket:ACTIVITY_BUCKET,p_path:path});
+  if (error) throw new Error("Le nettoyage du fichier n’est pas encore confirmé. Les fichiers sans activité sont vérifiés automatiquement après 24 heures.");
 }
 
 async function handleActivityFile(event) {
-  const file = event.target.files?.[0];
-
-  if (!file) return;
-
-  setActivityMessage("Lecture du fichier…");
-
+  const input = event.target, file = input.files?.[0], form = $("#activityForm");
+  if (!file || !form) return;
+  if (form._pendingCommand) { input.value=""; setActivityMessage("Termine d’abord la reprise de la sauvegarde en attente.",true); return; }
+  const formVersion=form.dataset.formVersion, importVersion=crypto.randomUUID();
+  form.dataset.importVersion=importVersion;
+  const current = () => form.dataset.formVersion === formVersion && form.dataset.importVersion === importVersion;
+  const importButton=$("#saveActivityButton");
+  if (importButton) importButton.disabled=true;
   try {
-    const parsed =
-      await parseActivityFile(file);
-
+    if (form.dataset.dirty === "true" || form.dataset.sourceHash || form.dataset.editActivityId) {
+      const replace = await window.MomentumUI.confirm({title:"Remplacer les mesures du formulaire ?",message:"La date, la nature, les mesures et la trace reconnues dans le fichier pourront remplacer les valeurs affichées. Ton effort, ton ressenti, tes photos et ton souvenir ne sont pas remplacés.",confirmLabel:"Lire et comparer",cancelLabel:"Garder ma saisie"});
+      if (!replace || !current()) { input.value=""; return; }
+    }
+    setActivityMessage("Lecture et vérification du fichier…");
+    if (file.size > window.MomentumImportRules.MAX_BYTES) throw new Error("Le fichier dépasse la limite de 20 Mo.");
+    const buffer=await file.arrayBuffer(), bytes=new Uint8Array(buffer);
+    window.MomentumImportRules.validateHeader(file.name,bytes);
+    const hash=[...new Uint8Array(await crypto.subtle.digest("SHA-256",buffer))].map(value=>value.toString(16).padStart(2,"0")).join("");
+    const user=await getCurrentUser();
+    if (!user) throw new Error("Reconnecte-toi avant d’enregistrer cet import.");
+    const existing=await window.momentumDB.from("activities").select("id,activity_date,activity_type").eq("user_id",user.id).eq("source_hash",hash).maybeSingle();
+    if (existing.error) throw new Error("Impossible de vérifier les doublons pour le moment. Réessaie sans enregistrer le fichier.");
+    if (!current()) return;
+    if (existing.data && existing.data.id !== form.dataset.editActivityId) {
+      input.value="";
+      const open=await window.MomentumUI.confirm({title:"Ce fichier est déjà enregistré",message:`Moment du ${existing.data.activity_date || "jour non précisé"}. Aucune nouvelle activité ne sera créée.`,confirmLabel:"Ouvrir l’activité existante",cancelLabel:"Revenir au formulaire"});
+      if (open && current()) { form.dataset.dirty="false"; await closeActivityDialog(true); await openEditActivityById(existing.data.id); }
+      return;
+    }
+    setActivityMessage("Analyse des données…");
+    const parsed=await parseActivityFile(file);
+    if (!current()) return;
+    const proposedTime=activityLocalDateTime(parsed.startedAt);
+    const history=await window.MomentumData.history(user.id);
+    if (!current()) return;
+    const candidates=window.MomentumImportRules.candidates({id:form.dataset.editActivityId,sport:parsed.sport,activity_date:parsed.date || form.elements.activity_date.value,activity_time:proposedTime?.time,duration_min:parsed.duration,distance_km:parsed.distance},history.data);
+    if (candidates.length && !existing.data) {
+      const candidate=candidates[0].activity;
+      const separate=await window.MomentumUI.confirm({title:"Une activité ressemble à cet import",message:`Import : ${parsed.date || "date absente"}, ${parsed.duration == null ? "durée absente" : Math.round(parsed.duration)+" min"}, ${parsed.distance == null ? "distance absente" : parsed.distance+" km"}.\nDéjà enregistré : ${candidate.activity_date}, ${candidate.activity_time || "heure absente"}, ${candidate.duration_min ?? "—"} min, ${candidate.distance_km ?? "—"} km. Rien n’est fusionné automatiquement.`,confirmLabel:"C’est un autre Moment",cancelLabel:"Ouvrir l’existant"});
+      if (!current()) return;
+      if (!separate) { input.value=""; form.dataset.dirty="false"; await closeActivityDialog(true); await openEditActivityById(candidate.id); return; }
+    }
     fillActivityForm(parsed);
-
-    setActivityMessage(
-      "Fichier lu. Vérifie les données avant d’enregistrer."
-    );
+    form.dataset.sourceHash=hash; form.dataset.dirty="true"; delete form.dataset.timelineSaved;
+    const missing=[!parsed.startedAt ? "date/heure source absente" : null,!parsed.duration ? "durée non renseignée" : null,!parsed.sport ? "nature à choisir" : null].filter(Boolean);
+    setActivityMessage(`Fichier analysé. Vérifie les valeurs reconnues avant d’enregistrer.${missing.length ? " Informations à compléter : "+missing.join(" ; ")+"." : ""}`);
+    window.MomentumMomentForm?.syncNature(form);
   } catch (error) {
-    console.error(
-      "HOME : import impossible.",
-      error
-    );
-
-    event.target.value = "";
-
-    setActivityMessage("Impossible de lire ce fichier. Vérifie son format puis réessaie.", true);
+    if (!current()) return;
+    input.value="";
+    setActivityMessage(error?.message || "Impossible d’analyser ce fichier. Réessaie avec un fichier FIT ou GPX valide.",true);
+  } finally {
+    if (current() && importButton) importButton.disabled=false;
   }
 }

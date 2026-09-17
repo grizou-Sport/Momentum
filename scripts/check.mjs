@@ -35,11 +35,6 @@ export function inspectSource(base, contract) {
 
 if (process.argv[1] && resolve(process.argv[1]) === resolve(root, 'scripts/check.mjs')) {
   const errors = inspectSource(root, readJSON('quality/source-contract.json'));
-  const cdc = readJSON('specs/cdc/2026-09-08.delivery.json');
-  if (cdc.status !== 'recovery-incomplete' || cdc.requiredFiles.some(path => existsSync(join(root, path)))) {
-    const checked = spawnSync(process.execPath, [join(root, 'scripts/check-cdc.mjs')], { encoding: 'utf8' });
-    if (checked.status !== 0) errors.push(`CDC delivery is incomplete:\n${checked.stderr || checked.error || 'CDC check failed'}`);
-  }
   const scripts = files(root).filter(path => /\.(?:js|mjs|cjs)$/.test(path) && !localPath(path).startsWith('recovery/'));
   for (const path of scripts) {
     const checked = spawnSync(process.execPath, ['--check', path], { encoding: 'utf8' });

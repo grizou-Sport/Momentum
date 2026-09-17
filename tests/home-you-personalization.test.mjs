@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("HOME recentre la fenêtre mobile de trois jours sur aujourd’hui", async () => {
+test("HOME centre la fenêtre mobile sans imposer un recentrage à chaque reprise", async () => {
   const [calendar, home, styles] = await Promise.all([
     read("js/home-calendar.js"),
     read("js/home.js"),
@@ -12,7 +12,8 @@ test("HOME recentre la fenêtre mobile de trois jours sur aujourd’hui", async 
   ]);
   assert.match(calendar, /data-day-offset=/);
   assert.match(calendar, /centerLivingWeekOnToday/);
-  assert.match(home, /pageshow.*centerLivingWeekOnToday/);
+  assert.match(home, /centerLivingWeekOnToday/);
+  assert.doesNotMatch(home, /pageshow.*centerLivingWeekOnToday/);
   assert.match(styles, /calc\(\(100% - 24px\) \/ 3\)/);
   assert.match(styles, /scroll-snap-align:center/);
 });
@@ -31,14 +32,15 @@ test("la navigation utilise l’avatar pour ouvrir directement YOU", async () =>
 
 test("YOU centralise le compte et recadre les avatars avant l’upload", async () => {
   const [you, passport, cropper, html] = await Promise.all([
-    read("js/you.js"),
+    read("js/you-account.js"),
     read("js/you-passport.js"),
     read("js/avatar-cropper.js"),
     read("you.html")
   ]);
   assert.match(html, /data-you-section="account"/);
   assert.match(you, /function renderAccount/);
-  assert.match(you, /from\("user_settings"\)\.upsert/);
+  assert.match(you, /MomentumPreferences.set/);
+  assert.doesNotMatch(you, /connection_coros|notification_email/);
   assert.match(you, /data-account-export/);
   assert.match(you, /data-account-logout/);
   assert.match(passport, /MomentumAvatarCropper\.open/);

@@ -30,7 +30,7 @@ Les paquets et les workflows de reconstruction sont retirés de la branche de r�
 - La réalisation complète du CDC et la recette navigateur restent à effectuer après reconstruction des fichiers manquants.
 - Aucune des migrations annoncées par l'ancien compte rendu n'est considérée comme appliquée ou validée sur la seule base de ce compte rendu.
 - Le manifeste du CDC reste `recovery-incomplete` ; `npm run check:cdc` doit échouer dans cet état.
-- La configuration de protection de `main` doit être activée dans les paramètres GitHub. Le fichier proposé ne vaut pas activation.
+- La protection de `main` a été activée le 12 septembre 2026 dans GitHub, puis vérifiée par l'API : règle nº 23020308 active, contrôle **Source and tests** de GitHub Actions obligatoire, aucune exception. Voir `docs/engineering/main-ruleset-2026-09-12.json`. Cette protection ne certifie pas la réalisation complète du CDC.
 
 ## Prévention
 

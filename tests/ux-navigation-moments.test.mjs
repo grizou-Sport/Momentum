@@ -20,9 +20,10 @@ test("every authenticated area uses the shared contextual rail", () => {
   }
 });
 
-test("mobile navigation exposes an accessible bottom bar with contextual cards", () => {
+test("mobile navigation exposes four labelled destinations without an intermediate menu", () => {
   assert.doesNotMatch(navigation, /aria-label="Ouvrir le menu"/);
-  assert.match(navigation, /aria-controls="momentum-panel-/);
+  assert.match(navigation, /momentum-rail-label/);
+  assert.doesNotMatch(navigation, /const willOpen/);
   assert.match(navigation, /data-mobile-section/);
   assert.match(navigationStyles, /inset:auto 8px calc\(8px \+ env\(safe-area-inset-bottom,0px\)\)/);
   assert.match(navigationStyles, /transform-origin:center bottom/);
@@ -48,7 +49,7 @@ test("tablet landscape content is offset from the fixed desktop rail", () => {
 });
 
 test("the avatar opens YOU directly and OFF remains a distinct system action", async () => {
-  const you = await readFile(new URL("../js/you.js", import.meta.url), "utf8");
+  const you = await readFile(new URL("../js/you-account.js", import.meta.url), "utf8");
   assert.match(navigation, /data-momentum-user-avatar/);
   assert.match(navigation, /data-momentum-direct/);
   assert.doesNotMatch(navigation, /aria-label="Paramètres, bientôt disponible"/);
@@ -59,13 +60,13 @@ test("the avatar opens YOU directly and OFF remains a distinct system action", a
   assert.match(you, /data-account-logout/);
 });
 
-test("Moment form follows visibility then Circle participant selection", () => {
+test("Moment form keeps visibility and participant selection in one shared command", () => {
   assert.ok(togetherPage.indexOf('id="momentVisibility"') < togetherPage.indexOf('id="momentParticipantPicker"'));
   assert.match(togetherPage, /value="PRIVATE">Privé/);
   assert.match(togetherPage, /value="CIRCLE">Cercle/);
   assert.match(togetherPage, /value="CLUB">Club/);
-  assert.match(together, /syncMomentParticipants/);
-  assert.match(together, /invitation_status: "PENDING"/);
+  assert.match(together, /MomentumSharedCommands\.request/);
+  assert.doesNotMatch(together, /\.from\("moment_participants"\)\.(insert|update)\(/);
 });
 
 test("Moment owners can edit, duplicate and delete while participants can answer", () => {

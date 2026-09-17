@@ -14,9 +14,21 @@ concurrency:
 
 jobs:
   verify:
-    name: Source and tests
+    name: Build and tests
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17.6
+        env:
+          POSTGRES_PASSWORD: momentum-ci-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -27,13 +39,26 @@ jobs:
           cache: npm
       - name: Install the committed lockfile
         run: npm ci --ignore-scripts
+      - name: Run every test even while CDC acceptance is pending
+        run: npm test
+      - name: Verify simultaneous writes on isolated PostgreSQL
+        run: npm run test:postgres
+        env:
+          PGHOST: 127.0.0.1
+          PGUSER: postgres
+          PGPASSWORD: momentum-ci-only
+      - uses: supabase/setup-cli@46f7f98c7f948ad727d22c1e67fab04c223a0520 # v3
+        with:
+          version: 2.117.0
+      - name: Verify real Supabase Auth, Storage, API and cleanup in Docker
+        run: npm run test:supabase -- --ci
       - name: Check source, run every test, build static output
         run: npm run build
       - name: Record the exact tested commit
         run: git rev-parse HEAD > tested-commit.txt
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: verified-site-${{ github.sha }}
+          name: tested-preview-${{ github.sha }}
           path: |
             dist/
             tested-commit.txt
@@ -41,8 +66,7 @@ jobs:
           retention-days: 14
 
   cdc:
-    name: CDC completeness
-    if: contains(github.head_ref || github.ref_name, 'cdc-consolidation') || contains(github.head_ref || github.ref_name, 'cdc-recovery')
+    name: CDC readiness
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -52,4 +76,21 @@ jobs:
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version-file: .nvmrc
-      - run: node scripts/check-cdc.mjs
+      - run: npm run check:release
+
+  release_gate:
+    name: Source and tests
+    needs: [verify, cdc]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require technical checks and CDC readiness before merging
+        env:
+          BUILD_RESULT: ${{ needs.verify.result }}
+          CDC_RESULT: ${{ needs.cdc.result }}
+        run: |
+          if [ "$BUILD_RESULT" != "success" ] || [ "$CDC_RESULT" != "success" ]; then
+            echo "Production remains blocked: build=$BUILD_RESULT, CDC readiness=$CDC_RESULT"
+            exit 1
+          fi

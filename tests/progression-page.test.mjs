@@ -68,12 +68,13 @@ test("Progression exposes the standard period shortcuts and temporal navigation"
 });
 
 test("Progression only queries completed activities and keeps the full history for load", () => {
-  assert.match(progressionScript, /\.eq\("status", "done"\)/);
+  assert.match(progressionScript, /MomentumMoments\?\.isCompletedActivity/);
+  assert.match(progressionScript, /MomentumData\.history/);
   assert.doesNotMatch(progressionScript, /\["done", "planned"\]/);
   assert.match(progressionScript, /historyActivities/);
-  assert.match(progressionScript, /Charge chronique \(CTL\)/);
-  assert.match(progressionScript, /Fatigue \(ATL\)/);
-  assert.match(progressionScript, /Forme \(TSB\)/);
+  assert.match(progressionScript, /Charge chronique/);
+  assert.match(progressionScript, /Charge récente/);
+  assert.match(progressionScript, /Équilibre de charge/);
 });
 
 test("shared navigation treats Progression as a first-level destination", () => {

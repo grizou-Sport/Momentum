@@ -44,7 +44,7 @@ function renderWellbeingForm() {
       </label>
 
       <label class="full">Notes
-        <textarea name="notes" rows="3">${YOU.wellbeingProfile?.notes || ""}</textarea>
+        <textarea name="notes" rows="3">${escapeHTML(YOU.wellbeingProfile?.notes || "")}</textarea>
       </label>
 
       <button class="login-primary full" type="submit">Enregistrer</button>

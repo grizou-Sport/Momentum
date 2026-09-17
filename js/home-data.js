@@ -8,8 +8,8 @@ const ACTIVITY_HOME_LEGACY_FIELDS = [
   "id", "user_id", "sport", "activity_type", "status",
   "distance_km", "duration_min", "elevation_m", "avg_hr", "rpe",
   "gear", "notes", "created_at", "activity_date", "activity_time",
-  "weather", "location_name", "route_summary", "activity_category",
-  "source_file_url", "source_file_type", "gpx_url"
+  "weather", "location_name", "location_id", "route_summary", "activity_category",
+  "source_file_url", "source_file_type", "gpx_url", "revision", "rpe_source", "duration_source", "timer_duration_seconds", "elapsed_duration_seconds", "moving_duration_seconds", "source_instant", "source_timezone", "source_hash", "practice_variant", "qualifiers", "is_memorable", "nutrition_note", "nutrition_elapsed_override_seconds"
 ].join(",");
 
 const ACTIVITY_HOME_FIT_FIELDS = [
@@ -110,6 +110,11 @@ function sessionsOn(date) {
 function mapActivityRow(row) {
   return {
     id: row.id,
+    original:row,
+    revision:row.revision ?? 0,
+    rpeSource:row.rpe_source || "undocumented",
+    qualifiers:row.qualifiers || [],
+    isMemorable:row.is_memorable || false,
     date: row.activity_date,
     time: row.activity_time || "",
     status: row.status || "done",
@@ -121,10 +126,13 @@ function mapActivityRow(row) {
     duration: row.duration_min,
     elevation: row.elevation_m,
     hr: row.avg_hr,
-    startedAt: row.started_at || null,
+    startedAt: row.source_instant || row.started_at || null,
     endedAt: row.ended_at || null,
-    totalDurationSeconds: row.total_duration_seconds,
-    movingTimeSeconds: row.moving_time_seconds,
+    totalDurationSeconds: row.elapsed_duration_seconds ?? row.total_duration_seconds,
+    elapsedDurationSeconds:row.elapsed_duration_seconds,
+    timerDurationSeconds:row.timer_duration_seconds,
+    nutrition_elapsed_override_seconds:row.nutrition_elapsed_override_seconds,
+    movingTimeSeconds: row.moving_duration_seconds ?? row.moving_time_seconds,
     pausedTimeSeconds: row.paused_time_seconds,
     distanceMeters: row.distance_m,
     totalAscentMeters: row.total_ascent_m,
@@ -182,13 +190,19 @@ function mapSharedMomentRow(row, today = iso(new Date())) {
   };
 }
 
+function hasLocationCoordinates(location) {
+  const valid = (value, limit) => ['number', 'string'].includes(typeof value) && String(value).trim() !== '' &&
+    Number.isFinite(Number(value)) && Math.abs(Number(value)) <= limit;
+  return valid(location?.latitude, 90) && valid(location?.longitude, 180);
+}
+
 function routeLocationPoint(routeSummary) {
   const center = routeSummary?.center;
-  if (Number.isFinite(Number(center?.latitude)) && Number.isFinite(Number(center?.longitude))) {
+  if (hasLocationCoordinates(center)) {
     return { latitude:Number(center.latitude), longitude:Number(center.longitude) };
   }
   const firstPoint = routeSummary?.map_points?.[0];
-  if (Array.isArray(firstPoint) && Number.isFinite(Number(firstPoint[0])) && Number.isFinite(Number(firstPoint[1]))) {
+  if (Array.isArray(firstPoint) && hasLocationCoordinates({latitude:firstPoint[0],longitude:firstPoint[1]})) {
     return { latitude:Number(firstPoint[0]), longitude:Number(firstPoint[1]) };
   }
   return null;
@@ -324,8 +338,7 @@ function getDefaultUserLocation() {
 
   if (
     !profile.locationName ||
-    !Number.isFinite(latitude) ||
-    !Number.isFinite(longitude)
+    !hasLocationCoordinates(profile)
   ) {
     return null;
   }
@@ -407,8 +420,7 @@ async function loadPassportLocation() {
   const current = state.profile || {};
   const sameSavedPlace =
     current.locationName === locationName &&
-    Number.isFinite(Number(current.latitude)) &&
-    Number.isFinite(Number(current.longitude));
+    hasLocationCoordinates(current);
 
   if (sameSavedPlace) {
     return getDefaultUserLocation();
