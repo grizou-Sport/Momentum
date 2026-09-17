@@ -33,6 +33,7 @@ export async function fixture({ database } = {}) {
   await db.exec(await read('./scheduler-adapters.sql'));
   await db.exec((await read('../../supabase/migrations/20260911202220_cdc_cleanup_schedule.sql')).replace(/^create extension[^;]+;$/gm,''));
   await db.exec(await read('../../supabase/migrations/20260911202513_cdc_account_deletion.sql'));
+  await db.exec(await read('../../supabase/migrations/20260911205559_cdc_shared_moment_backfill_compatibility.sql'));
   await db.exec(await read('../../supabase/migrations/20260911205620_cdc_shared_moment_commands.sql'));
   await db.exec(await read('../../supabase/migrations/20260912083358_cdc_legacy_storage_references.sql'));
   // Session rows are an adapter in these SQL-only tests; real sessions are covered locally.

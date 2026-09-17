@@ -5,8 +5,8 @@ import test from 'node:test';
 import vm from 'node:vm';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
-const [discover,navigation,you,together,home,calendar,activities,nutrition,progression,progressionPage,flow,account,story,session,styles,dataSource,cleanupWorker,accountHandler] = await Promise.all([
-  'discover.html','js/navigation.js','js/you.js','js/together.js','js/home.js','js/home-calendar.js','js/home-activities.js','js/activity-nutrition.js','js/home-progression.js','progression.html','js/home-flow.js','js/you-account.js','js/you-story.js','js/momentum-session.js','css/consolidation.css','js/momentum-data.js','supabase/functions/storage-cleanup/worker.mjs','supabase/functions/account-deletion/handler.mjs'
+const [discover,navigation,you,together,home,calendar,activities,nutrition,progression,progressionPage,flow,account,story,session,styles,dataSource,cleanupWorker,accountHandler,sharedBackfill] = await Promise.all([
+  'discover.html','js/navigation.js','js/you.js','js/together.js','js/home.js','js/home-calendar.js','js/home-activities.js','js/activity-nutrition.js','js/home-progression.js','progression.html','js/home-flow.js','js/you-account.js','js/you-story.js','js/momentum-session.js','css/consolidation.css','js/momentum-data.js','supabase/functions/storage-cleanup/worker.mjs','supabase/functions/account-deletion/handler.mjs','supabase/migrations/20260911205559_cdc_shared_moment_backfill_compatibility.sql'
 ].map(read));
 
 test('ACC-01/02: public discovery is explicit, fictitious, read-only and leads to real signup', () => {
@@ -74,6 +74,13 @@ test('MOM-08/09/10/11/12/19: optional side effects have cancellation, stale-resp
   assert.match(activities, /version !== form\.dataset\.formVersion/);
   assert.match(activities, /discard_uploaded_file/);
   assert.match(activities, /delete_personal_activity/);
+});
+
+test('TOG migration: populated participants accept only the sessionless schedule-version backfill', () => {
+  assert.match(sharedBackfill, /to_jsonb\(new\) \? 'confirmed_schedule_revision'/);
+  assert.match(sharedBackfill, /to_jsonb\(new\)-'confirmed_schedule_revision'-'updated_at'/);
+  assert.match(sharedBackfill, /raise exception 'Session requise'/);
+  assert.doesNotMatch(sharedBackfill, /disable trigger|session_replication_role/);
 });
 
 test('DAT-15: complete client pagination handles several thousand stable rows within a bounded lab time', async () => {
