@@ -5,4 +5,6 @@ import { createContentValidator } from './content.mjs';
 import { createFileIngestHandler } from './handler.mjs';
 await magick.initializeImageMagick(await Deno.readFile(new URL(import.meta.resolve('npm:@imagemagick/magick-wasm@0.0.43/magick.wasm'))));
 const validateContent=createContentValidator({DOMParser,XMLSerializer,decodeImage:imageCodec(magick)});
-Deno.serve(createFileIngestHandler({url:Deno.env.get('SUPABASE_URL'),serviceKey:Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),publishableKey:Deno.env.get('SUPABASE_ANON_KEY'),allowLocal:Deno.env.get('MOMENTUM_LOCAL_DEVELOPMENT')==='true',allowedOrigins:(Deno.env.get('MOMENTUM_ALLOWED_ORIGINS')||'https://momentum-alpha-rho.vercel.app').split(',').map(value=>value.trim()).filter(Boolean),validateContent}));
+const productionOrigin='https://momentum-alpha-rho.vercel.app';
+const allowedOrigins=[...(Deno.env.get('MOMENTUM_ALLOWED_ORIGINS')||'').split(','),productionOrigin].map(value=>value.trim()).filter(Boolean);
+Deno.serve(createFileIngestHandler({url:Deno.env.get('SUPABASE_URL'),serviceKey:Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),publishableKey:Deno.env.get('SUPABASE_ANON_KEY'),allowLocal:Deno.env.get('MOMENTUM_LOCAL_DEVELOPMENT')==='true',allowedOrigins,validateContent}));

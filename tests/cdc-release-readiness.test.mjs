@@ -5,8 +5,8 @@ import test from 'node:test';
 import vm from 'node:vm';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
-const [discover,navigation,you,together,home,calendar,activities,nutrition,progression,progressionPage,flow,account,story,session,styles,dataSource,cleanupWorker,accountHandler,sharedBackfill] = await Promise.all([
-  'discover.html','js/navigation.js','js/you.js','js/together.js','js/home.js','js/home-calendar.js','js/home-activities.js','js/activity-nutrition.js','js/home-progression.js','progression.html','js/home-flow.js','js/you-account.js','js/you-story.js','js/momentum-session.js','css/consolidation.css','js/momentum-data.js','supabase/functions/storage-cleanup/worker.mjs','supabase/functions/account-deletion/handler.mjs','supabase/migrations/20260911205559_cdc_shared_moment_backfill_compatibility.sql'
+const [discover,navigation,you,together,home,calendar,activities,nutrition,progression,progressionPage,flow,account,story,session,styles,dataSource,cleanupWorker,accountHandler,accountIndex,fileIngestIndex,sharedBackfill] = await Promise.all([
+  'discover.html','js/navigation.js','js/you.js','js/together.js','js/home.js','js/home-calendar.js','js/home-activities.js','js/activity-nutrition.js','js/home-progression.js','progression.html','js/home-flow.js','js/you-account.js','js/you-story.js','js/momentum-session.js','css/consolidation.css','js/momentum-data.js','supabase/functions/storage-cleanup/worker.mjs','supabase/functions/account-deletion/handler.mjs','supabase/functions/account-deletion/index.mjs','supabase/functions/file-ingest/index.mjs','supabase/migrations/20260911205559_cdc_shared_moment_backfill_compatibility.sql'
 ].map(read));
 
 test('ACC-01/02: public discovery is explicit, fictitious, read-only and leads to real signup', () => {
@@ -122,4 +122,12 @@ test('PER-05/06/09/10/13/14 and SEC-17/18/20: unknown values, unavailable source
   assert.doesNotMatch(cleanupWorker + accountHandler, /console\.(?:log|error|warn)/);
   assert.doesNotMatch(accountHandler, /respond\([^\n]*(?:password|current|reauthenticated)/);
   assert.match(cleanupWorker, /neither secret nor request body is logged/);
+});
+
+test('SEC-16/20: the published application origin remains allowed when extra origins are configured', () => {
+  for (const source of [accountIndex,fileIngestIndex]) {
+    assert.match(source, /const productionOrigin='https:\/\/momentum-alpha-rho\.vercel\.app'/);
+    assert.match(source, /MOMENTUM_ALLOWED_ORIGINS'[\s\S]*productionOrigin/);
+    assert.match(source, /allowedOrigins/);
+  }
 });
