@@ -1095,6 +1095,8 @@ main{
   left:var(--flow-x);
   width:22px;
   height:22px;
+  /* Exception au minimum global des boutons : la cible tactile est portée par ::after. */
+  min-height:0!important;
   padding:0;
   border:3px solid rgba(255,255,255,.94);
   border-radius:50%;
@@ -1105,7 +1107,17 @@ main{
   pointer-events:auto;
 }
 
-.flow-point::after{content:"";position:absolute;inset:-8px;border:1px solid transparent;border-radius:inherit}
+.flow-point::after{
+  content:"";
+  position:absolute;
+  top:50%;
+  left:50%;
+  width:max(44px,calc(100% + 16px));
+  height:max(44px,calc(100% + 16px));
+  transform:translate(-50%,-50%);
+  border:1px solid transparent;
+  border-radius:inherit;
+}
 .flow-point:hover,.flow-point:focus-visible{z-index:3;transform:translate(-50%,-50%) scale(1.25)}
 .flow-points.has-selection .flow-point:not(.is-selected){opacity:.28}
 .flow-point.is-selected{z-index:4;transform:translate(-50%,-50%) scale(1.38);box-shadow:0 0 0 5px rgba(255,255,255,.9),0 0 0 7px var(--flow-color),0 8px 22px rgba(20,25,22,.24)}
