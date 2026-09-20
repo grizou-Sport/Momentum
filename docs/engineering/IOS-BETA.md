@@ -46,6 +46,8 @@ Les fonctions `file-ingest` et `account-deletion` vérifient strictement l’ori
 
 Cette modification n’est pas appliquée à la production par la génération iOS. Son déploiement doit être traité séparément, après validation de ce changement de sécurité. Tant qu’il n’a pas été appliqué, les envois de fichiers et la suppression de compte depuis l’app sont bloqués par le serveur. Les parcours web existants restent disponibles.
 
+État au 20 septembre 2026 : adaptation explicitement autorisée par Christophe et déployée en version 4 des deux fonctions. Précontrôles de l’app et du site vérifiés en 204, origines étrangères refusées en 403 et requêtes sans session refusées en 401. Les redirections d’e-mail restent inchangées. Aucun fichier ni compte réel n’a été modifié par ces contrôles.
+
 ## Signature et TestFlight
 
 Projet : `ios/App/App.xcodeproj`, scheme `App`, identifiant `com.chrisgyger.momentum`, version initiale `0.1.0` / build `1`, iPhone avec iOS 15 ou ultérieur.
@@ -57,6 +59,8 @@ Projet : `ios/App/App.xcodeproj`, scheme `App`, identifiant `com.chrisgyger.mome
 5. Vérifier le traitement du build dans App Store Connect avant de le proposer au testeur. Ne pas confondre compilation locale et disponibilité TestFlight.
 
 Une clé API App Store Connect peut aussi automatiser l’envoi, si elle existe déjà et est stockée hors du dépôt. Ne jamais versionner de clé, certificat privé, archive, IPA ou journal de distribution.
+
+La configuration d’export, les consignes en français et la procédure de reprise avec le plugin sont décrites dans [TESTFLIGHT.md](TESTFLIGHT.md). Christophe a annoncé une activation de son compte sous 48 heures ; aucun build n’est encore envoyé.
 
 ## Recette iPhone
 
