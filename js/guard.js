@@ -35,7 +35,7 @@
     ]);
     clearTimeout(timeout);
     if (version !== attempt) return;
-    const requested = window.MomentumAccess.safeReturn(location.pathname + location.search + location.hash, location.origin);
+    const requested = window.MomentumAccess.safeReturn(location.pathname + location.search + location.hash, window.MomentumNative?.origin || location.origin);
     if (["anonymous", "expired"].includes(result.status)) {
       if (result.status === "expired") await window.momentumDB.auth.signOut({ scope:"local" });
       location.replace(`login.html?returnTo=${encodeURIComponent(requested)}`); return;

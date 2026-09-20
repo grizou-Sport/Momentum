@@ -4,7 +4,7 @@
   const form = document.getElementById('onboardingForm'), status = document.getElementById('onboardingStatus');
   const message = document.getElementById('stepMessage'), retry = document.getElementById('retryOnboarding');
   const next = document.getElementById('nextStep'), previous = document.getElementById('previousStep'), skip = document.getElementById('skipStep');
-  const destination = window.MomentumAccess.safeReturn(new URLSearchParams(location.search).get('returnTo'), location.origin);
+  const destination = window.MomentumAccess.safeReturn(new URLSearchParams(location.search).get('returnTo'), window.MomentumNative?.origin || location.origin);
   let step = 1, user = null, updatedAt = null, pending = null, loading = false, attempt = 0;
   async function withTimeout(request) { let timer; try { return await Promise.race([request,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Chargement interrompu. Réessaie.')),12000);})]); } finally {clearTimeout(timer);} }
   function showStep(value) {

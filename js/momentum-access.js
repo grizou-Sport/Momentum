@@ -10,7 +10,8 @@
     if (typeof value !== "string" || /[\\\u0000-\u001f]/.test(value)) return "index.html";
     try {
       const url = new URL(value, origin);
-      if (url.origin !== new URL(origin).origin || url.username || url.password) return "index.html";
+      const base = new URL(origin);
+      if (url.protocol !== base.protocol || url.host !== base.host || url.origin !== base.origin || url.username || url.password) return "index.html";
       const path = url.pathname.replace(/^\//, "");
       if (!allowed.has(path)) return "index.html";
       return path + url.search + url.hash;

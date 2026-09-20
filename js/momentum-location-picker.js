@@ -113,7 +113,10 @@
     let lastError = null;
     for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
-        const response = await fetch(`/api/locations?${parameters}`, {
+        const request = window.MomentumNative?.fetchLocations
+          ? (url, options) => window.MomentumNative.fetchLocations(parameters, options)
+          : fetch;
+        const response = await request(`/api/locations?${parameters}`, {
           headers: { Accept: "application/json" }
         });
         const payload = await response.json().catch(() => ({}));

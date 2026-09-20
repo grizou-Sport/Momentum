@@ -19,7 +19,7 @@
   function report(error){message.textContent=errors[error.message]||'Action non confirmée. Actualise ou réessaie.';}
   function showLink(result){
    if(!result.secret){message.textContent='L’invitation existe déjà. Utilise « Renouveler le lien » pour obtenir un nouveau lien.';return;}
-   dialog.dataset.linkInvitation=result.id;dialog.querySelector('[data-link]').hidden=false;dialog.querySelector('[data-link-value]').value=new URL('invite.html',location.href).href+'#'+result.secret;
+   dialog.dataset.linkInvitation=result.id;dialog.querySelector('[data-link]').hidden=false;dialog.querySelector('[data-link-value]').value=new URL('invite.html',window.MomentumNative?.webOrigin || location.href).href+'#'+result.secret;
    dialog.querySelector('[data-expiry]').textContent='Lien valable jusqu’au '+date(result.view.expires_at)+'.';message.textContent='Lien créé. Tu peux le copier et choisir comment le partager.';
   }
   async function load(){

@@ -13,12 +13,26 @@
     "verify": "npm run check && npm test",
     "build": "npm run verify && node scripts/build.mjs",
     "check:cdc": "node scripts/check-cdc.mjs",
-    "check:release": "node scripts/check-cdc.mjs --release"
+    "check:release": "node scripts/check-cdc.mjs --release",
+    "ios:prepare": "npm run build && node scripts/build-native.mjs && cap sync ios",
+    "ios:beta": "MOMENTUM_BUILD_TARGET=production npm run ios:prepare",
+    "ios:open": "cap open ios"
   },
   "devDependencies": {
+    "@capacitor/cli": "8.5.2",
     "@electric-sql/pglite": "0.5.8",
     "@imagemagick/magick-wasm": "0.0.43",
+    "@supabase/supabase-js": "2.116.0",
     "@xmldom/xmldom": "0.9.12",
+    "chart.js": "4.5.1",
+    "esbuild": "0.28.2",
+    "leaflet": "1.9.4",
     "pg": "8.16.3"
+  },
+  "dependencies": {
+    "@capacitor/app": "8.1.1",
+    "@capacitor/browser": "8.0.4",
+    "@capacitor/core": "8.5.2",
+    "@capacitor/ios": "8.5.2"
   }
 }
