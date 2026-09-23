@@ -155,8 +155,8 @@ async function getWeather(latitude, longitude, date) {
     : "https://api.open-meteo.com/v1/forecast";
 
   const params = new URLSearchParams({
-    latitude: String(latitude),
-    longitude: String(longitude),
+    latitude: Number(latitude).toFixed(2),
+    longitude: Number(longitude).toFixed(2),
     start_date: date,
     end_date: date,
     daily:
@@ -186,8 +186,8 @@ async function getWeather(latitude, longitude, date) {
 
 async function getLivingWeatherWindow(latitude, longitude) {
   const params = new URLSearchParams({
-    latitude: String(latitude),
-    longitude: String(longitude),
+    latitude: Number(latitude).toFixed(2),
+    longitude: Number(longitude).toFixed(2),
     past_days: "3",
     forecast_days: "4",
     daily:

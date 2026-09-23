@@ -22,7 +22,8 @@
     if (failed) {
       const retry = document.createElement("button"); retry.type = "button"; retry.textContent = "Réessayer"; retry.onclick = protectPage;
       const back = document.createElement("a"); back.href = "discover.html"; back.textContent = "Retour à la découverte";
-      panel.append(retry, back);
+      const rights = document.createElement("a"); rights.href = "privacy-center.html"; rights.textContent = "Confidentialité, export et suppression";
+      panel.append(retry, back, rights);
     }
   }
   async function protectPage() {
@@ -40,12 +41,19 @@
       if (result.status === "expired") await window.momentumDB.auth.signOut({ scope:"local" });
       location.replace(`login.html?returnTo=${encodeURIComponent(requested)}`); return;
     }
+    if (result.status === "legal_required") { location.replace(`privacy-center.html?returnTo=${encodeURIComponent(requested)}`); return; }
     if (result.status === "onboarding") { location.replace(`welcome.html?returnTo=${encodeURIComponent(requested)}`); return; }
     if (result.status !== "ready") { message(true); return; }
     window.MomentumSession?.activate(result.user.id);
     await Promise.race([window.MomentumPreferences?.load(result.user.id),new Promise(resolve=>setTimeout(resolve,2500))]);
     if (version !== attempt) return;
     panel.remove(); delete document.documentElement.dataset.accessPending;
+    if (result.privacyUpdated) {
+      const notice = document.createElement('aside'), link = document.createElement('a');
+      notice.className = 'legal-update-notice'; notice.setAttribute('aria-label', 'Information confidentialité');
+      link.href = 'privacy-center.html'; link.textContent = 'La politique de confidentialité a été mise à jour. Consulter les informations.';
+      notice.append(link); document.body.append(notice);
+    }
     resolveReady(result.user);
   }
   protectPage();

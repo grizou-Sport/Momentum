@@ -6,7 +6,7 @@ const access=require('../../js/momentum-access.js');
 const user={id:'fictitious-account'};
 function client({session={user},sessionError=null,userError=null,profile={personalization:{onboarding_completed:true}},profileError=null}={}){
  let writes=0;
- return {auth:{async getSession(){return {data:{session},error:sessionError};},async getUser(){return {data:{user},error:userError};}},from(name){assert.equal(name,'passports');return {select(){return this;},eq(){return this;},async maybeSingle(){return {data:profile,error:profileError};},insert(){writes++;}};},writes:()=>writes};
+ return {async rpc(){return {data:{enabled:true,accepted:true}};},auth:{async getSession(){return {data:{session},error:sessionError};},async getUser(){return {data:{user},error:userError};}},from(name){assert.equal(name,'passports');return {select(){return this;},eq(){return this;},async maybeSingle(){return {data:profile,error:profileError};},insert(){writes++;}};},writes:()=>writes};
 }
 test('ACC-04/05/06: legacy profiles stay ready; temporary failures never mean missing or expired accounts',async()=>{
  const db=client();assert.equal((await access.check(db)).status,'ready');assert.equal(db.writes(),0);
@@ -45,7 +45,7 @@ function recoveryFixture({profileError=null}={}){
  const db=client({session:null,profileError});let updates=0,listener;
  db.auth.updateUser=async()=>{updates++;return {error:null};};db.auth.onAuthStateChange=fn=>{listener=fn;};
  const location={href:'http://localhost/login.html?recovery=1&returnTo=you.html%23passport',search:'?recovery=1&returnTo=you.html%23passport',hash:'',origin:'http://localhost',replace(value){redirects.push(value);}};
- const window={location,MomentumAccess:access};
+ const window={location,MomentumAccess:access,MomentumLegal:require('../../js/momentum-legal.js')};
  vm.runInNewContext(fs.readFileSync(require.resolve('../../js/auth.js'),'utf8'),{window,location,momentumDB:db,document:{getElementById:element,querySelectorAll(){return [];}},URL,URLSearchParams,setTimeout(fn){timers.push(fn);}});
  listener('PASSWORD_RECOVERY');
  return {elements,element,timers,redirects,updates:()=>updates,submit:()=>element('newPasswordForm').handlers.submit({preventDefault(){}})};

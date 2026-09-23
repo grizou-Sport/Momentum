@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="css/location-picker.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="css/consolidation.css">
+  <link rel="stylesheet" href="css/legal.css" />
 </head>
 
 <body class="home-body" data-momentum-page="home">
@@ -264,14 +265,14 @@
 <input name="activity_category" type="radio" value="adventure"/>
 <span><img alt="" aria-hidden="true" src="Assets/icons/sports/mountain.svg"/>Aventure</span>
 </label>
-</fieldset><label class="activity-file-zone full" id="activityFileZone">
+</fieldset><p class="legal-notice full" id="importPrivacyNotice">Un fichier FIT ou GPX peut contenir ton trajet, tes horaires, ta fréquence cardiaque et d’autres mesures. MOMENTUM extrait les données disponibles et conserve le fichier source lors de l’enregistrement. Une trace peut révéler ton domicile. Le centre du trajet peut être envoyé au service de recherche de lieu via MOMENTUM pour proposer un nom. <a href="confidentialite.html#imports" target="_blank" rel="noopener">Comprendre l’import et ses destinataires</a>.</p><label class="activity-file-zone full" id="activityFileZone">
 <span>Importer un fichier</span>
 <strong>FIT ou GPX</strong>
 <small>
           Les données reconnues rempliront
           automatiquement le formulaire.
         </small>
-<input accept=".fit,.gpx,application/gpx+xml,application/octet-stream" id="activityFile" name="activity_file" type="file"/>
+<input accept=".fit,.gpx,application/gpx+xml,application/octet-stream" id="activityFile" aria-describedby="importPrivacyNotice" name="activity_file" type="file"/>
 <small hidden="" id="existingActivityFile"></small>
 </label><div class="moment-nature full"><label for="momentNature">Nature du Moment</label><input aria-label="Rechercher une pratique" class="nature-filter" data-nature-filter="" placeholder="Rechercher une pratique…" type="search"/><select aria-label="Nature du Moment" data-moment-nature="" id="momentNature" required=""><option value="">Choisir la nature du Moment</option></select><p class="private-note" data-load-requirement=""></p><p class="private-note" data-practice-priority-status role="status"></p></div><label class="full" data-practice-variant hidden>Variante de la pratique<select name="practice_variant"><option value="">Non précisée</option><option value="active">Active — effort physique</option><option value="passive">Passive — repos ou relâchement</option></select><small>Sans précision, la charge reste indéterminée.</small></label><div data-nature-compat="" hidden=""><label data-activity-category="sport">
         Sport
@@ -491,6 +492,7 @@
 
 <script src="js/supabase.js"></script>
 <script src="js/momentum-uploads.js"></script>
+<script src="js/momentum-legal.js"></script>
 <script src="js/momentum-access.js"></script>
 <script src="js/momentum-session.js"></script>
 <script src="js/momentum-preferences.js"></script>
@@ -530,5 +532,6 @@
 <script src="js/home.js"></script>
 
 <script src="js/momentum-surface.js"></script>
+<nav class="legal-links" aria-label="Informations juridiques"><a href="conditions.html">Conditions</a><a href="confidentialite.html">Confidentialité</a><a href="mentions-legales.html">Mentions légales et contact</a><a href="cookies.html">Stockage navigateur</a><a href="privacy-center.html">Confidentialité et données</a></nav>
 </body>
 </html>

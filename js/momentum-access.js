@@ -32,9 +32,13 @@
       }
       if (!result.data?.user) return { status:"expired" };
       const user = result.data.user;
+      const legal = await db.rpc('legal_account_status');
+      if (legal.error || typeof legal.data?.enabled !== 'boolean') return { status:'temporary_error', user };
+      if (!legal.data.enabled || !legal.data.accepted) return { status:'legal_required', user };
       const profile = await db.from("passports").select("personalization,display_name").eq("user_id", user.id).maybeSingle();
       if (profile.error) return { status:"temporary_error" };
-      return { status:complete(profile.data) ? "ready" : "onboarding", user, passport:profile.data };
+      const privacyUpdated = Boolean(legal.data.privacy && !(legal.data.history || []).some(item => item.event_type === 'notice_delivered' && item.version === legal.data.privacy.version));
+      return { status:complete(profile.data) ? "ready" : "onboarding", user, passport:profile.data, privacyUpdated };
     } catch (_) { return { status:"temporary_error" }; }
   }
   return Object.freeze({ safeReturn, complete, check });

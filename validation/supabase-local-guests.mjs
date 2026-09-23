@@ -19,9 +19,10 @@ export async function verifyLocalGuests({request,A,B}) {
  const first=await call(null,'exchange_guest_invitation',{p_secret:invitation.secret});
  const second=await call(null,'exchange_guest_invitation',{p_secret:invitation.secret});
  assert.equal(first.view.answer,'none');assert.equal(second.view.answer,'none');
- const answer={p_session:first.session,p_name:'Alex fictitious',p_answer:'yes',p_availability:{},p_revision:first.view.response_revision};
- const replied=await call(null,'respond_guest_invitation',answer);assert.equal(replied.view.response_state,'pending_validation');
- assert.deepEqual(await call(null,'respond_guest_invitation',answer),replied,'Lost-response retry must be idempotent');
+ const legal=await call(null,'legal_public_status',{});
+ const answer={p_notice_version:legal.guest.version,p_notice_sha256:legal.guest.sha256,p_session:first.session,p_name:'Alex fictitious',p_answer:'yes',p_availability:{},p_revision:first.view.response_revision};
+ const replied=await call(null,'respond_guest_with_notice',answer);assert.equal(replied.view.response_state,'pending_validation');
+ assert.deepEqual(await call(null,'respond_guest_with_notice',answer),replied,'Lost-response retry must be idempotent');
  assert.equal((await call(A,'manage_guest_invitation',{p_action:'confirm',p_id:invitation.id,p_revision:replied.view.response_revision})).view.response_state,'confirmed');
  assert.equal((await call(null,'read_guest_invitation',{p_session:first.session})).view.response_state,'confirmed');
  const renewed=await call(A,'manage_guest_invitation',{p_action:'renew',p_id:invitation.id});

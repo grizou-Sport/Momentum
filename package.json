@@ -13,7 +13,8 @@
     "verify": "npm run check && npm test",
     "build": "npm run verify && node scripts/build.mjs",
     "check:cdc": "node scripts/check-cdc.mjs",
-    "check:release": "node scripts/check-cdc.mjs --release"
+    "check:release": "node scripts/check-cdc.mjs --release",
+    "check:legal": "node scripts/check-legal.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",

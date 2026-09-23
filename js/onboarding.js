@@ -21,6 +21,7 @@
       const access = await Promise.race([window.MomentumAccess.check(window.momentumDB), new Promise(resolve => setTimeout(() => resolve({status:'temporary_error'}),12000))]);
       if (version !== attempt) return;
       if (['anonymous','expired'].includes(access.status)) { location.replace(`login.html?returnTo=${encodeURIComponent(destination)}`); return; }
+      if (access.status === 'legal_required') { location.replace('privacy-center.html?returnTo='+encodeURIComponent(destination)); return; }
       if (access.status === 'ready') { location.replace(destination); return; }
       if (access.status !== 'onboarding') throw new Error('Espace temporairement indisponible. Réessaie sans recréer ton profil.');
       user = access.user;

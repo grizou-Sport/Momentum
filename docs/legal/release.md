@@ -1,0 +1,16 @@
+# Publication du cadre légal
+
+État : **préparation technique, publication bloquée**. Les anciennes pages de projet sont remplacées dans cette branche par un état d’indisponibilité ; il ne s’agit pas d’une politique en vigueur. La production existante n’est pas modifiée.
+
+1. Compléter `legal-facts.md` (ignoré par Git, jamais copié dans dist). Faire valider L01–L10, textes, portée CH/UE, durées et fonctions par exploitant et juriste. Le registre interne reste privé, ce dépôt étant public.
+2. Finaliser les cinq documents : CGU, confidentialité, mentions/contact, stockage navigateur, notice invités ; archiver chaque version approuvée dans `legal/versions/`. Les pages principales gardent leurs URLs. Pas de brouillon, placeholder ou affirmation non vérifiée.
+3. Compléter `legal/publication.json` avec attestations sans donnée privée, références de preuves, SHA-256 des fichiers exacts, date/version et résultats LEG-01–14. Renseigner `review.source_sha256` avec `processingFingerprint` de `scripts/legal-publication.mjs` après revue du code : un changement ultérieur des collectes, scripts, fournisseurs ou règles serveur bloque à nouveau la publication. Les documents sont des HTML statiques consultables sans compte. Toute modification crée une nouvelle version, jamais une modification d’une archive.
+4. Tester la migration `20260923143302_legal_framework.sql` sur une base isolée. Installer les documents approuvés dans private.legal_documents : le hash est calculé par Postgres sur le contenu UTF-8 exact. Aucun événement rétroactif. Rejouer les scénarios comptes existants, deux sujets, erreur réseau, invitation, export et suppression.
+5. Préparer la fenêtre de bascule : la migration ferme les inscriptions et bloque les écritures tant que le registre serveur n’est pas activé. Sauvegarder l’état publié. Déployer les pages approuvées et le client testé, vérifier leurs empreintes depuis le domaine public, puis activer private.legal_release avec les versions effectivement accessibles. Ne jamais exiger un document qui n’est pas publié. La lecture et les démarches restent possibles pendant la bascule.
+6. Exécuter `npm run check:legal`, les contrôles source/CI, les scénarios représentatifs et la vérification de version.json. Consigner les preuves de migration et de production séparément.
+
+Une acceptation de CGU crée `terms_accept`. L’information confidentialité crée `notice_delivered`, pas un consentement. Une mise à jour informative de confidentialité ne bloque pas un utilisateur ayant accepté les mêmes CGU ; l’interface de compte présente la politique actuelle. Une modification matérielle des CGU exige une nouvelle acceptation avant écriture. Aucun consentement optionnel n’est créé sans décision de fondement ; ces fonctions ne peuvent être publiées en l’absence de validation.
+
+## Repli
+
+Conserver les versions HTML et les événements. Désactiver la release si une version est inaccessible ; les démarches restent accessibles. Revert du code par nouveau commit, jamais suppression de preuves ou migration historique. L’ancien client n’est pas un repli fonctionnel après activation du contrôle juridique : il est bloqué côté serveur. Revenir au dernier client compatible pour rouvrir le service. Ne pas déployer cette migration seule en production.

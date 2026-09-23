@@ -84,6 +84,20 @@ test('Full local Supabase: real identity, files, API, scheduler and deletion',as
   if(process.env.MOMENTUM_LOCAL_ACCOUNTS)await writeFile(process.env.MOMENTUM_LOCAL_ACCOUNTS,JSON.stringify({A,B,C}),{mode:0o600});
  });
  if(!A||!B||!C)throw new Error('Real confirmed accounts are required for the remaining integration tests');
+ await step('Legal proof: real sessions, direct bypass rejection, rights on refusal and idempotent acceptance',async()=>{
+  const release=expect(await rpc(null,'legal_public_status'),200,'Public legal documents');
+  for(const user of [A,B,C]) {
+   const before=expect(await rpc(user,'legal_account_status'),200,'Legal status');assert.equal(before.accepted,false);assert.deepEqual(before.history,[]);
+   const rejected=await save(user,{notes:'Must not be written before acceptance'});assert.ok(rejected.status>=400);assert.equal(rejected.data.code,'ML001');
+   expect(await rpc(user,'prepare_account_deletion'),200,'Deletion remains accessible');
+   if(user===C)expect(await rpc(user,'begin_personal_export'),200,'Export remains accessible');
+   const args={p_version:release.terms.version,p_sha256:release.terms.sha256,p_privacy_version:release.privacy.version,p_privacy_sha256:release.privacy.sha256};
+   const replies=await Promise.all([rpc(user,'accept_current_terms',args),rpc(user,'accept_current_terms',args),rpc(user,'accept_current_terms',args)]);
+   const accepted=expect(replies[0],200,'Accept current terms');assert.equal(accepted.accepted,true);
+   for(const reply of replies.slice(1))assert.deepEqual(expect(reply,200,'Concurrent acceptance'),accepted);
+   assert.equal(accepted.history.length,2);assert.ok(accepted.history.every(item=>item.path.startsWith('legal/versions/')));
+  }
+ });
  await step('Minimal onboarding persists without physiological estimates',async()=>{
   let row=expect(await request('/rest/v1/onboarding_progress?user_id=eq.'+A.user.id,{user:A}),200,'Read progress')[0];
   for(const [step,values] of [[1,{display_name:'Camille Docker'}],[2,{skipped:true}],[3,{intention:'Retrouver les sentiers sans objectif de temps.'}]]){
