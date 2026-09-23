@@ -19,7 +19,7 @@ Préparation technique, **pas une livraison juridique ni une publication**. Réf
 
 | Scénario | État | Preuve acquise et travail restant |
 |---|---|---|
-| LEG-01 | Bloqué | Navigation publique créée ; exploitant, localité et e-mail confirmés et accessibles ; adresse complète et cinq textes définitifs à finaliser. |
+| LEG-01 | Bloqué | Navigation publique créée ; exploitant, adresse complète et e-mail confirmés et accessibles ; cinq textes définitifs à finaliser. |
 | LEG-02 | Partiel | Refus empêche signUp, case non cochée, confidentialité séparée ; vérifier les textes approuvés. |
 | LEG-03 | Partiel | Idempotence serveur, double clic et reprise réseau, vrais comptes locaux ; durée de purge des inscriptions abandonnées à décider et implémenter. |
 | LEG-04 | Partiel | Ancien compte orienté vers finalisation ; export/suppression accessibles sans accord ; contact réel désormais accessible ; finalisation des documents toujours requise. |

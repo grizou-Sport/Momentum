@@ -4,7 +4,7 @@ Ce texte n’est pas en vigueur. Les passages liés aux décisions L01–L10 doi
 
 ## Conditions générales : clauses préparées
 
-MOMENTUM est un projet personnel développé et exploité en son nom propre par Christophe Gyger, à 2503 Bienne, Suisse, puis partagé avec d’autres personnes. Le service est actuellement gratuit et proposé en français. Il prend la forme d’un journal sportif et d’aventures en version alpha. Les fonctions disponibles permettent de conserver des activités, expériences et contenus personnels, puis de choisir certains partages. Des évolutions et interruptions de maintenance restent possibles.
+MOMENTUM est un projet personnel développé et exploité en son nom propre par Christophe Gyger, au Ch. Des barques 1, 2503 Bienne, Suisse, puis partagé avec d’autres personnes. Le service est actuellement gratuit, proposé en français et destiné à un public dans le monde entier. Il prend la forme d’un journal sportif et d’aventures en version alpha. Les fonctions disponibles permettent de conserver des activités, expériences et contenus personnels, puis de choisir certains partages. Des évolutions et interruptions de maintenance restent possibles.
 
 Le service est réservé aux personnes de 18 ans révolus ou plus. En acceptant les conditions, tu déclares remplir cette condition d’âge. Tu protèges tes identifiants et signales tout accès suspect à grizou@gmx.ch. Les informations descriptives de FLOW et Progression ne sont ni un diagnostic ni une prescription médicale.
 
@@ -16,11 +16,11 @@ N’utilise pas MOMENTUM pour harceler, contourner les permissions, publier un c
 
 Tu peux exporter tes données et demander la suppression du compte sans accepter de nouvelles conditions. Le récapitulatif de suppression distingue données personnelles, fichiers, contributions des autres et éléments collectifs conservés. Les sauvegardes sont traitées selon la durée qui doit encore être confirmée.
 
-Les décisions de l’exploitant sont consignées dans decisions-2026-09-23.md. L’adresse de correspondance complète, le ciblage des pays, la loi applicable et le règlement des litiges restent à finaliser ; aucune compétence juridictionnelle exclusive ni renonciation à un droit impératif n’est inventée. Toute prestation payante exige son propre lot précontractuel avant activation. Date, version, archive et notification des modifications doivent accompagner les textes validés.
+Les décisions de l’exploitant sont consignées dans decisions-2026-09-23.md. La diffusion mondiale est confirmée. La loi applicable et le règlement des litiges restent à finaliser pour ce périmètre ; aucune compétence juridictionnelle exclusive ni renonciation à un droit impératif n’est inventée. Toute prestation payante exige son propre lot précontractuel avant activation. Date, version, archive et notification des modifications doivent accompagner les textes validés.
 
 ## Confidentialité : contenu à finaliser
 
-Responsable du traitement : Christophe Gyger, exploitant en nom propre à 2503 Bienne, Suisse. Contact pour les données, l’assistance, les réclamations et les incidents : grizou@gmx.ch. Compléter l’adresse de correspondance. Prévoir ensuite une table des matières et le tableau données/provenance/finalité/destinataires/durée/fondement pour chaque ligne de inventory.md. Les décisions de fondement et les durées ne peuvent pas être déduites de la seule présence des tables.
+Responsable du traitement : Christophe Gyger, exploitant en nom propre au Ch. Des barques 1, 2503 Bienne, Suisse. Contact pour les données, l’assistance, les réclamations et les incidents : grizou@gmx.ch. Prévoir une table des matières et le tableau données/provenance/finalité/destinataires/durée/fondement pour chaque ligne de inventory.md. Les décisions de fondement et les durées ne peuvent pas être déduites de la seule présence des tables.
 
 Le compte fournit l’adresse de connexion. Les profils, notes, observations, activités, photos et fichiers sont fournis par l’utilisateur. Aucun connecteur COROS, Whoop ou Strava opérationnel n’est annoncé. Les FIT/GPX peuvent révéler trajets, domicile, horaires, fréquence cardiaque et autres mesures présentes dans le fichier ; l’original peut contenir davantage que les seules valeurs affichées.
 
@@ -38,7 +38,7 @@ Sécurité : permissions serveur, restrictions RLS, espaces de fichiers privés 
 
 ## Mentions, stockage et invitation
 
-Mentions : Christophe Gyger, exploitant personnel ; localité 2503 Bienne, Suisse ; contact grizou@gmx.ch. Compléter l’adresse de correspondance et vérifier les droits sur les visuels. Aucun numéro de société ou DPO fictif. Le nom MOMENTUM seul ne désigne pas l’entité juridique.
+Mentions : Christophe Gyger, exploitant personnel ; adresse de correspondance Ch. Des barques 1, 2503 Bienne, Suisse ; contact grizou@gmx.ch. Vérifier les droits sur les visuels. Aucun numéro de société ou DPO fictif. Le nom MOMENTUM seul ne désigne pas l’entité juridique.
 
 Stockage : reprendre le tableau technique de inventory.md en ajoutant la qualification validée, durée, pays et choix pour chaque technologie ; aucune bannière tant qu’aucun stockage facultatif contrôlé ne la justifie. Les caches et tiers demandent une mesure réseau, pas une recherche de mots dans le code.
 
