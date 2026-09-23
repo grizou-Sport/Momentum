@@ -19,16 +19,16 @@ Préparation technique, **pas une livraison juridique ni une publication**. Réf
 
 | Scénario | État | Preuve acquise et travail restant |
 |---|---|---|
-| LEG-01 | Bloqué | Navigation publique créée ; identité/contact et cinq textes définitifs absents. |
+| LEG-01 | Bloqué | Navigation publique créée ; exploitant, localité et e-mail confirmés et accessibles ; adresse complète et cinq textes définitifs à finaliser. |
 | LEG-02 | Partiel | Refus empêche signUp, case non cochée, confidentialité séparée ; vérifier les textes approuvés. |
 | LEG-03 | Partiel | Idempotence serveur, double clic et reprise réseau, vrais comptes locaux ; durée de purge des inscriptions abandonnées à décider et implémenter. |
-| LEG-04 | Partiel | Ancien compte orienté vers finalisation ; export/suppression accessibles sans accord ; contact réel à fournir. |
+| LEG-04 | Partiel | Ancien compte orienté vers finalisation ; export/suppression accessibles sans accord ; contact réel désormais accessible ; finalisation des documents toujours requise. |
 | LEG-05 | Partiel | Politique informative distincte des CGU, historique/version exacte conservés ; procédure et contenu des notifications à valider. |
 | LEG-06 | Partiel | Relevé vierge login/discover et inventaire source ; audit authentifié réel complet et scénario UE selon L02 à terminer. |
 | LEG-07 | Bloqué | Pas de consentement facultatif inventé ; les finalités et qualifications restent à décider dans L06. Aucun statut « non applicable » présumé. |
 | LEG-08 | Bloqué | Marketing/connecteurs non ajoutés ; base des fonctions santé à qualifier avant activation publique de ce lot. |
 | LEG-09 | Partiel | Tests existants d’isolation, partages et exports réexécutés ; revue globale des publics/champs et anciens buckets publics à clore. |
-| LEG-10 | Partiel | Notice versionnée avant réponse, ancien RPC bloqué, retrait idempotent ; exploitant, durée et contact pour lien expiré à finaliser. |
+| LEG-10 | Partiel | Notice versionnée avant réponse, ancien RPC bloqué, retrait idempotent ; exploitant et contact pour lien expiré ajoutés ; durée et document définitif à finaliser. |
 | LEG-11 | Partiel | Notice import, suppression des logs d’erreurs brutes, fichiers validés et export/suppression locaux ; contrats/durées et relevé complet des destinations à clore. |
 | LEG-12 | Partiel | Suppression asynchrone, statut et reprise testés dans le socle/local ; sauvegardes hébergées et promesses finales non vérifiées. |
 | LEG-13 | Réussi technique | Construction de production et CI bloquées si décisions/preuves/textes manquent ; empreinte du code de collecte invalide la revue après nouveau fournisseur/script. Le ciblage d’un pays et les réglages externes restent aussi soumis à la procédure d’exploitation. |

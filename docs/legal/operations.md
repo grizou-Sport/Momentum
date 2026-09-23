@@ -4,7 +4,7 @@ Ce document organise la réalisation ; il n’atteste pas d’une validation de 
 
 ## Demandes de droits et plaintes
 
-1. Désigner un titulaire et un suppléant, une adresse surveillée et le régime/les délais applicables dans le registre interne non public.
+1. Titulaire et contact confirmés : Christophe Gyger, grizou@gmx.ch. Définir la continuité en cas d’indisponibilité sans inventer de suppléant, ainsi que le régime et les délais applicables dans le registre interne non public.
 2. Enregistrer identifiant de demande, date, canal et objet, sans recopier de données de santé ni de secret d’invitation dans un ticket.
 3. Vérifier l’identité de façon proportionnée. Pour un invité, utiliser le lien encore valide ou faire intervenir l’organisateur ; ne pas réclamer automatiquement une pièce d’identité.
 4. Qualifier accès, rectification, export, opposition, retrait, effacement, photo d’un tiers ou contenu illicite. Le refus des CGU n’empêche pas ces démarches.
