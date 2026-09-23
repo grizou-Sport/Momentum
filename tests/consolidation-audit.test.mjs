@@ -71,8 +71,10 @@ test("technical errors, native dialogs and dead legal links are removed from act
   assert.doesNotMatch(scripts, /error\.message/);
   assert.doesNotMatch(scripts, /window\.(alert|confirm|prompt)\(/);
   assert.doesNotMatch(login, /data-legal|href="#"/);
-  assert.match(read("conditions.html"), /Version :<\/strong> 0\.1/);
-  assert.match(read("confidentialite.html"), /Entrée en vigueur prévue/);
+  for (const page of ["conditions.html", "confidentialite.html"]) {
+    assert.doesNotMatch(read(page), /0\.1 — projet|Entrée en vigueur prévue/);
+    assert.match(read(page), /href="privacy-center.html"/);
+  }
 });
 
 test("all user-facing pages point to the real favicon", () => {

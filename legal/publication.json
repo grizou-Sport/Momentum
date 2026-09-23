@@ -1,0 +1,153 @@
+{
+  "status": "blocked-decisions",
+  "version": 1,
+  "review": {
+    "operator": null,
+    "legal": null,
+    "reviewed_at": null,
+    "source_sha256": null
+  },
+  "facts": {
+    "L01": {
+      "status": "pending",
+      "evidence": []
+    },
+    "L02": {
+      "status": "pending",
+      "evidence": []
+    },
+    "L03": {
+      "status": "pending",
+      "evidence": []
+    },
+    "L04": {
+      "status": "pending",
+      "evidence": []
+    },
+    "L05": {
+      "status": "pending",
+      "evidence": []
+    },
+    "L06": {
+      "status": "pending",
+      "evidence": []
+    },
+    "L07": {
+      "status": "pending",
+      "evidence": []
+    },
+    "L08": {
+      "status": "pending",
+      "evidence": []
+    },
+    "L09": {
+      "status": "pending",
+      "evidence": []
+    },
+    "L10": {
+      "status": "pending",
+      "evidence": []
+    }
+  },
+  "documents": [],
+  "scenarios": [
+    {
+      "id": "LEG-01",
+      "result": "blocked",
+      "evidence": [
+        "docs/legal/acceptance.md"
+      ]
+    },
+    {
+      "id": "LEG-02",
+      "result": "partial",
+      "evidence": [
+        "docs/legal/acceptance.md"
+      ]
+    },
+    {
+      "id": "LEG-03",
+      "result": "partial",
+      "evidence": [
+        "docs/legal/acceptance.md"
+      ]
+    },
+    {
+      "id": "LEG-04",
+      "result": "partial",
+      "evidence": [
+        "docs/legal/acceptance.md"
+      ]
+    },
+    {
+      "id": "LEG-05",
+      "result": "partial",
+      "evidence": [
+        "docs/legal/acceptance.md"
+      ]
+    },
+    {
+      "id": "LEG-06",
+      "result": "partial",
+      "evidence": [
+        "docs/legal/acceptance.md"
+      ]
+    },
+    {
+      "id": "LEG-07",
+      "result": "blocked",
+      "evidence": [
+        "docs/legal/acceptance.md"
+      ]
+    },
+    {
+      "id": "LEG-08",
+      "result": "blocked",
+      "evidence": [
+        "docs/legal/acceptance.md"
+      ]
+    },
+    {
+      "id": "LEG-09",
+      "result": "partial",
+      "evidence": [
+        "docs/legal/acceptance.md"
+      ]
+    },
+    {
+      "id": "LEG-10",
+      "result": "partial",
+      "evidence": [
+        "docs/legal/acceptance.md"
+      ]
+    },
+    {
+      "id": "LEG-11",
+      "result": "partial",
+      "evidence": [
+        "docs/legal/acceptance.md"
+      ]
+    },
+    {
+      "id": "LEG-12",
+      "result": "partial",
+      "evidence": [
+        "docs/legal/acceptance.md"
+      ]
+    },
+    {
+      "id": "LEG-13",
+      "result": "passed",
+      "evidence": [
+        "docs/legal/acceptance.md"
+      ]
+    },
+    {
+      "id": "LEG-14",
+      "result": "partial",
+      "evidence": [
+        "docs/legal/acceptance.md"
+      ]
+    }
+  ]
+}

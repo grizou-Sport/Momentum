@@ -20,14 +20,26 @@ await db.exec(`insert into public.profiles(id,display_name) values ('${A}','Cami
 insert into public.sports(id,name) values ('33333333-3333-4333-8333-333333333333','running'),('44444444-4444-4444-8444-444444444444','hiking');
 insert into public.activities(user_id,activity_date,status,sport,activity_type,duration_min,is_memorable,notes) select '${A}', date '2026-09-01'-n,'done','hiking','hiking',60,n=0,'Note privée fictive' from generate_series(0,11) n;`);
 if(process.argv.includes('--returning'))await db.query("insert into public.passports(user_id,display_name,personalization) values ($1,'Camille',$2)",[A,JSON.stringify({minimal_onboarding_version:1,open_intention:'Retrouver les sentiers, sans objectif de temps.'})]);
+const legalDocuments=new Map();
+const fixtureSession='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+await db.query('insert into auth.sessions(id,user_id) values($1,$2)',[fixtureSession,A]);
+await db.exec(await read('supabase/migrations/20260923143302_legal_framework.sql'));
+for(const kind of ['terms','privacy','guest']) {
+ const relative=`legal/versions/${kind}-fixture-1.html`;
+ const html=`<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Document fictif de recette</title></head><body><h1>Document ${kind} fictif</h1><p>Version fixture-1. Données de test uniquement. Ce texte ne constitue pas des conditions ou une politique en vigueur.</p></body></html>`;
+ legalDocuments.set('/'+relative,html);
+ await db.query("insert into private.legal_documents(kind,version,content,public_path,effective_at,approved_at) values($1,'fixture-1',$2,$3,now()-interval '1 day',now())",[kind,html,relative]);
+}
+await db.exec("insert into private.legal_release(singleton,terms_version,privacy_version,guest_version,enabled) values(true,'fixture-1','fixture-1','fixture-1',true)");
 const user={id:A,aud:'authenticated',role:'authenticated',email:'camille@example.test',email_confirmed_at:'2026-09-01T00:00:00Z',app_metadata:{provider:'email',providers:['email']},user_metadata:{},identities:[],created_at:'2026-09-01T00:00:00Z'};
-const jwt=Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url')+'.'+Buffer.from(JSON.stringify({sub:A,aud:'authenticated',role:'authenticated',exp:Math.floor(Date.now()/1000)+86400})).toString('base64url')+'.local-fixture-signature';
+const jwt=Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url')+'.'+Buffer.from(JSON.stringify({sub:A,session_id:fixtureSession,aud:'authenticated',role:'authenticated',exp:Math.floor(Date.now()/1000)+86400})).toString('base64url')+'.local-fixture-signature';
 function reply(res,status,data,headers={}){res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store',...headers});res.end(JSON.stringify(data));}
 const id=value=>{if(!/^[a-z_][a-z_0-9]*$/.test(value))throw new Error('Identifiant interdit');return '"'+value+'"';};
 let queue=Promise.resolve();
 const server=http.createServer(async(req,res)=>{
  const url=new URL(req.url,origin);let body='';for await(const chunk of req){body+=chunk;if(body.length>6000000){reply(res,413,{message:'Trop volumineux'});return;}}
  try{
+  if(legalDocuments.has(url.pathname)){res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});res.end(legalDocuments.get(url.pathname));return;}
   if(url.pathname==='/js/supabase.js'){res.writeHead(200,{'Content-Type':'text/javascript'});res.end(`window.MomentumConfig=Object.freeze({url:${JSON.stringify(origin)},publishableKey:'fixture-public-key'});if(window.supabase)window.momentumDB=window.supabase.createClient(${JSON.stringify(origin)},'fixture-public-key',{global:{headers:{'x-momentum-client':'cdc-2026-09-08'}}});`);return;}
   if(url.pathname==='/fixture-shared.html'){res.writeHead(200,{'Content-Type':'text/html'});res.end('<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Recette fictive des invitations</title><link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/consolidation.css"><body><main style="padding:32px"><h1>Moment fictif · Recette locale</h1><p>Aucun invité réel. Le compte Camille doit être connecté dans cet onglet.</p><button id="openGuest">Organiser les invitations fictives</button></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/supabase.js"></script><script src="js/momentum-ui.js"></script><script src="js/momentum-guest-manager.js"></script><script src="/fixture-shared.js"></script></body></html>');return;}
   if(url.pathname==='/fixture-shared.js'){res.writeHead(200,{'Content-Type':'text/javascript'});res.end(`document.getElementById('openGuest').addEventListener('click',()=>window.MomentumGuests.open(${JSON.stringify(demoMoment)}));`);return;}
@@ -35,10 +47,11 @@ const server=http.createServer(async(req,res)=>{
   if(url.pathname==='/auth/v1/user'){reply(res,200,user);return;}
   if(url.pathname==='/auth/v1/logout'){reply(res,200,{});return;}
   if(url.pathname.startsWith('/rest/v1/')){
-   const guestRPC=['exchange_guest_invitation','read_guest_invitation','respond_guest_invitation'].some(name=>url.pathname==='/rest/v1/rpc/'+name);
+   const guestRPC=['exchange_guest_invitation','read_guest_invitation','respond_guest_invitation','respond_guest_with_notice','withdraw_guest_response','legal_public_status'].some(name=>url.pathname==='/rest/v1/rpc/'+name);
    if(!guestRPC&&!req.headers.authorization?.endsWith('.local-fixture-signature')){reply(res,401,{message:'Session de test requise'});return;}
    const job=async()=>db.transaction(async tx=>{
     await tx.exec(guestRPC?'set local role anon':'set local role authenticated');await tx.query("select set_config('request.jwt.claim.sub',$1,true)",[guestRPC?'':A]);await tx.query("select set_config('request.headers',$1,true)",[JSON.stringify({origin:req.headers.origin||origin,'x-forwarded-for':'192.0.2.10','x-momentum-client':req.headers['x-momentum-client']||''})]);
+    await tx.query("select set_config('request.jwt.claims',$1,true)",[JSON.stringify(guestRPC?{}:{sub:A,session_id:fixtureSession})]);
     if(url.pathname.startsWith('/rest/v1/rpc/')){
      const name=url.pathname.split('/').pop(),params=body?JSON.parse(body):{};
      const args=Object.entries(params),result=await tx.query(`select public.${id(name)}(${args.map(([key],i)=>id(key)+'=> $'+(i+1)).join(',')}) result`,args.map(([,value])=>value!==null&&typeof value==='object'?JSON.stringify(value):value));
@@ -77,7 +90,7 @@ const server=http.createServer(async(req,res)=>{
   const filename=path.resolve(root,'.'+decodeURIComponent(url.pathname==='/'?'/login.html':url.pathname));
   if(!filename.startsWith(root+path.sep)||!['.html','.css','.js','.svg','.jpg','.jpeg','.png','.webp','.avif','.woff2'].includes(path.extname(filename))){reply(res,404,{});return;}
   let content=await readFile(filename);const ext=path.extname(filename);
-  if(ext==='.html')content=Buffer.from(content.toString().replace('connect-src https://njcqcpyiiibudlalnzoa.supabase.co','connect-src '+origin).replace('</body>','<p style="position:fixed;top:0;right:0;z-index:20000;background:#fffbd4;color:#222;padding:4px;font:13px system-ui">Recette locale · Données fictives</p></body>'));
+  if(ext==='.html')content=Buffer.from(content.toString().replaceAll('https://njcqcpyiiibudlalnzoa.supabase.co',origin).replace('</body>','<p style="position:fixed;top:0;right:0;z-index:20000;background:#fffbd4;color:#222;padding:4px;font:13px system-ui">Recette locale · Données fictives</p></body>'));
   res.writeHead(200,{'Content-Type':{'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.jpg':'image/jpeg','.jpeg':'image/jpeg','.png':'image/png','.webp':'image/webp','.avif':'image/avif','.woff2':'font/woff2'}[ext],'Cache-Control':'no-store'});res.end(content);
  }catch(error){process.stderr.write(`${req.method} ${url.pathname}: ${error.code||'FIXTURE'} ${error.message}\n`);reply(res,400,{code:error.code||'FIXTURE',message:error.message});}
 });

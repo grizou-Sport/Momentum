@@ -5,11 +5,12 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { root, files, localPath } from './lib.mjs';
 import { inspectCDC } from './cdc-validation.mjs';
+import { inspectLegal } from './legal-publication.mjs';
 import { buildEnvironment, browserConfiguration, disconnectedPreview, productionOrigin } from './build-environment.mjs';
 
 const environment = buildEnvironment();
 if (environment.target === 'production') {
-  const failures = inspectCDC(root, 'release');
+  const failures = [...inspectCDC(root, 'release'), ...inspectLegal(root)];
   if (failures.length) throw new Error('Production release is not ready:\n' + failures.join('\n'));
 }
 
@@ -18,7 +19,7 @@ rmSync(output, { recursive: true, force: true });
 mkdirSync(output);
 const entries = files(root).filter(path => {
   const relative = localPath(path);
-  return !relative.split('/').some(part => part.startsWith('.')) && (/^[^/]+\.(html|js)$/.test(relative) || /^(js|css|Assets)\//.test(relative));
+  return !relative.split('/').some(part => part.startsWith('.')) && (/^[^/]+\.(html|js)$/.test(relative) || /^(js|css|Assets)\//.test(relative) || /^legal\/versions\/[a-zA-Z0-9._-]+\.html$/.test(relative));
 });
 const commit = process.env.VERCEL_GIT_COMMIT_SHA || execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
 const checksums = {};

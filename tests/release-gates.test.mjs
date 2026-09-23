@@ -61,7 +61,7 @@ test('preview configuration rejects production, privileged keys, external endpoi
 });
 test('an incomplete CDC can build an isolated preview but cannot build production',t=>{
   const f=fixture(t);f.manifest.status='implementation-in-progress';f.save();
-  for(const file of ['scripts/lib.mjs','scripts/build.mjs','scripts/cdc-validation.mjs','scripts/build-environment.mjs']) f.write(file,readFileSync(join(root,file),'utf8'));
+  for(const file of ['scripts/lib.mjs','scripts/build.mjs','scripts/cdc-validation.mjs','scripts/build-environment.mjs','scripts/legal-publication.mjs']) f.write(file,readFileSync(join(root,file),'utf8'));
   f.write('login.html','<script src="js/supabase.js"></script><input name="password">');f.write('js/supabase.js',`fetch('${productionOrigin}')`);
   const env={...process.env,VERCEL_ENV:'preview',VERCEL_GIT_COMMIT_SHA:'a'.repeat(40),MOMENTUM_TEST_SUPABASE_URL:'',MOMENTUM_TEST_SUPABASE_KEY:''};
   const preview=spawnSync(process.execPath,['scripts/build.mjs'],{cwd:f.dir,env,encoding:'utf8'});assert.equal(preview.status,0,preview.stderr);

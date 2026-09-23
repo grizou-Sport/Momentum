@@ -17,3 +17,7 @@ maintenance/cdc-finalize/
 # Local Supabase CLI state
 supabase/.temp/
 .supabase-local/
+
+# Internal legal decisions are never published or committed in this public repository.
+docs/legal/legal-facts.md
+docs/legal/private/

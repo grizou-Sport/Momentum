@@ -9,6 +9,21 @@ const authTitle = document.getElementById("authTitle");
 const authLead = document.getElementById("authLead");
 let authMode = "login";
 let recoveringPassword = false;
+let signupRelease = null;
+let submitting = false;
+let signupSession = null;
+async function loadSignupLegal() {
+  const output = document.getElementById('signupLegalStatus');
+  signupRelease = null; output.hidden = false; output.textContent = 'Chargement des conditions…';
+  try {
+    const release = await window.MomentumLegal.status(momentumDB, false);
+    await window.MomentumLegal.verifyDocuments(release);
+    signupRelease = release;
+    document.getElementById('signupTermsLink').href = window.MomentumLegal.documentPath(release.terms);
+    document.getElementById('signupTermsVersion').textContent = `(version ${release.terms.version}, ${new Date(release.terms.effective_at).toLocaleDateString('fr-CH')})`;
+    output.textContent = 'Après confirmation de ton e-mail, confirme les conditions dans ton espace sécurisé pour finaliser ton compte.';
+  } catch (error) { output.textContent = error.message; }
+}
 
 function appUrl(path) {
   return new URL(path, window.location.href).href;
@@ -41,6 +56,8 @@ function callbackErrorMessage() {
 
 async function destinationForUser(user) {
   if (!user) throw new Error("Session indisponible.");
+  const legal = await window.MomentumLegal.status(momentumDB);
+  if (!legal.enabled || !legal.accepted) return 'privacy-center.html?returnTo=' + encodeURIComponent(window.MomentumAccess.safeReturn(new URLSearchParams(location.search).get('returnTo'), location.origin));
   const { data, error } = await momentumDB.from("passports").select("personalization").eq("user_id", user.id).maybeSingle();
   if (error) throw error;
   const target = window.MomentumAccess.safeReturn(new URLSearchParams(location.search).get("returnTo"), location.origin);
@@ -55,7 +72,10 @@ async function redirectIfLoggedIn() {
 }
 
 function showMode(mode) {
+  if (submitting) return;
   authMode = mode;
+  if (mode === 'signup') loadSignupLegal();
+  else document.getElementById('signupLegalStatus').hidden = true;
   authForm.hidden = false;
   recoveryForm.hidden = true;
   newPasswordForm.hidden = true;
@@ -79,6 +99,7 @@ function showMode(mode) {
 }
 
 function showRecovery() {
+  if (submitting) return;
   authForm.hidden = true;
   recoveryForm.hidden = false;
   newPasswordForm.hidden = true;
@@ -120,6 +141,7 @@ forgotBtn.addEventListener("click", showRecovery);
 
 authForm.addEventListener("submit", async (event) => {
   event.preventDefault();
+  if (submitting) return;
   const message = document.getElementById("authMessage");
   const email = authForm.email.value.trim();
   const password = authForm.password.value;
@@ -130,15 +152,19 @@ authForm.addEventListener("submit", async (event) => {
   if (authMode === "signup" && password !== confirmation) return setMessage(message, "Les deux mots de passe ne correspondent pas.", "error");
   if (authMode === "signup" && !authForm.terms.checked) return setMessage(message, "Ton accord est nécessaire pour créer ton espace.", "error");
 
+  if (authMode === 'signup' && !signupRelease) return setMessage(message, 'Les inscriptions sont temporairement fermées tant que les documents ne sont pas disponibles.', 'error');
+  if (authMode === 'signup' && signupSession && signupSession.user.email?.toLowerCase() !== email.toLowerCase()) return setMessage(message, 'Ton premier compte a déjà été créé. Reprends avec son adresse e-mail pour finaliser les conditions.', 'error');
+  const submittedMode = authMode, submittedRelease = signupRelease;
+  submitting = true;
   submitBtn.disabled = true;
   setMessage(message, authMode === "signup" ? "Création de ton espace…" : "Ouverture de ton espace…");
   try {
-    const result = authMode === "signup"
+    const result = signupSession && submittedMode === "signup" ? { data: signupSession } : submittedMode === "signup"
       ? await momentumDB.auth.signUp({ email, password, options: { emailRedirectTo: appUrl("welcome.html") } })
       : await momentumDB.auth.signInWithPassword({ email, password });
     if (result.error) return setMessage(message, friendlyAuthError(result.error), "error");
 
-    if (authMode === "signup" && !result.data.session) {
+    if (submittedMode === "signup" && !result.data.session) {
       authForm.reset();
       authTitle.innerHTML = "Regarde ta<br />boîte mail.";
       authLead.textContent = "Clique sur le lien envoyé pour valider ton compte. Ton Passeport t'attendra juste après.";
@@ -147,10 +173,15 @@ authForm.addEventListener("submit", async (event) => {
       return;
     }
 
+    if (submittedMode === 'signup') {
+      signupSession = result.data;
+      await window.MomentumLegal.accept(momentumDB, submittedRelease);
+    }
     window.location.replace(await destinationForUser(result.data.user || result.data.session.user));
   } catch (error) {
-    setMessage(message, friendlyAuthError(error), "error");
+    setMessage(message, signupSession ? error.message : friendlyAuthError(error), "error");
   } finally {
+    submitting = false;
     submitBtn.disabled = false;
   }
 });

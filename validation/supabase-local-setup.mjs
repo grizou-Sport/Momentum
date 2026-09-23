@@ -82,6 +82,13 @@ try {
    using(bucket_id='avatars' and (storage.foldername(name))[1]=auth.uid()::text);
  `);
  for(const name of files.filter(f=>f>='20260911'))await step(name,await read('../supabase/migrations/'+name));
+ // Synthetic approved texts exist ONLY in the explicitly isolated local stack.
+ await step('local-legal-fixtures', `
+  insert into private.legal_documents(kind,version,content,public_path,effective_at,approved_at)
+  select kind,'fixture-1','FICTITIOUS LOCAL TEST '||kind,'legal/versions/'||kind||'-fixture-1.html',now()-interval '1 day',now()
+  from unnest(array['terms','privacy','guest']) kind;
+  insert into private.legal_release(singleton,terms_version,privacy_version,guest_version,enabled) values(true,'fixture-1','fixture-1','fixture-1',true);
+ `);
  await step('local-storage-origin', "insert into private.storage_origins(origin) values('http://127.0.0.1:54321') on conflict do nothing");
  await step('local-guest-origin', "insert into private.guest_allowed_origins(origin) values('http://127.0.0.1:3000') on conflict do nothing");
  await db.query("notify pgrst, 'reload schema'");

@@ -766,8 +766,7 @@ async function parseFit(file) {
       );
     } catch (error) {
       console.warn(
-        "HOME : lieu FIT non résolu.",
-        error
+        "HOME : lieu FIT non résolu."
       );
     }
   }
@@ -844,8 +843,7 @@ async function parseActivityFile(file) {
         );
       } catch (error) {
         console.warn(
-          "HOME : lieu GPX non résolu.",
-          error
+          "HOME : lieu GPX non résolu."
         );
       }
     }

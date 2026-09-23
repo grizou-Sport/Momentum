@@ -76,7 +76,7 @@ test('empty required source files are rejected', t => {
 
 test('build copies the public application and excludes internal files and transfers', t => {
   const dir = fixture(t);
-  for (const path of ['scripts/lib.mjs', 'scripts/build.mjs', 'scripts/build-environment.mjs', 'scripts/cdc-validation.mjs']) write(dir, path, readFileSync(join(root, path)));
+  for (const path of ['scripts/lib.mjs', 'scripts/build.mjs', 'scripts/build-environment.mjs','scripts/legal-publication.mjs', 'scripts/cdc-validation.mjs']) write(dir, path, readFileSync(join(root, path)));
   write(dir, 'index.html', '<h1>MOMENTUM</h1>');
   write(dir, 'js/app.js', 'void 0;');
   write(dir, 'Assets/image.svg', '<svg/>');
