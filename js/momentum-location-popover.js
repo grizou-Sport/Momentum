@@ -120,7 +120,10 @@
         longitude:String(location.longitude)
       });
       try {
-        const response = await fetch(`/api/locations?${parameters}`, { headers:{ Accept:"application/json" } });
+        const request = window.MomentumNative?.fetchLocations
+          ? (url, options) => window.MomentumNative.fetchLocations(parameters, options)
+          : fetch;
+        const response = await request(`/api/locations?${parameters}`, { headers:{ Accept:"application/json" } });
         const payload = await response.json().catch(() => ({}));
         result = response.ok ? payload.results?.[0] || null : null;
       } catch (_error) {

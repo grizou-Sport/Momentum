@@ -1,0 +1,12 @@
+{
+  "appId": "com.chrisgyger.momentum",
+  "appName": "MOMENTUM",
+  "webDir": "dist-native",
+  "backgroundColor": "#f7f6f1",
+  "loggingBehavior": "debug",
+  "ios": {
+    "contentInset": "never",
+    "preferredContentMode": "mobile",
+    "allowsLinkPreview": false
+  }
+}

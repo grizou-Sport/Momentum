@@ -1,0 +1,15 @@
+Première bêta iPhone de MOMENTUM.
+
+À essayer :
+• Connecte-toi à ton compte et retrouve ton Passeport et tes Moments.
+• Explore YOU, FLOW, Progression et Together.
+• Crée un Moment, choisis son lieu et ajoute une photo.
+• Ferme puis rouvre l’app et vérifie que tu retrouves ton espace.
+• Vérifie le confort de lecture, le clavier et les boutons sur ton iPhone.
+• Sans réseau, vérifie que le message de connexion apparaît. Reconnecte-toi avant d’enregistrer une modification.
+
+Cette bêta utilise les mêmes données que le site : les modifications enregistrées sont réelles.
+
+La confirmation d’adresse et la récupération du mot de passe passent par le site, depuis l’e-mail reçu. Reviens ensuite te connecter dans l’app.
+
+Pour signaler un problème, utilise le retour TestFlight et précise les étapes, ce que tu attendais et ce qui s’est passé. Évite d’inclure des informations privées dans les captures.

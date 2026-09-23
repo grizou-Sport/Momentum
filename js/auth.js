@@ -11,7 +11,7 @@ let authMode = "login";
 let recoveringPassword = false;
 
 function appUrl(path) {
-  return new URL(path, window.location.href).href;
+  return window.MomentumNative?.authRedirect(path) || new URL(path, window.location.href).href;
 }
 
 function setMessage(element, message = "", type = "") {
@@ -43,7 +43,7 @@ async function destinationForUser(user) {
   if (!user) throw new Error("Session indisponible.");
   const { data, error } = await momentumDB.from("passports").select("personalization").eq("user_id", user.id).maybeSingle();
   if (error) throw error;
-  const target = window.MomentumAccess.safeReturn(new URLSearchParams(location.search).get("returnTo"), location.origin);
+  const target = window.MomentumAccess.safeReturn(new URLSearchParams(location.search).get("returnTo"), window.MomentumNative?.origin || location.origin);
   return window.MomentumAccess.complete(data) ? target : `welcome.html?returnTo=${encodeURIComponent(target)}`;
 }
 
@@ -141,9 +141,11 @@ authForm.addEventListener("submit", async (event) => {
     if (authMode === "signup" && !result.data.session) {
       authForm.reset();
       authTitle.innerHTML = "Regarde ta<br />boîte mail.";
-      authLead.textContent = "Clique sur le lien envoyé pour valider ton compte. Ton Passeport t'attendra juste après.";
+      authLead.textContent = window.MomentumNative
+        ? "Valide ton adresse sur le site depuis l’e-mail reçu, puis reviens ici pour te connecter."
+        : "Clique sur le lien envoyé pour valider ton compte. Ton Passeport t'attendra juste après.";
       authForm.hidden = true;
-      authTabs.hidden = true;
+      authTabs.hidden = !window.MomentumNative;
       return;
     }
 
@@ -165,7 +167,7 @@ recoveryForm.addEventListener("submit", async (event) => {
   setMessage(message, "Envoi du lien sécurisé…");
   try {
     const { error } = await momentumDB.auth.resetPasswordForEmail(email, { redirectTo: appUrl("login.html?recovery=1") });
-    setMessage(message, error ? friendlyAuthError(error) : "Lien envoyé. Consulte ta boîte mail.", error ? "error" : "success");
+    setMessage(message, error ? friendlyAuthError(error) : (window.MomentumNative ? "Lien envoyé. Choisis ton mot de passe sur le site, puis reviens te connecter dans l’app." : "Lien envoyé. Consulte ta boîte mail."), error ? "error" : "success");
   } catch (error) {
     setMessage(message, friendlyAuthError(error), "error");
   } finally {

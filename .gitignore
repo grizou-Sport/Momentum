@@ -17,3 +17,15 @@ maintenance/cdc-finalize/
 # Local Supabase CLI state
 supabase/.temp/
 .supabase-local/
+
+# iOS generated assets and local signing/build artifacts
+dist-native/
+build/
+ios/App/App/public/
+ios/App/App/capacitor.config.json
+ios/App/App/config.xml
+ios/App/CapApp-SPM/.build/
+**/xcuserdata/
+*.xcarchive
+*.ipa
+*.p8

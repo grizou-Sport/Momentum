@@ -12,7 +12,7 @@
   return result;
  }
  function downloadReceipt() {
-  const link=new URL('account-deletion-status.html',location.href);link.hash=`${receipt.id}.${receipt.receipt}`;
+  const link=new URL('account-deletion-status.html',window.MomentumNative?.webOrigin || location.href);link.hash=`${receipt.id}.${receipt.receipt}`;
   const blob=new Blob([JSON.stringify({service:'MOMENTUM',usage:'Lien privé de suivi. Ne le partage pas.',status_url:link.href},null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='MOMENTUM-recu-suppression.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
  }
